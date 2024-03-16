@@ -817,3 +817,80 @@ class GodownComments(models.Model):
     login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
     godown = models.ForeignKey(Godown, on_delete=models.CASCADE,null=True,blank=True)
     comment = models.CharField(max_length = 250)
+
+
+#-------Delivery Challan ------start-------------------------------
+
+class Delivery_challan(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    customer=models.ForeignKey(Customer, on_delete=models.CASCADE,null=True,blank=True)
+    customer_name = models.CharField(max_length=220,null=True)
+    challan_date=  models.DateField(auto_now_add=True, null=True)
+    reference_number = models.IntegerField(null=True)  
+    challan_number = models.CharField(max_length=200,null=True)
+    challan_type = models.CharField(max_length=200,null=True)
+    description = models.TextField(max_length=200,null=True)
+    terms_condition = models.CharField(max_length=200,null=True)
+    document = models.FileField(upload_to='doc/')
+    sub_total = models.IntegerField(null=True)
+    cgst = models.IntegerField(null=True)
+    sgst = models.IntegerField(null=True)
+    tax_amount = models.IntegerField(null=True)
+    shipping_charge = models.IntegerField(null=True)
+    adjustment = models.IntegerField(null=True)
+    grand_total = models.DecimalField(max_digits=10, decimal_places=2,default=0.00)
+    advance = models.IntegerField(null=True)
+    balance = models.DecimalField(max_digits=10, decimal_places=2,default=0.00)
+    status = models.CharField(max_length=50,null=True)
+     #---invoice reccurring invoice
+    
+
+
+class Delivery_challan_item(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    delivery_challan=models.ForeignKey(Delivery_challan, on_delete=models.CASCADE,null=True,blank=True)
+    item=models.ForeignKey(Items, on_delete=models.CASCADE,null=True,blank=True)
+    hsn = models.CharField(max_length=200,null=True)
+    quantity = models.IntegerField(null=True)
+    price=  models.IntegerField(null=True)
+    tax_rate= models.IntegerField(null=True)
+    discount= models.IntegerField(null=True)
+    total =  models.DecimalField(max_digits=10, decimal_places=2,default=0.00)
+
+
+
+class Delivery_challan_reference(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    
+    reference_number = models.CharField(max_length=200,null=True)
+
+class Delivery_challan_history(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    delivery_challan=models.ForeignKey(Delivery_challan, on_delete=models.CASCADE,null=True,blank=True)
+    date=  models.DateField(auto_now_add=True, null=True)
+   
+    action = models.CharField(max_length=200,null=True)
+
+
+
+
+   
+   
+    
+
+
+
+
+
+
+
+
+
+
+    
+    
+    
