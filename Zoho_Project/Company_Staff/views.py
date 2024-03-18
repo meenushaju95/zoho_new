@@ -13063,27 +13063,90 @@ def delete_godown(request,pk):
 #--------------------------Meenu Shaju -Delivery Challan--------------
 
 def challan_list(request):
+    if 'login_id' in request.session:
+        if request.session.has_key('login_id'):
+            log_id = request.session['login_id']
+           
+        else:
+            return redirect('/')
     
-    return render(request,'zohomodules/Delivery-challan/challan_list.html')
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type=='Staff':
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+            comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
+
+        else:    
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+            comp_details=CompanyDetails.objects.get(login_details=log_details)
+
+            
+        allmodules= ZohoModules.objects.get(company=comp_details,status='New')
+    
+    
+        return render(request,'zohomodules/Delivery-challan/challan_list.html')
 
 def delivery_challan(request):
+     
      if 'login_id' in request.session:
-        log_id = request.session['login_id']
-        if 'login_id' not in request.session:
-            return redirect('/')
-        log_details = LoginDetails.objects.get(id=log_id)
-        if log_details.user_type == 'Company':
-            company = CompanyDetails.objects.get(login_details=log_details)
-            
-            allmodules= ZohoModules.objects.get(company=company)
+        if request.session.has_key('login_id'):
+            log_id = request.session['login_id']
            
-            return render(request,'zohomodules/Delivery-challan/new_challan.html',{'allmodules':allmodules})
-        if log_details.user_type=='Staff':
-            staff = StaffDetails.objects.get(login_details=log_details)
-            
-            
-            allmodules= ZohoModules.objects.get(company=staff.company)
-            bloods = Bloodgroup.objects.all()
-            return render(request,'zohomodules/Delivery-challan/new_challan.html',{'allmodules':allmodules})
-        
+        else:
+            return redirect('/')
     
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type=='Staff':
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+            comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
+
+        else:    
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+            comp_details=CompanyDetails.objects.get(login_details=log_details)
+            
+        allmodules= ZohoModules.objects.get(company=comp_details,status='New')
+        customer=Customer.objects.filter(company=comp_details,customer_status='Active')
+        item=Items.objects.filter(company=comp_details,activation_tag='Active')
+        context={'allmodules':allmodules,'customer':customer,'item':item}
+    
+           
+        return render(request,'zohomodules/Delivery-challan/new_challan.html',context)
+     
+
+
+def get_customer_data(request, customer_id):
+    try:
+        customer = Customer.objects.get(id=customer_id)
+       
+        data = {
+            'email': customer.customer_email,
+            'billing_address': customer.billing_address,
+            'gsttype':customer.GST_treatement,
+            'gstnumber':customer.GST_number,
+            'place':customer.place_of_supply
+           
+        }
+        return JsonResponse(data)
+    except Customer.DoesNotExist:
+        return JsonResponse({'error': 'Customer not found'}, status=404)
+    
+
+
+def get_item_data(request, item_id):
+    try:
+        item = Items.objects.get(id=item_id)
+       
+        data = {
+            'hsn': item.hsn_code,
+            'rate': item.purchase_price,
+            'intratax':item.intrastate_tax,
+            'intertax':item.interstate_tax,
+            'company_state':item.company.state,
+            'stock': item.current_stock 
+            
+           
+        }
+        return JsonResponse(data)
+    except item.DoesNotExist:
+        return JsonResponse({'error': 'Customer not found'}, status=404)
+        
+

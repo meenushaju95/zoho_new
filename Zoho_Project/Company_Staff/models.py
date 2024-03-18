@@ -819,29 +819,178 @@ class GodownComments(models.Model):
     comment = models.CharField(max_length = 250)
 
 
+
+#-----------------------------invoice--------
+class invoice(models.Model):
+    company = models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    customer = models.ForeignKey(Customer,on_delete=models.CASCADE,null=True,blank=True)
+    payment_terms = models.ForeignKey(Company_Payment_Term,on_delete=models.CASCADE,null=True,blank=True)
+
+    customer_email=models.EmailField(max_length=220,null=True,blank=True)
+    customer_billingaddress=models.CharField(max_length=220,null=True,blank=True)
+    customer_GSTtype=models.CharField(max_length=220,null=True,blank=True)
+    customer_GSTnumber=models.CharField(max_length=220,null=True,blank=True)
+    customer_place_of_supply=models.CharField(max_length=220,null=True,blank=True)
+    date = models.DateField(auto_now_add=True, null=True, blank=True) 
+    expiration_date = models.DateField(auto_now_add=True, null=True, blank=True) 
+    reference_number=models.IntegerField(blank=True,null=True,)
+    invoice_number=models.CharField(max_length=220,null=True,blank=True) 
+    payment_method=models.CharField(max_length=220,null=True,blank=True) 
+    cheque_number=models.CharField(max_length=220,null=True,blank=True) 
+    UPI_number=models.CharField(max_length=220,null=True,blank=True) 
+    bank_account_number=models.CharField(max_length=220,null=True,blank=True) 
+    description=models.CharField(max_length=220,null=True,blank=True) 
+    terms_and_condition=models.CharField(max_length=220,null=True,blank=True) 
+    document=models.FileField(upload_to="images/",null=True)
+    sub_total=models.FloatField(default=0.0, null=True, blank=True)
+    CGST=models.FloatField(default=0.0, null=True, blank=True)
+    SGST=models.FloatField(default=0.0, null=True, blank=True)
+    IGST = models.FloatField(default=0.0, null=True, blank=True)
+
+    tax_amount=models.FloatField(default=0.0, null=True, blank=True)
+    shipping_charge=models.FloatField(default=0.0, null=True, blank=True)
+    adjustment=models.FloatField(default=0.0, null=True, blank=True)
+    grand_total=models.FloatField(default=0.0, null=True, blank=True)
+    advanced_paid=models.FloatField(default=0.0, null=True, blank=True)
+    balance=models.FloatField(default=0.0, null=True, blank=True)
+    status=models.CharField(max_length=220,null=True,blank=True) 
+
+
+class invoiceHistory(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company = models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    invoice = models.ForeignKey(invoice,on_delete=models.CASCADE,null=True,blank=True)
+
+    action = models.CharField(max_length=220,null=True,blank=True)
+    date = models.DateField(auto_now_add=True, null=True, blank=True)  
+    
+    
+class invoiceReference(models.Model):
+    reference_number = models.CharField(max_length=220,null=True,blank=True)
+    company = models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    staff = models.ForeignKey(StaffDetails,on_delete=models.CASCADE,null=True,blank=True)
+
+    
+class invoiceitems(models.Model):
+    company = models.ForeignKey(CompanyDetails,on_delete=models.CASCADE)
+    logindetails = models.ForeignKey(LoginDetails,on_delete=models.CASCADE)
+    Items = models.ForeignKey(Items,on_delete=models.CASCADE)
+    invoice = models.ForeignKey(invoice,on_delete=models.CASCADE,null=True,blank=True)
+
+    hsn = models.CharField(max_length=220,null=True,blank=True)
+    quantity=models.IntegerField(blank=True,null=True,default=0)
+    price=models.FloatField(default=0.0, null=True, blank=True)
+    tax_rate=models.FloatField(default=0.0, null=True, blank=True)
+    discount=models.FloatField(default=0.0, null=True, blank=True)
+    total=models.FloatField(default=0.0, null=True, blank=True)
+
+class invoicecomments(models.Model):
+    company = models.ForeignKey(CompanyDetails,on_delete=models.CASCADE)
+    invoice = models.ForeignKey(invoice,on_delete=models.CASCADE,null=True,blank=True)
+    comments = models.CharField(max_length=500,null=True,blank=True)
+
+
+class RecurringInvoice(models.Model):
+    company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE,null=True)
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE,null=True)
+    customer_email = models.EmailField(max_length=100, null=True, blank=True)
+    billing_address = models.TextField(null=True, blank=True)
+    gst_type = models.CharField(max_length=100, null=True, blank=True)
+    gstin = models.CharField(max_length=100, null=True, blank=True)
+    place_of_supply = models.CharField(max_length=100, null=True, blank=True)
+    entry_type = models.CharField(max_length=20, null=True, blank=True)
+    profile_name = models.CharField(max_length=100, null=True, blank=True)
+    reference_no = models.IntegerField(null=True, blank=True)
+    rec_invoice_no = models.CharField(max_length=100)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    salesOrder_no = models.CharField(max_length=100, null=True, blank=True)
+    repeat_every = models.ForeignKey(CompanyRepeatEvery, on_delete=models.CASCADE,null=True)
+    payment_terms = models.ForeignKey(Company_Payment_Term, on_delete=models.CASCADE,null=True)
+    payment_method = models.CharField(max_length=20, null=True,blank=True)
+    cheque_number = models.CharField(max_length=100, null=True, blank=True)
+    upi_number = models.CharField(max_length=100, null=True, blank=True)
+    bank_account_number = models.CharField(max_length=100, null=True, blank=True)
+    description = models.CharField(max_length=200, null=True, blank=True)
+    terms_and_conditions = models.TextField(null=True, blank=True)
+    document=models.FileField(upload_to="images/",null=True)
+    subtotal = models.IntegerField(default=0, null=True)
+    igst = models.FloatField(default=0.0, null=True, blank=True)
+    cgst = models.FloatField(default=0.0, null=True, blank=True)
+    sgst = models.FloatField(default=0.0, null=True, blank=True)
+    tax_amount = models.FloatField(default=0.0, null=True, blank=True)
+    adjustment = models.FloatField(default=0.0, null=True, blank=True)
+    shipping_charge = models.FloatField(default=0.0, null=True, blank=True)
+    grandtotal = models.FloatField(default=0.0, null=True, blank=True)
+    advance_paid = models.FloatField(default=0.0, null=True, blank=True)
+    balance = models.FloatField(default=0.0, null=True, blank=True)
+    STATUS_CHOICES = [
+        ('Draft', 'Draft'),
+        ('Saved', 'Saved'),
+    ]
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+
+
+class RecurringInvoiceHistory(models.Model):
+    company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE)
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE)
+    recurring_invoice = models.ForeignKey(RecurringInvoice, on_delete=models.CASCADE)
+    date = models.DateField(auto_now_add=True)
+    
+    action = models.CharField(max_length=20, null=True)
+
+
+class Reccurring_Invoice_item(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    reccuring_invoice=models.ForeignKey(RecurringInvoice,on_delete=models.CASCADE,null=True,blank=True)
+    
+    item=models.ForeignKey(Items, on_delete=models.CASCADE,null=True,blank=True)
+    hsn = models.CharField(max_length=200,null=True)
+    quantity = models.IntegerField(null=True)
+    price=  models.FloatField(default=0.0, null=True, blank=True)
+    tax_rate= models.FloatField(default=0.0, null=True, blank=True)
+    discount= models.FloatField(default=0.0, null=True, blank=True)
+    total =  models.FloatField(default=0.0, null=True, blank=True)
+
+
+
+class Reccurring_Invoice_Reference(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    
+    reference_number = models.CharField(max_length=200,null=True)
+
+
+
+
+
+
 #-------Delivery Challan ------start-------------------------------
 
 class Delivery_challan(models.Model):
     login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
     company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
     customer=models.ForeignKey(Customer, on_delete=models.CASCADE,null=True,blank=True)
-    customer_name = models.CharField(max_length=220,null=True)
+   
     challan_date=  models.DateField(auto_now_add=True, null=True)
     reference_number = models.IntegerField(null=True)  
     challan_number = models.CharField(max_length=200,null=True)
     challan_type = models.CharField(max_length=200,null=True)
     description = models.TextField(max_length=200,null=True)
     terms_condition = models.CharField(max_length=200,null=True)
-    document = models.FileField(upload_to='doc/')
-    sub_total = models.IntegerField(null=True)
-    cgst = models.IntegerField(null=True)
-    sgst = models.IntegerField(null=True)
-    tax_amount = models.IntegerField(null=True)
-    shipping_charge = models.IntegerField(null=True)
-    adjustment = models.IntegerField(null=True)
-    grand_total = models.DecimalField(max_digits=10, decimal_places=2,default=0.00)
-    advance = models.IntegerField(null=True)
-    balance = models.DecimalField(max_digits=10, decimal_places=2,default=0.00)
+    document=models.FileField(upload_to="images/",null=True)
+    sub_total = models.FloatField(default=0.0, null=True, blank=True)
+    cgst = models.FloatField(default=0.0, null=True, blank=True)
+    sgst = models.FloatField(default=0.0, null=True, blank=True)
+    tax_amount = models.FloatField(default=0.0, null=True, blank=True)
+    shipping_charge = models.FloatField(default=0.0, null=True, blank=True)
+    adjustment = models.FloatField(default=0.0, null=True, blank=True)
+    grand_total = models.FloatField(default=0.0, null=True, blank=True)
+    advance = models.FloatField(default=0.0, null=True, blank=True)
+    balance = models.FloatField(default=0.0, null=True, blank=True)
     status = models.CharField(max_length=50,null=True)
      #---invoice reccurring invoice
     
@@ -854,10 +1003,10 @@ class Delivery_challan_item(models.Model):
     item=models.ForeignKey(Items, on_delete=models.CASCADE,null=True,blank=True)
     hsn = models.CharField(max_length=200,null=True)
     quantity = models.IntegerField(null=True)
-    price=  models.IntegerField(null=True)
-    tax_rate= models.IntegerField(null=True)
-    discount= models.IntegerField(null=True)
-    total =  models.DecimalField(max_digits=10, decimal_places=2,default=0.00)
+    price=  models.FloatField(default=0.0, null=True, blank=True)
+    tax_rate= models.FloatField(default=0.0, null=True, blank=True)
+    discount= models.FloatField(default=0.0, null=True, blank=True)
+    total =  models.FloatField(default=0.0, null=True, blank=True)
 
 
 

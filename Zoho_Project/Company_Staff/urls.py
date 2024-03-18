@@ -317,6 +317,9 @@ urlpatterns = [
     #------------meenu shaju-delivery challan-------
     path('challan_list/',views.challan_list,name='challan_list'),
     path('delivery_challan',views.delivery_challan,name='delivery_challan'),
+    path('get_customer_data/<int:customer_id>/',views.get_customer_data, name='get_customer_data'),
+    path('get_item_data/<int:item_id>/',views.get_item_data, name='get_item_data'),
+    
 
     #End
     

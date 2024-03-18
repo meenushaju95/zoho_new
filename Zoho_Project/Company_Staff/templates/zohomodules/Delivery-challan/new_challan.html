@@ -10,7 +10,7 @@
     flex-wrap: wrap;
   }
   
-  /* Column styles */
+  
   .column {
     width: 48%; /* Adjust as needed */
     margin-bottom: 20px;
@@ -33,6 +33,9 @@
     font-size: 16px;
     background-color: #000;
   }
+  select{
+    color: white;
+  }
   textarea{
     width: 100%;
     padding: 10px;
@@ -52,22 +55,7 @@
   /* Additional styling for select dropdown arrow */
   
    
-  .btn-add {
-    border: 2px solid orange;
-    border-radius: 10px;
-    background-color: orange;
-    color: white;
-    width: 80px;
-    display: block;
-    margin: 0 auto;
-    text-align: center;
-    transition: background-color 0.3s ease; /* Add smooth transition effect */
-}
-
-.btn-add:hover {
-    background-color: orange;
-    color: white; /* Add this line to ensure text is visible on hover */
-}
+  
 table {
     border-collapse: collapse;
     width: 100%;
@@ -83,25 +71,7 @@ table {
   th {
    color: white;
   }
-  .row-elements {
-  display: flex;
-  align-items: center;
-}
-
-.row-elements select,
-.row-elements input[type="text"],
-.row-elements input[type="number"] {
-  flex: 1;
-  margin-right: 5px; /* Adjust margin as needed */
-}
-
-.row-elements .add-item-button,
-.row-elements .remove-button {
-  padding: 4px 8px;
-  border: 1px solid orange;
-  border-radius: 5px;
-  cursor: pointer;
-}
+  
 #itemTable th:nth-child(1),
   #itemTable td:nth-child(1) {
     width: 30px; /* Decrease width of Index column */
@@ -180,11 +150,15 @@ table {
             <div class="container">
               <!-- Left Column -->
               <div class="column">
-                <form>
+               
                   <label for="customerName">Customer Name*</label>
                   <select id="customerName" name="customerName">
-                    <!-- Options will be populated dynamically using JavaScript -->
+                    <option value="value" selected></option>
+                   {% for customer in customer %}
+                   <option value="{{customer.id}}">{{customer.first_name}} {{customer.last_name}}</option>
+                   {% endfor%}
                   </select>
+                 
                   <button  onclick="addNewCustomer()" style="border: 1px solid orange;border-radius: 5px;width: 50px;height: 40px;">+</button><br>
             
                   <label for="customerEmail">Customer Email ID</label>
@@ -195,22 +169,39 @@ table {
                  
             
                   <label for="gstTreatment">GST Treatment</label>
-                  <input type="text" id="gstTreatment" name="gstTreatment" >
+                  <input type="text" id="gstTreatment" name="gstTreatment" readonly >
             
-                  <label for="gstNumber">GST Number</label>
-                  <input type="text" id="gstNumber" name="gstNumber" >
-                </form>
+                  <label id="gstNumberLabel"  for="gstNumber" >GST Number</label>
+                  <input type="text" id="gstNumber" name="gstNumber" readonly >
+               
               </div>
             
               <!-- Right Column -->
               <div class="column">
-                <form>
+                
                   <label for="placeOfSupply">Place of Supply</label>
                   <select id="placeOfSupply" name="placeOfSupply">
-                    <!-- Options will be populated dynamically using JavaScript -->
+                    <option value="value" selected></option>
+                    <option value="[AN]-Andaman And Nicobar Islands">[AN]-Andaman And Nicobar Islands</option> <option value="[AD]-Andhra Pradesh">[AD]-Andhra Pradesh</option>
+                    <option value="[AR]-Arunachal Pradesh">[AR]-Arunachal Pradesh	</option> <option value="volvo">[AS]-Assam</option>
+                    <option value="[BR]-Bihar">[BR]-Bihar</option> <option value="volvo">[CH]-	Chandhigarh</option><option value="[CG]-Chattisgarh">[CG]-Chattisgarh</option>
+                    <option value="[DD]-Daman Diu">[DD]-Daman Diu</option><option value="volvo">[DL]-	Delhi</option><option value="[GA]-Goa">[GA]-Goa</option> <option value="[GJ]-Gujarat">[GJ]-Gujarat</option>
+                    <option value="[HR]-Haryana">[HR]-Haryana</option> <option value="[HP]-Himachal Pradesh">[HP]-Himachal Pradesh</option>
+                    <option value="[JK]-Jammu And Kashmir">[JK]-Jammu And Kashmir</option><option value="[JH]-Jharkand">[JH]-Jharkand</option>
+                    <option value="[KA]-Karnataka">[KA]-Karnataka</option><option value="[KL]-Kerala">[KL]-Kerala</option>
+                    <option value="[LA]-Ladakh">[LA]-Ladakh</option><option value="[LD]-Lakshadweep">[LD]-Lakshadweep</option>
+                    <option value="[MP]-Madhyapradesh">[MP]-Madhyapradesh</option><option value="[MH]-Maharashtra">[MH]-Maharashtra</option>
+                    <option value="[MN]-Manipur">[MN]-Manipur</option>  <option value="[ML]-Meghalaya">[ML]-Meghalaya</option>
+                  <option value="[MZ]-Mizoram">[MZ]-Mizoram</option> <option value="[NL]-Nagaland">[NL]-Nagaland</option> <option value="[NL]-Nagaland">[NL]-Nagaland</option>
+                   <option value="[OD]-Odisha">[OD]-Odisha</option><option value="[PY]-Puducherry">[PY]-Puducherry</option>
+                    <option value="[PB]-Punjab">[PB]-Punjab.</option><option value="[RL]-Rajasthan">[RL]-Rajasthan</option>
+                    <option value="[SK]-Sikkim">[SK]-Sikkim</option><option value="[TN]-Tamilnadu">[TN]-Tamilnadu</option>
+                    <option value="[TS]-Telenghana">[TS]-Telenghana</option><option value="[TR]-Tripura">[TR]-Tripura</option><option value="[UP]-Uttar Pradesh">[UP]-Uttar Pradesh</option>
+                    <option value="[UK]-Utharakhand">[UK]-Utharakhand</option><option value="[WB]-West Bengal">[WB]-West Bengal</option>
+                    <option value="[OT]-Other Territory">[OT]-Other Territory</option>
                   </select>
             
-                  <label for="deliveryChallan">Delivery Challan</label>
+                  <label for="deliveryChallan">Delivery Challan No</label>
                   <input type="text" id="deliveryChallan" name="deliveryChallan" oninput="updateChallanPattern()">
             
                   <label for="referenceNumber">Reference Number</label>
@@ -253,19 +244,22 @@ table {
                 <td>1</td>
                 <td>
                     <div style="display: flex; align-items: center;">
-                        <select name="item" style="flex: 1; width: 250%;">
-                            <!-- Options will be populated dynamically using JavaScript -->
+                        <select name="item" id="item" style="flex: 1; width: 250%;color: white;">
+                          <option value="value" selected></option>
+                            {% for i in item %}
+                            <option value="{{i.id}}" style="color: white;" >{{i.item_name}}</option>
+                            {% endfor %}
                         </select>
                         <button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;">+</button>
                     </div>
                 </td>
-                <td><input type="text" name="hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
-                <td><input type="number" name="quantity" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
-                <td><input type="number" name="rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
-                <td><input type="number" name="discount" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
+                <td><input type="text" id="hsn" name="hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
+                <td><input type="number" id="quantity" name="quantity" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label id="availableStock" style="color: orange;"></label></td>
+                <td><input type="number" id="rate" name="rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
+                <td><input type="number" name="discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td>
-                    <select name="tax" style="width: 100%;">
-                        <!-- Adjust width as needed -->
+                    <select id="tax" name="tax" style="width: 100%;">
+                       
                         <option value="0">0% GST</option>
                         <option value="3">3% GST</option>
                         <option value="5">5% GST</option>
@@ -300,7 +294,7 @@ table {
 
   <!-- Right Column -->
   <div class="column ">
-      <h4 style="color: white;">Order Summary</h4>
+      
 
       <label for="subtotal">Sub Total:</label><br>
       <input type="text" id="subtotal" name="subtotal" readonly><br>
@@ -331,13 +325,139 @@ table {
 <div class="button-container">
   <button class="draft-button">Draft</button>
   <button class="sent-button">Sent</button>
+</form>
   <button class="cancel-button">Cancel</button>
 </div>
 
-          </form>
 
 
+<script>
+ document.getElementById('customerName').addEventListener('change', function() {
+    var customerId = this.value;
+    console.log('Selected Customer ID:', customerId);
+    if (customerId) {
+        fetchCustomerData(customerId);
+    } else {
+        clearCustomerInfo();
+    }
+});
+  function fetchCustomerData(customerId) {
+      $.ajax({
+          url: '/get_customer_data/' + customerId + '/',
+          type: 'GET',
+          success: function(data) {
+              document.getElementById('customerEmail').value = data.email;
+              document.getElementById('billingAddress').value = data.billing_address;
+              document.getElementById('gstTreatment').value = data.gsttype;
+              document.getElementById('placeOfSupply').value = data.place;
+              var gstNumberLabel = document.getElementById('gstNumberLabel');
+              if (data.gsttype === 'Unregistered Business-not Registered under GST') {
+                  document.getElementById('gstNumber').style.display = 'none';
+                  gstNumberLabel.style.display = 'none'; 
+              } else {
+                  document.getElementById('gstNumber').value = data.gstnumber;
+                  document.getElementById('gstNumber').style.display = 'block';
+                  gstNumberLabel.style.display = 'block'; 
+              }
+          },
+          error: function(xhr, status, error) {
+              console.error('Error fetching customer data:', error);
+          }
+      });
+  }
   
+  function clearCustomerInfo() {
+      
+      document.getElementById('customerEmail').value = '';
+      document.getElementById('billingAddress').value = '';
+      
+  }
+  </script>
+
+<script>
+  document.getElementById('item').addEventListener('change', function() {
+     var itemId = this.value;
+    
+     if (itemId) {
+         fetchitemData(itemId);
+     } else {
+         clearitemInfo();
+     }
+ });
+
+ document.getElementById('quantity').addEventListener('input', function() {
+        var quantity = this.value;
+        var itemId = document.getElementById('item').value;
+
+        if (quantity && itemId) {
+            fetchStock(itemId, quantity);
+        } else {
+            clearStock();
+        }
+    });
+    document.getElementById('quantity').addEventListener('input', function() {
+    var quantity = parseFloat(this.value);
+    var itemId = document.getElementById('item').value;
+
+    if (quantity >= 0 && itemId) {
+        fetchitemData(itemId);
+    } else {
+        clearitemInfo();
+    }
+});
+ function fetchitemData(itemId) {
+    $.ajax({
+        url: '/get_item_data/' + itemId + '/',
+        type: 'GET',
+        success: function(data) {
+            console.log('Received item data:', data);
+            document.getElementById('hsn').value = data.hsn;
+            document.getElementById('rate').value = data.rate;
+            
+            var placeOfSupply = document.getElementById('placeOfSupply').value;
+            var taxType = 'GST'; 
+
+            if (placeOfSupply !== data.company_state) {
+                taxType = 'IGST';
+            }
+
+            var taxRate = (taxType === 'GST') ? data.intratax : data.intertax;
+            document.getElementById('tax').value = taxRate;
+            updateAvailableStock(data.stock);
+
+
+            
+        
+        },
+        
+       
+
+
+        
+    });
+}
+function updateAvailableStock(stock) {
+    var quantity = parseFloat(document.getElementById('quantity').value);
+    var availableStock = stock - quantity;
+    document.getElementById('availableStock').innerText = 'Available Stock: ' + availableStock;
+}
+
+       
+
+    function clearitemInfo() {
+        document.getElementById('hsn').value = '';
+        document.getElementById('rate').value = '';
+        document.getElementById('tax').value = '';
+    }
+
+    function clearStock() {
+        var stockLabel = document.getElementById('availableStock');
+        stockLabel.textContent = ''; 
+    }
+   </script>
+
+
+
   <script>
     function addRow() {
       var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
@@ -353,7 +473,11 @@ table {
       var amount = newRow.insertCell(7);
       var action = newRow.insertCell(8);
       row.innerHTML = index;
-      item.innerHTML = '<div style="display: flex; align-items: center;"><select name="item" style="flex: 1; width: 200%;"></select><button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;">+</button></div>';
+      
+      
+
+
+      item.innerHTML = '<div style="display: flex; align-items: center;"><select name="item" style="flex: 1; width: 200%;color: white;"></select><button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;">+</button></div>';
       hsn.innerHTML = '<input type="text" name="hsn" style="width: 100%;">';
       quantity.innerHTML = '<input type="number" name="quantity" style="width: 100%;">';
       rate.innerHTML = '<input type="number" name="rate" style="width: 100%;">';
@@ -368,6 +492,29 @@ table {
       row.parentNode.removeChild(row);
     }
   </script>
+
+
+
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0'); 
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    
+    const currentDate = new Date();
+
+    
+    document.getElementById('deliveryChallanDate').value = formatDate(currentDate);
+  });
+</script>
+
   
 </body>
 
