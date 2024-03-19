@@ -244,7 +244,7 @@ table {
                 <td>1</td>
                 <td>
                     <div style="display: flex; align-items: center;">
-                        <select name="item" id="item" style="flex: 1; width: 250%;color: white;">
+                        <select name="item" id="item"  onchange="fetchItemData(this)" style="flex: 1; width: 250%;color: white;">
                           <option value="value" selected></option>
                             {% for i in item %}
                             <option value="{{i.id}}" style="color: white;" >{{i.item_name}}</option>
@@ -254,7 +254,7 @@ table {
                     </div>
                 </td>
                 <td><input type="text" id="hsn" name="hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
-                <td><input type="number" id="quantity" name="quantity" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label id="availableStock" style="color: orange;"></label></td>
+                <td><input type="number" id="quantity" class="quantity" name="quantity" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label id="availableStock" class="availableStock" style="color: orange;"></label></td>
                 <td><input type="number" id="rate" name="rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td><input type="number" name="discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td>
@@ -269,7 +269,7 @@ table {
                     </select>
                 </td>
                 <td><input type="text" name="amount" style="width: 100%;"></td>
-                <td><button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="removeRow(this)">-</button></td>
+                <td><button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" >-</button></td>
             </tr>
         </tbody>
     </table>
@@ -376,36 +376,27 @@ table {
 
 <script>
   document.getElementById('item').addEventListener('change', function() {
-     var itemId = this.value;
-    
-     if (itemId) {
-         fetchitemData(itemId);
-     } else {
-         clearitemInfo();
-     }
- });
+    var itemId = this.value;
 
- document.getElementById('quantity').addEventListener('input', function() {
-        var quantity = this.value;
-        var itemId = document.getElementById('item').value;
+    if (itemId) {
+        fetchitemData(itemId);
+    } else {
+        clearitemInfo();
+    }
+});
 
-        if (quantity && itemId) {
-            fetchStock(itemId, quantity);
-        } else {
-            clearStock();
-        }
-    });
-    document.getElementById('quantity').addEventListener('input', function() {
+document.getElementById('quantity').addEventListener('input', function() {
     var quantity = parseFloat(this.value);
     var itemId = document.getElementById('item').value;
 
     if (quantity >= 0 && itemId) {
         fetchitemData(itemId);
     } else {
-        clearitemInfo();
+        clearStock();
     }
 });
- function fetchitemData(itemId) {
+
+function fetchitemData(itemId) {
     $.ajax({
         url: '/get_item_data/' + itemId + '/',
         type: 'GET',
@@ -413,7 +404,7 @@ table {
             console.log('Received item data:', data);
             document.getElementById('hsn').value = data.hsn;
             document.getElementById('rate').value = data.rate;
-            
+
             var placeOfSupply = document.getElementById('placeOfSupply').value;
             var taxType = 'GST'; 
 
@@ -424,42 +415,30 @@ table {
             var taxRate = (taxType === 'GST') ? data.intratax : data.intertax;
             document.getElementById('tax').value = taxRate;
             updateAvailableStock(data.stock);
-
-
-            
-        
         },
-        
-       
-
-
-        
     });
 }
+
 function updateAvailableStock(stock) {
     var quantity = parseFloat(document.getElementById('quantity').value);
     var availableStock = stock - quantity;
     document.getElementById('availableStock').innerText = 'Available Stock: ' + availableStock;
 }
 
-       
+function clearitemInfo() {
+    document.getElementById('hsn').value = '';
+    document.getElementById('rate').value = '';
+    document.getElementById('tax').value = '';
+}
 
-    function clearitemInfo() {
-        document.getElementById('hsn').value = '';
-        document.getElementById('rate').value = '';
-        document.getElementById('tax').value = '';
-    }
-
-    function clearStock() {
-        var stockLabel = document.getElementById('availableStock');
-        stockLabel.textContent = ''; 
-    }
+function clearStock() {
+    var stockLabel = document.getElementById('availableStock');
+    stockLabel.textContent = ''; 
+}
    </script>
 
-
-
-  <script>
-    function addRow() {
+<script>
+  function addRow() {
       var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
       var newRow = table.insertRow(table.rows.length);
       var index = table.rows.length;
@@ -473,30 +452,141 @@ function updateAvailableStock(stock) {
       var amount = newRow.insertCell(7);
       var action = newRow.insertCell(8);
       row.innerHTML = index;
-      
-      
 
-
-      item.innerHTML = '<div style="display: flex; align-items: center;"><select name="item" style="flex: 1; width: 200%;color: white;"></select><button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;">+</button></div>';
-      hsn.innerHTML = '<input type="text" name="hsn" style="width: 100%;">';
-      quantity.innerHTML = '<input type="number" name="quantity" style="width: 100%;">';
-      rate.innerHTML = '<input type="number" name="rate" style="width: 100%;">';
-      discount.innerHTML = '<input type="number" name="discount" style="width: 100%;">';
-      tax.innerHTML = '<select name="tax" style="width: 100%;"><option value="0">0% GST</option><option value="3">3% GST</option><option value="5">5% GST</option><option value="12">12% GST</option><option value="18">18% GST</option><option value="28">28% GST</option></select>';
-      amount.innerHTML = '<input type="text" name="amount" style="width: 100%;">';
+      item.innerHTML = `
+          <div style="display: flex; align-items: center;">
+              <select name="item" id="item${index}" class="item-select" onchange="fetchItemData(this)" style="flex: 1; width: 250%;color: white;">
+                  <option value="" selected></option>
+                  {% for i in item %}
+                  <option value="{{i.id}}" style="color: white;">{{i.item_name}}</option>
+                  {% endfor %}
+              </select>
+              <button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="addRow()">+</button>
+          </div>
+      `;
+      hsn.innerHTML = '<input type="text" name="hsn" class="item-hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+      quantity.innerHTML = '<input type="number" class="item-quantity" name="quantity" value="0" class="item-quantity" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label class="availableStock" style="color: orange;"></label>';
+      rate.innerHTML = '<input type="number" name="rate" class="item-rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+      discount.innerHTML = '<input type="number" name="discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+      tax.innerHTML = `
+          <select name="tax" class="item-tax" style="width: 100%;">
+              <option value="0">0% GST</option>
+              <option value="3">3% GST</option>
+              <option value="5">5% GST</option>
+              <option value="12">12% GST</option>
+              <option value="18">18% GST</option>
+              <option value="28">28% GST</option>
+          </select>
+      `;
+      amount.innerHTML = '<input type="text" name="amount" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
       action.innerHTML = '<button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="removeRow(this)">-</button>';
-    }
+  }
   
-    function removeRow(button) {
-      var row = button.parentNode.parentNode;
-      row.parentNode.removeChild(row);
+  function removeRow(button) {
+    var row = button.closest('tr');
+    var table = row.closest('table');
+    if (table.rows.length > 2) {
+        row.remove();
+    } else {
+        clearRowContent(row);
     }
-  </script>
+  }
+
+  function clearRowContent(row) {
+    var cells = row.cells;
+    for (var i = 0; i < cells.length; i++) {
+        cells[i].innerHTML = '';
+    }
+  }
+</script>
+
+<script>
+  $(document).ready(function () {
+    // Function to fetch item data
+    function fetchItemData(element) {
+      var itemId = element.value;
+      var row = element.closest('tr');
+
+      if (itemId) {
+        $.ajax({
+          url: '/get_item_data/' + itemId + '/',
+          type: 'GET',
+          success: function (data) {
+            console.log('Received item data:', data);
+            row.querySelector('.item-hsn').value = data.hsn;
+            row.querySelector('.item-rate').value = data.rate;
+            row.querySelector('.item-tax').value = calculateTax(data);
+
+            updateAvailableStock(row, data.stock);
+          },
+          error: function (error) {
+            console.error('Error fetching item data:', error);
+          }
+        });
+      } else {
+        clearItemInfo(row);
+        clearStock(row);
+      }
+    }
+
+    // Function to calculate tax based on company state
+    function calculateTax(data) {
+      var placeOfSupply = document.getElementById('placeOfSupply').value;
+      return (placeOfSupply !== data.company_state) ? data.intertax : data.intratax;
+    }
+
+    // Function to update available stock for the row
+    function updateAvailableStock(row, stock) {
+  var quantityInput = row.querySelector('.item-quantity');
+  var quantity = parseFloat(quantityInput.value);
+  var availableStockLabel = row.querySelector('.availableStock');
+
+  if (!isNaN(quantity) && quantity >= 0) {
+    var availableStock = Math.max(stock - quantity, 0); // Ensure available stock doesn't go below 0
+    availableStockLabel.innerText = 'Available Stock: ' + availableStock;
+    availableStockLabel.style.color = 'orange';
+  } else {
+    availableStockLabel.innerText = 'Available Stock: ' + stock;
+    availableStockLabel.style.color = 'orange';
+  }
+}
 
 
 
+    // Function to clear item info fields for the row
+    function clearItemInfo(row) {
+      row.querySelector('.item-hsn').value = '';
+      row.querySelector('.item-rate').value = '';
+      row.querySelector('.item-tax').value = '';
+    }
 
+    // Function to clear stock info field for the row
+    function clearStock(row) {
+      row.querySelector('.availableStock').textContent = '';
+    }
 
+    function removeRow(button) {
+    var row = button.closest('tr');
+    var table = row.closest('table');
+    if (table.rows.length > 2) {
+        row.remove();
+    } else {
+        clearRowContent(row);
+    }
+}
+
+    // Add event listener for item select change
+    $("#itemTable").on("change", ".item-select", function () {
+      fetchItemData(this);
+    });
+
+    
+    $("#itemTable").on("input", ".item-quantity", function () {
+      var row = this.closest('tr');
+      fetchItemData(row.querySelector('.item-select'));
+    });
+  });
+</script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     
