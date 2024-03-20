@@ -2,6 +2,8 @@
 {% block content %}
 {% load static %}
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
 
 <style>
   .container {
@@ -256,7 +258,7 @@ table {
                 <td><input type="text" id="hsn" name="hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td><input type="number" id="quantity" class="quantity" name="quantity" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label id="availableStock" class="availableStock" style="color: orange;"></label></td>
                 <td><input type="number" id="rate" name="rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
-                <td><input type="number" name="discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
+                <td><input type="number" id="discount" name="discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td>
                     <select id="tax" name="tax" style="width: 100%;">
                        
@@ -268,8 +270,11 @@ table {
                         <option value="28">28% GST</option>
                     </select>
                 </td>
-                <td><input type="text" name="amount" style="width: 100%;"></td>
-                <td><button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" >-</button></td>
+                <td><input type="text" id="amount" name="amount" style="width: 100%;"></td>
+                <td>
+                  <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="removeRow(this)">-</button>
+                  <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="cloneRow(this)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+              </td>
             </tr>
         </tbody>
     </table>
@@ -376,27 +381,27 @@ table {
 
 <script>
   document.getElementById('item').addEventListener('change', function() {
-    var itemId = this.value;
-
-    if (itemId) {
-        fetchitemData(itemId);
-    } else {
-        clearitemInfo();
-    }
-});
-
-document.getElementById('quantity').addEventListener('input', function() {
-    var quantity = parseFloat(this.value);
-    var itemId = document.getElementById('item').value;
-
-    if (quantity >= 0 && itemId) {
-        fetchitemData(itemId);
-    } else {
-        clearStock();
-    }
-});
-
-function fetchitemData(itemId) {
+      var itemId = this.value;
+  
+      if (itemId) {
+          fetchitemData(itemId);
+      } else {
+          clearitemInfo();
+      }
+  });
+  
+  document.getElementById('quantity').addEventListener('input', function() {
+      var quantity = parseFloat(this.value);
+      var itemId = document.getElementById('item').value;
+  
+      if (quantity >= 0 && itemId) {
+          fetchitemData(itemId);
+      } else {
+          clearStock();
+      }
+  });
+  
+  function fetchitemData(itemId) {
     $.ajax({
         url: '/get_item_data/' + itemId + '/',
         type: 'GET',
@@ -414,73 +419,97 @@ function fetchitemData(itemId) {
 
             var taxRate = (taxType === 'GST') ? data.intratax : data.intertax;
             document.getElementById('tax').value = taxRate;
-            updateAvailableStock(data.stock);
+            updateAvailableStock(data.stock, data); // Pass data object to updateAvailableStock
         },
     });
 }
 
-function updateAvailableStock(stock) {
+function updateAvailableStock(stock, data) { // Accept data as a parameter
     var quantity = parseFloat(document.getElementById('quantity').value);
     var availableStock = stock - quantity;
     document.getElementById('availableStock').innerText = 'Available Stock: ' + availableStock;
+    
+    var rate = parseFloat(data.rate);
+    var discount = parseFloat(document.getElementById('discount').value);
+    var amount = (quantity * rate) - discount;
+    document.getElementById('amount').value = amount.toFixed(2);
 }
-
-function clearitemInfo() {
-    document.getElementById('hsn').value = '';
-    document.getElementById('rate').value = '';
-    document.getElementById('tax').value = '';
-}
-
-function clearStock() {
-    var stockLabel = document.getElementById('availableStock');
-    stockLabel.textContent = ''; 
-}
-   </script>
-
+  function clearitemInfo() {
+      document.getElementById('hsn').value = '';
+      document.getElementById('rate').value = '';
+      document.getElementById('tax').value = '';
+  }
+  
+  function clearStock() {
+      var stockLabel = document.getElementById('availableStock');
+      stockLabel.textContent = ''; 
+  }
+</script>
 <script>
   function addRow() {
-      var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
-      var newRow = table.insertRow(table.rows.length);
-      var index = table.rows.length;
-      var row = newRow.insertCell(0);
-      var item = newRow.insertCell(1);
-      var hsn = newRow.insertCell(2);
-      var quantity = newRow.insertCell(3);
-      var rate = newRow.insertCell(4);
-      var discount = newRow.insertCell(5);
-      var tax = newRow.insertCell(6);
-      var amount = newRow.insertCell(7);
-      var action = newRow.insertCell(8);
-      row.innerHTML = index;
+    var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
+    var newRow = table.insertRow(table.rows.length);
+    var index = table.rows.length;
+    var row = newRow.insertCell(0);
+    var item = newRow.insertCell(1);
+    var hsn = newRow.insertCell(2);
+    var quantity = newRow.insertCell(3);
+    var rate = newRow.insertCell(4);
+    var discount = newRow.insertCell(5);
+    var tax = newRow.insertCell(6);
+    var amount = newRow.insertCell(7);
+    var action = newRow.insertCell(8);
+    row.innerHTML = index;
 
-      item.innerHTML = `
-          <div style="display: flex; align-items: center;">
-              <select name="item" id="item${index}" class="item-select" onchange="fetchItemData(this)" style="flex: 1; width: 250%;color: white;">
-                  <option value="" selected></option>
-                  {% for i in item %}
-                  <option value="{{i.id}}" style="color: white;">{{i.item_name}}</option>
-                  {% endfor %}
-              </select>
-              <button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="addRow()">+</button>
-          </div>
-      `;
-      hsn.innerHTML = '<input type="text" name="hsn" class="item-hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
-      quantity.innerHTML = '<input type="number" class="item-quantity" name="quantity" value="0" class="item-quantity" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label class="availableStock" style="color: orange;"></label>';
-      rate.innerHTML = '<input type="number" name="rate" class="item-rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
-      discount.innerHTML = '<input type="number" name="discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
-      tax.innerHTML = `
-          <select name="tax" class="item-tax" style="width: 100%;">
-              <option value="0">0% GST</option>
-              <option value="3">3% GST</option>
-              <option value="5">5% GST</option>
-              <option value="12">12% GST</option>
-              <option value="18">18% GST</option>
-              <option value="28">28% GST</option>
-          </select>
-      `;
-      amount.innerHTML = '<input type="text" name="amount" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
-      action.innerHTML = '<button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="removeRow(this)">-</button>';
-  }
+    item.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <select name="item" id="item${index}" class="item-select" onchange="fetchItemData(this)" style="flex: 1; width: 250%;color: white;">
+                <option value="" selected></option>
+                {% for i in item %}
+                <option value="{{i.id}}" style="color: white;">{{i.item_name}}</option>
+                {% endfor %}
+            </select>
+            <button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="addRow()">+</button>
+        </div>
+    `;
+    hsn.innerHTML = '<input type="text" name="hsn" class="item-hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+    quantity.innerHTML = '<input type="number" class="item-quantity" name="quantity" value="0" class="item-quantity" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label class="availableStock" style="color: orange;"></label>';
+    rate.innerHTML = '<input type="number" name="rate" class="item-rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+    discount.innerHTML = '<input type="number" name="discount" class="item-discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+    tax.innerHTML = `
+        <select name="tax" class="item-tax" style="width: 100%;">
+            <option value="0">0% GST</option>
+            <option value="3">3% GST</option>
+            <option value="5">5% GST</option>
+            <option value="12">12% GST</option>
+            <option value="18">18% GST</option>
+            <option value="28">28% GST</option>
+        </select>
+    `;
+    amount.innerHTML = '<input type="text" name="amount" class="item-amount" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+    action.innerHTML = `
+        <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="removeRow(this)">-</button>
+        <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="cloneRow(this)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+    `;
+
+    // Add event listeners for quantity and discount inputs in the new row
+    newRow.querySelector('.item-quantity').addEventListener('input', calculateAmount);
+    newRow.querySelector('.item-discount').addEventListener('input', calculateAmount);
+}
+
+function calculateAmount() {
+    var row = this.closest('tr');
+    var quantity = parseFloat(row.querySelector('.item-quantity').value);
+    var rate = parseFloat(row.querySelector('.item-rate').value);
+    var discount = parseFloat(row.querySelector('.item-discount').value);
+
+    // Calculate the amount
+    var amount = (quantity * rate) - discount;
+
+    // Update the amount field in the same row
+    var amountField = row.querySelector('.item-amount');
+    amountField.value = isNaN(amount) || !isFinite(amount) ? '' : amount.toFixed(2);
+}
   
   function removeRow(button) {
     var row = button.closest('tr');
@@ -587,6 +616,29 @@ function clearStock() {
     });
   });
 </script>
+
+
+
+<script>
+  document.getElementById('quantity').addEventListener('input', function() {
+    updateAmount();
+});
+
+document.getElementById('discount').addEventListener('input', function() {
+    updateAmount();
+});
+
+function updateAmount() {
+    var quantity = parseFloat(document.getElementById('quantity').value);
+    var rate = parseFloat(document.getElementById('rate').value);
+    var discount = parseFloat(document.getElementById('discount').value);
+
+    var amount = (quantity * rate) - discount;
+    document.getElementById('amount').value = amount.toFixed(2);
+}
+</script>
+
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     
