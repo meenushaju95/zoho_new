@@ -13102,14 +13102,23 @@ def delivery_challan(request):
         else:    
             dash_details = CompanyDetails.objects.get(login_details=log_details)
             comp_details=CompanyDetails.objects.get(login_details=log_details)
+
             
+        allmodules= ZohoModules.objects.get(company=comp_details,status='New')
         allmodules= ZohoModules.objects.get(company=comp_details,status='New')
         customer=Customer.objects.filter(company=comp_details,customer_status='Active')
         item=Items.objects.filter(company=comp_details,activation_tag='Active')
-        context={'allmodules':allmodules,'customer':customer,'item':item}
-    
-           
-        return render(request,'zohomodules/Delivery-challan/new_challan.html',context)
+        
+        
+        comp_payment_terms=Company_Payment_Term.objects.filter(company=comp_details)
+        price_lists=PriceList.objects.filter(company=comp_details,type='Sales',status='Active')
+
+       
+        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item}) 
+     else:
+        return redirect('/')  
+
+       
      
 
 
@@ -13149,4 +13158,245 @@ def get_item_data(request, item_id):
     except item.DoesNotExist:
         return JsonResponse({'error': 'Customer not found'}, status=404)
         
+def challan_add_customer(request):
+   
+    if 'login_id' in request.session:
+        if request.session.has_key('login_id'):
+            log_id = request.session['login_id']
+           
+        else:
+            return redirect('/')
+    
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type=='Staff':
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+            comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
+
+        else:    
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+            comp_details=CompanyDetails.objects.get(login_details=log_details)
+
+            
+        allmodules= ZohoModules.objects.get(company=comp_details,status='New')
+
+        
+
+       
+        if request.method=="POST":
+            customer_dat=Customer()
+            customer_dat.login_details=log_details
+            customer_dat.company=comp_details
+            customer_dat.customer_type = request.POST.get('type')
+
+            customer_dat.title = request.POST.get('salutation')
+            customer_dat.first_name=request.POST['first_name']
+            customer_dat.last_name=request.POST['last_name']
+            customer_dat.company_name=request.POST['company_name']
+            customer_dat.customer_display_name=request.POST['v_display_name']
+            customer_dat.customer_email=request.POST['vendor_email']
+            customer_dat.customer_phone=request.POST['w_phone']
+            customer_dat.customer_mobile=request.POST['m_phone']
+            customer_dat.skype=request.POST['skype_number']
+            customer_dat.designation=request.POST['designation']
+            customer_dat.department=request.POST['department']
+            customer_dat.website=request.POST['website']
+            customer_dat.GST_treatement=request.POST['gst']
+            customer_dat.customer_status="Active"
+            customer_dat.remarks=request.POST['remark']
+            customer_dat.current_balance=request.POST['opening_bal']
+
+            x=request.POST['gst']
+            if x=="Unregistered Business-not Registered under GST":
+                customer_dat.PAN_number=request.POST['pan_number']
+                customer_dat.GST_number="null"
+            else:
+                customer_dat.GST_number=request.POST['gst_number']
+                customer_dat.PAN_number=request.POST['pan_number']
+
+            customer_dat.place_of_supply=request.POST['source_supply']
+            customer_dat.currency=request.POST['currency']
+            op_type=request.POST.get('op_type')
+            if op_type is not None:
+                customer_dat.opening_balance_type=op_type
+            else:
+                customer_dat.opening_balance_type='Opening Balance not selected'
+    
+            customer_dat.opening_balance=request.POST['opening_bal']
+            customer_dat.company_payment_terms=Company_Payment_Term.objects.get(id=request.POST['payment_terms'])
+            # customer_data.price_list=request.POST['plst']
+            plst=request.POST.get('plst')
+            if plst!=0:
+                 customer_dat.price_list=plst
+            else:
+                customer_dat.price_list='Price list not selected'
+
+
+
+
+            # customer_data.portal_language=request.POST['plang']
+            plang=request.POST.get('plang')
+            if plang!=0:
+                 customer_dat.portal_language=plang
+            else:
+                customer_dat.portal_language='Portal language not selected'
+
+            customer_dat.facebook=request.POST['fbk']
+            customer_dat.twitter=request.POST['twtr']
+            customer_dat.tax_preference=request.POST['tax1']
+
+            type=request.POST.get('type')
+            if type is not None:
+                customer_dat.customer_type=type
+            else:
+                customer_dat.customer_type='Customer type not selected'
+    
+
+
+
+           
+            customer_dat.billing_attention=request.POST['battention']
+            customer_dat.billing_country=request.POST['bcountry']
+            customer_dat.billing_address=request.POST['baddress']
+            customer_dat.billing_city=request.POST['bcity']
+            customer_dat.billing_state=request.POST['bstate']
+            customer_dat.billing_pincode=request.POST['bzip']
+            customer_dat.billing_mobile=request.POST['bphone']
+            customer_dat.billing_fax=request.POST['bfax']
+            customer_dat.shipping_attention=request.POST['sattention']
+            customer_dat.shipping_country=request.POST['s_country']
+            customer_dat.shipping_address=request.POST['saddress']
+            customer_dat.shipping_city=request.POST['scity']
+            customer_dat.shipping_state=request.POST['sstate']
+            customer_dat.shipping_pincode=request.POST['szip']
+            customer_dat.shipping_mobile=request.POST['sphone']
+            customer_dat.shipping_fax=request.POST['sfax']
+            customer_dat.save()
+           # ................ Adding to History table...........................
+            
+            vendor_history_obj=CustomerHistory()
+            vendor_history_obj.company=comp_details
+            vendor_history_obj.login_details=log_details
+            vendor_history_obj.customer=customer_dat
+            vendor_history_obj.date=date.today()
+            vendor_history_obj.action='Completed'
+            vendor_history_obj.save()
+
+    # .......................................................adding to remaks table.....................
+            vdata=Customer.objects.get(id=customer_dat.id)
+            vendor=vdata
+            rdata=Customer_remarks_table()
+            rdata.remarks=request.POST['remark']
+            rdata.company=comp_details
+            rdata.customer=vdata
+            rdata.save()
+
+
+     #...........................adding multiple rows of table to model  ........................................................  
+        
+            title =request.POST.getlist('salutation[]')
+            first_name =request.POST.getlist('first_name[]')
+            last_name =request.POST.getlist('last_name[]')
+            email =request.POST.getlist('email[]')
+            work_phone =request.POST.getlist('wphone[]')
+            mobile =request.POST.getlist('mobile[]')
+            skype_name_number =request.POST.getlist('skype[]')
+            designation =request.POST.getlist('designation[]')
+            department =request.POST.getlist('department[]') 
+            vdata=Customer.objects.get(id=customer_dat.id)
+            vendor=vdata
+           
+            if title != ['Select']:
+                if len(title)==len(first_name)==len(last_name)==len(email)==len(work_phone)==len(mobile)==len(skype_name_number)==len(designation)==len(department):
+                    mapped2=zip(title,first_name,last_name,email,work_phone,mobile,skype_name_number,designation,department)
+                    mapped2=list(mapped2)
+                    print(mapped2)
+                    for ele in mapped2:
+                        created = CustomerContactPersons.objects.get_or_create(title=ele[0],first_name=ele[1],last_name=ele[2],email=ele[3],
+                                work_phone=ele[4],mobile=ele[5],skype=ele[6],designation=ele[7],department=ele[8],company=comp_details,customer=vendor)
+                
+            data = {
+            "message": "success",
+            'customer_id': customer_dat.id
+            
+            }
+            return JsonResponse(data)
+
+        else:
+            return JsonResponse({'error': 'Invalid request'}, status=400) 
+
+
+def customer_dropdown(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        if 'login_id' not in request.session:
+            return redirect('/')
+        log_details = LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            company=CompanyDetails.objects.get(login_details=log_details)
+            options = {}
+            option_objects =Customer.objects.filter(company=company,status='Active')
+            for option in option_objects:
+                full_name = f"{option.first_name} {option.last_name}"
+                options[option.id] = full_name
+
+            return JsonResponse(options)
+            
+        if log_details.user_type=='Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            options = {}
+            option_objects = Customer.objects.filter(company=staff.company,status='Active')
+            for option in option_objects:
+                full_name = f"{option.first_name} {option.last_name}"
+                options[option.id] = full_name
+
+            return JsonResponse(options)
+           
+
+
+            
+               
+       
+    
+
+            
+def invoice_customer_payment_terms_add(request):
+    if 'login_id' in request.session:
+        if request.session.has_key('login_id'):
+            log_id = request.session['login_id']
+           
+        else:
+            return redirect('/')
+    
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type=='Staff':
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+            comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
+
+        else:    
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+            comp_details=CompanyDetails.objects.get(login_details=log_details)
+
+            
+        allmodules= ZohoModules.objects.get(company=comp_details,status='New')
+    
+        if request.method == 'POST':
+            terms = request.POST.get('name')
+            day = request.POST.get('days')
+            normalized_data = terms.replace(" ", "")
+            pay_tm = add_space_before_first_digit(normalized_data)
+            ptr = Company_Payment_Term(term_name=pay_tm, days=day, company=dash_details)
+            ptr.save()
+            payterms_obj = Company_Payment_Term.objects.filter(company=comp_details).values('id', 'term_name')
+
+
+            payment_list = [{'id': pay_terms['id'], 'name': pay_terms['term_name']} for pay_terms in payterms_obj]
+            response_data = {
+            "message": "success",
+            'payment_list':payment_list,
+            }
+            return JsonResponse(response_data)
+
+        else:
+            return JsonResponse({'error': 'Invalid request'}, status=400)   
+            
 
