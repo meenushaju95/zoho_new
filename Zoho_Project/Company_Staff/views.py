@@ -1029,7 +1029,7 @@ def account_dropdown(request):
 
     
     
-def itemsoverview(request,pk):                                                                
+def itemsoverview(request,pk):                                                                 
     if 'login_id' in request.session:
         login_id = request.session['login_id']
         if 'login_id' not in request.session:
@@ -13359,7 +13359,7 @@ def customer_dropdown(request):
     
 
             
-def invoice_customer_payment_terms_add(request):
+def challan_customer_payment_terms_add(request):
     if 'login_id' in request.session:
         if request.session.has_key('login_id'):
             log_id = request.session['login_id']
@@ -13399,4 +13399,349 @@ def invoice_customer_payment_terms_add(request):
         else:
             return JsonResponse({'error': 'Invalid request'}, status=400)   
             
+
+
+
+def challan_create_item(request):                                                                #new by tinto mt
+    
+    login_id = request.session['login_id']
+    if 'login_id' not in request.session:
+        return redirect('/')
+    log_user = LoginDetails.objects.get(id=login_id)
+    if log_user.user_type == 'Company':
+        company_id = request.session['login_id']
+        
+        if request.method=='POST':
+            a=Items()
+            b=Item_Transaction_History()
+            c = CompanyDetails.objects.get(login_details=company_id)
+            b.company=c
+            b.Date=date.today()
+            b.logindetails=log_user
+            a.login_details=log_user
+            a.company=c
+            a.item_type = request.POST.get("type",None)
+            a.item_name = request.POST.get("name",None)
+            unit_id = request.POST.get("unit")
+            uid=Unit.objects.get(id=unit_id)
+            # unit_instance = get_object_or_404(Unit, id=unit_id)
+            a.unit = uid
+            a.hsn_code = request.POST.get("hsn",None)
+            a.tax_reference = request.POST.get("radio",None)
+            a.intrastate_tax = request.POST.get("intra",None)
+            a.interstate_tax= request.POST.get("inter",None)
+            a.selling_price = request.POST.get("sel_price",None)
+            a.sales_account = request.POST.get("sel_acc",None)
+            a.sales_description = request.POST.get("sel_desc",None)
+            a.purchase_price = request.POST.get("cost_price",None)
+            a.purchase_account = request.POST.get("cost_acc",None)
+            a.purchase_description = request.POST.get("pur_desc",None)
+            # track = request.POST.get("trackState",None)
+            track_state_value = request.POST.get("trackstate", None)
+
+# Check if the checkbox is checked
+            if track_state_value == "on":
+                a.track_inventory = 1
+            else:
+                a.track_inventory = 0
+
+            
+            minstock=request.POST.get("minimum_stock",None)
+            if minstock != "":
+                a.minimum_stock_to_maintain = request.POST.get("minimum_stock",None)
+            else:
+                a.minimum_stock_to_maintain = 0
+            a.activation_tag = 'Active'
+            a.type = 'Opening Stock'
+            a.inventory_account = request.POST.get("invacc",None)
+            a.opening_stock = request.POST.get("openstock",None)
+            a.current_stock=request.POST.get("openstock",None)
+            a.opening_stock_per_unit = request.POST.get("rate",None)
+            item_name= request.POST.get("name",None)
+            hsncode=request.POST.get("hsn",None)
+            
+            if Items.objects.filter(item_name=item_name, company=c).exists():
+                error='yes'
+                messages.error(request,'Item with same name exsits !!!')
+                return redirect('new_items')
+            elif Items.objects.filter(hsn_code=hsncode, company=c).exists():
+                error='yes'
+                messages.error(request,'Item with same  hsn code exsits !!!')
+                return redirect('new_items')
+            else:
+                a.save()    
+                t=Items.objects.get(id=a.id)
+                b.items=t
+                b.save()
+                return JsonResponse({'success': True, 'message': 'Item saved successfully'})
+            return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
+    elif log_user.user_type == 'Staff':
+        staff_id = request.session['login_id']
+        if request.method=='POST':
+            a=Items()
+            b=Item_Transaction_History()
+            staff = LoginDetails.objects.get(id=staff_id)
+            sf = StaffDetails.objects.get(login_details=staff)
+            c=sf.company
+            b.Date=date.today()
+            b.company=c
+            b.logindetails=log_user
+            a.login_details=log_user
+            a.company=c
+            a.item_type = request.POST.get("type",None)
+            a.item_name = request.POST.get("name",None)
+            unit_id = request.POST.get("unit")
+            unit_instance = get_object_or_404(Unit, id=unit_id)
+            a.unit = unit_instance
+            a.hsn_code = request.POST.get("hsn",None)
+            a.tax_reference = request.POST.get("radio",None)
+            a.intrastate_tax = request.POST.get("intra",None)
+            a.interstate_tax= request.POST.get("inter",None)
+            a.selling_price = request.POST.get("sel_price",None)
+            a.sales_account = request.POST.get("sel_acc",None)
+            a.sales_description = request.POST.get("sel_desc",None)
+            a.purchase_price = request.POST.get("cost_price",None)
+            a.purchase_account = request.POST.get("cost_acc",None)
+            a.purchase_description = request.POST.get("pur_desc",None)
+            # track_state_value = request.POST.get("trackState", None)
+
+            track_state_value = request.POST.get("trackstate", None)
+
+            # Check if the checkbox is checked
+            if track_state_value == "on":
+                a.track_inventory = 1
+            else:
+                a.track_inventory = 0
+            minstock=request.POST.get("minimum_stock",None)
+            item_name= request.POST.get("name",None)
+            hsncode=request.POST.get("hsn",None)
+            
+            if minstock != "":
+                a.minimum_stock_to_maintain = request.POST.get("minimum_stock",None)
+            else:
+                a.minimum_stock_to_maintain = 0
+            # a.activation_tag = request.POST.get("status",None)
+            a.inventory_account = request.POST.get("invacc",None)
+            a.opening_stock = request.POST.get("openstock",None)
+            a.current_stock=request.POST.get("openstock",None)
+        
+        
+
+        
+            if Items.objects.filter(item_name=item_name,company=c).exists():
+                error='yes'
+                messages.error(request,'Item with same name exsits !!!')
+                return redirect('new_items')
+            elif Items.objects.filter(hsn_code=hsncode, company=c).exists():
+                error='yes'
+                messages.error(request,'Item with same  hsn code exsits !!!')
+                return redirect('new_items')
+            else:
+                a.save()    
+                t=Items.objects.get(id=a.id)
+                b.items=t
+                b.save()
+                return JsonResponse({'success': True, 'message': 'Item saved successfully'})
+        return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
+    
+
+def challan_item_dropdown(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        if 'login_id' not in request.session:
+            return redirect('/')
+        log_details = LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            company=CompanyDetails.objects.get(login_details=log_details)
+            options = {}
+            option_objects =Items.objects.filter(company=company,status='Active')
+            for option in option_objects:
+                full_name = f"{option.first_name} {option.last_name}"
+                options[option.id] = full_name
+
+            return JsonResponse(options)
+            
+        if log_details.user_type=='Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            options = {}
+            option_objects = Items.objects.filter(company=staff.company,status='Active')
+            for option in option_objects:
+                full_name = f"{option.first_name} {option.last_name}"
+                options[option.id] = full_name
+
+            return JsonResponse(options)
+           
+
+# create unit
+def challan_add_unit(request):                                                                #new by tinto mt (item)
+    login_id = request.session['login_id']
+    log_user = LoginDetails.objects.get(id=login_id)
+
+    if log_user.user_type == 'Company':
+        if request.method == 'POST':
+            c = CompanyDetails.objects.get(login_details=login_id)
+            unit_name = request.POST['units']
+            
+            if Unit.objects.filter(unit_name=unit_name, company=c).exists():
+                return JsonResponse({"message": "error"})
+            else:
+                unit = Unit(unit_name=unit_name, company=c)  
+                unit.save()  
+                return JsonResponse({"message": "success"})
+
+    elif log_user.user_type == 'Staff':
+        if request.method == 'POST':
+            staff = LoginDetails.objects.get(id=login_id)
+            sf = StaffDetails.objects.get(login_details=staff)
+            c = sf.company
+            unit_name = request.POST['units']
+            
+            if Unit.objects.filter(unit_name=unit_name, company=c).exists():
+                return JsonResponse({"message": "error"})
+            else:
+                unit = Unit(unit_name=unit_name, company=c)  
+                unit.save()  
+                return JsonResponse({"message": "success"})
+
+    return JsonResponse({"message": "success"})
+# create unit
+
+
+    
+def challan_unit_dropdown(request):                                                               
+    login_id = request.session['login_id']
+    log_user = LoginDetails.objects.get(id=login_id)
+    if log_user.user_type == 'Company':
+            dash_details = CompanyDetails.objects.get(login_details=log_user)
+            options = {}
+            option_objects = Unit.objects.filter(company=dash_details)
+            for option in option_objects:
+                unit_name=option.unit_name
+            options[option.id] = [unit_name,f"{unit_name}"]
+            return JsonResponse(options)
+      
+
+    elif log_user.user_type == 'Staff':
+            dash_details = StaffDetails.objects.get(login_details=log_user)
+            options = {}
+            option_objects = Unit.objects.filter(company=dash_details.company)
+            for option in option_objects:
+                unit_name=option.unit_name
+            options[option.id] = [unit_name,f"{unit_name}"]
+            return JsonResponse(options)
+             
+
+
+
+def challan_add_account(request):                                                              
+    login_id = request.session['login_id']
+    log_user = LoginDetails.objects.get(id=login_id)
+    if log_user.user_type == 'Company':
+        company_id = request.session['login_id']
+        if request.method == 'POST':
+            a=Chart_of_Accounts()
+            b=Chart_of_Accounts_History()
+            c = CompanyDetails.objects.get(login_details=company_id)
+            b.company=c
+            b.logindetails=log_user
+            b.action="Created"
+            b.Date=date.today()
+            a.login_details=log_user
+            a.company=c
+          
+        
+            a.account_type = request.POST.get("account_type",None)
+            a.account_name = request.POST.get("account_name",None)
+            a.account_code = request.POST.get("account_code",None)
+            a.description = request.POST.get("description",None)
+    
+            a.Create_status="active"
+            ac_name=request.POST.get("account_name",None)
+            if Chart_of_Accounts.objects.filter(account_name=ac_name, company=c).exists():
+                return JsonResponse({"message": "error"})
+            else:
+          
+                a.save()
+                t=Chart_of_Accounts.objects.get(id=a.id)
+                b.chart_of_accounts=t
+                b.save()
+                acc_id = a.id  
+                acc_name=a.account_name
+                response_data = {
+                "message": "success",
+                "acc_id":acc_id,
+                "acc_name":acc_name,
+        
+                         }
+
+                return JsonResponse(response_data)
+        
+
+    elif log_user.user_type == 'Staff':
+        staff_id = request.session['login_id']
+        if request.method=='POST':
+            a=Chart_of_Accounts()
+            b=Chart_of_Accounts_History()
+            staff = LoginDetails.objects.get(id=staff_id)
+            sf = StaffDetails.objects.get(login_details=staff)
+            a=sf.company
+            b.Date=date.today()
+            b.company=c
+            b.logindetails=log_user
+            a.login_details=log_user
+            a.company=c
+          
+        
+            a.account_type = request.POST.get("account_type",None)
+            a.account_name = request.POST.get("account_name",None)
+            a.account_code = request.POST.get("account_code",None)
+            a.description = request.POST.get("description",None)
+    
+            a.Create_status="active"
+            ac_name=request.POST.get("account_name",None)
+            if Chart_of_Accounts.objects.filter(account_name=ac_name, company=c).exists():
+                return JsonResponse({"message": "error"})
+            else:
+          
+                a.save()
+                t=Chart_of_Accounts.objects.get(id=a.id)
+                b.chart_of_accounts=t
+                b.save()
+                acc_id = a.id  
+                acc_name=a.account_name
+                response_data = {
+                "message": "success",
+                "acc_id":acc_id,
+                "acc_name":acc_name,
+        
+                         }
+
+                return JsonResponse(response_data)
+        
+      
+        
+    return redirect('newitems')
+
+def challan_account_dropdown(request):                                                                
+    login_id = request.session['login_id']
+    log_user = LoginDetails.objects.get(id=login_id)
+    if log_user.user_type == 'Company':
+            dash_details = CompanyDetails.objects.get(login_details=log_user)
+            options = {}
+            option_objects = Chart_of_Accounts.objects.filter(Q(company=dash_details) & (Q(account_type='Expense') | Q(account_type='Other Expense') | Q(account_type='Cost Of Goods Sold')))
+            for option in option_objects:
+                account_name=option.account_name
+                account_type=option.account_type
+                options[option.id] = [account_name,f"{account_name}"]
+            return JsonResponse(options)
+    elif log_user.user_type == 'Staff':
+            dash_details = StaffDetails.objects.get(login_details=log_user)
+            options = {}
+       
+            option_objects = Chart_of_Accounts.objects.filter(Q(company=dash_details.company) & (Q(account_type='Expense') | Q(account_type='Other Expense') | Q(account_type='Cost Of Goods Sold')))
+            for option in option_objects:
+                account_name=option.account_name
+                options[option.id] = [account_name,f"{account_name}"]
+            return JsonResponse(options)
+
 

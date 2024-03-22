@@ -320,8 +320,15 @@ urlpatterns = [
     path('get_customer_data/<int:customer_id>/',views.get_customer_data, name='get_customer_data'),
     path('get_item_data/<int:item_id>/',views.get_item_data, name='get_item_data'),
     path('challan_add_customer/',views.challan_add_customer, name='challan_add_customer'),
-    path('invoice_customer_payment_terms_add/',views.invoice_customer_payment_terms_add, name='invoice_customer_payment_terms_add'),
+    path('challan_customer_payment_terms_add/',views.challan_customer_payment_terms_add, name='challan_customer_payment_terms_add'),
     path('customer_dropdown/',views.customer_dropdown, name='customer_dropdown'),
+    path('challan_create_item/',views.challan_create_item, name='challan_create_item'),
+    path('challan_item_dropdown/',views.challan_item_dropdown, name='challan_item_dropdown'),
+    path('challan_add_unit/',views.challan_add_unit, name='challan_add_unit'),
+    path('challan_unit_dropdown/',views.challan_unit_dropdown, name='challan_unit_dropdown'),
+    path('challan_add_account/',views.challan_add_account, name='challan_add_account'),
+    path('challan_account_dropdown/',views.challan_account_dropdown, name='challan_account_dropdown'),
+
 
     #End
     
