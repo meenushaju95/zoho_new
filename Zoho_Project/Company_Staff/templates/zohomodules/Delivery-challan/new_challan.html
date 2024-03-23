@@ -307,7 +307,7 @@ input {
                             <option value="{{i.id}}" style="color: white;" >{{i.item_name}}</option>
                             {% endfor %}
                         </select>
-                        <button type="button" id="Item" data-toggle="modal" data-target="#newItem" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;">+</button>
+                        <button type="button" id="newwItem" data-toggle="modal" data-target="#newwItem" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;">+</button>
                     </div>
                 </td>
                 <td><input type="text" id="hsn" name="hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
@@ -315,7 +315,7 @@ input {
                 <td><input type="number" id="rate" name="rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td><input type="number" id="discount" name="discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td>
-                    <select id="tax" name="tax" style="width: 100%;">
+                    <select id="tax" name="tax" class="item-tax" style="width: 100%;">
                        
                         <option value="0">0% GST</option>
                         <option value="3">3% GST</option>
@@ -325,7 +325,7 @@ input {
                         <option value="28">28% GST</option>
                     </select>
                 </td>
-                <td><input type="text" id="amount" name="amount" style="width: 100%;"></td>
+                <td><input type="text" id="amount"   class="item-amount" name="amount" style="width: 100%;" readonly  oninput="updateSubtotal()"></td>
                 <td>
                   <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="removeRow(this)">-</button>
                   <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="cloneRow(this)"><i class="fa fa-clone" aria-hidden="true"></i></button>
@@ -357,7 +357,7 @@ input {
       
 
       <label for="subtotal">Sub Total:</label><br>
-      <input type="text" id="subtotal" name="subtotal" readonly><br>
+      <input type="text" id="subtotal" name="subtotal" readonly onchange="calculateTaxes(data)"><br>
 
       <label for="igst">IGST:</label><br>
       <input type="text" id="igst" name="igst" readonly><br>
@@ -1198,6 +1198,25 @@ input {
                             </div>
                         </div>
                         </form>
+
+
+
+
+
+                       
+
+
+
+
+
+
+
+
+
+
+
+
+
                     </div></div></div>
                    
                 <script>
@@ -2113,7 +2132,11 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
     var amount = (quantity * rate) - discount;
     document.getElementById('amount').value = amount.toFixed(2);
     document.getElementById('amount').value = isNaN(amount) || !isFinite(amount) ? '' : amount.toFixed(2);
+    updateSubtotal()
+    calculateTaxes(data);
 }
+
+
   function clearitemInfo() {
       document.getElementById('hsn').value = '';
       document.getElementById('rate').value = '';
@@ -2124,6 +2147,8 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
       var stockLabel = document.getElementById('availableStock');
       stockLabel.textContent = ''; 
   }
+ 
+
 </script>
 <script>
   function addRow() {
@@ -2166,7 +2191,7 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
             <option value="28">28% GST</option>
         </select>
     `;
-    amount.innerHTML = '<input type="text"  name="amount" class="item-amount" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+    amount.innerHTML = '<input type="text"  name="amount" class="item-amount" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"  oninput="updateSubtotal()">';
     action.innerHTML = `
         <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="removeRow(this)">-</button>
         <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="cloneRow(this)"><i class="fa fa-clone" aria-hidden="true"></i></button>
@@ -2175,6 +2200,7 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
     // Add event listeners for quantity and discount inputs in the new row
     newRow.querySelector('.item-quantity').addEventListener('input', calculateAmount);
     newRow.querySelector('.item-discount').addEventListener('input', calculateAmount);
+    updateSubtotal()
 }
 
 function calculateAmount() {
@@ -2189,6 +2215,8 @@ function calculateAmount() {
     // Update the amount field in the same row
     var amountField = row.querySelector('.item-amount');
     amountField.value = isNaN(amount) || !isFinite(amount) ? '' : amount.toFixed(2);
+    updateSubtotal()
+    calculateTaxes(data)
 }
   
   function removeRow(button) {
@@ -2199,7 +2227,10 @@ function calculateAmount() {
     } else {
         clearRowContent(row);
     }
+    updateSubtotal()
+    calculateTaxes(data)
   }
+  
 
   function clearRowContent(row) {
     var cells = row.cells;
@@ -2227,6 +2258,7 @@ function calculateAmount() {
             row.querySelector('.item-tax').value = calculateTax(data);
 
             updateAvailableStock(row, data.stock);
+            calculateTaxes(data)
           },
           error: function (error) {
             console.error('Error fetching item data:', error);
@@ -2244,6 +2276,7 @@ function calculateAmount() {
       return (placeOfSupply !== data.company_state) ? data.intertax : data.intratax;
     }
 
+    
     // Function to update available stock for the row
     function updateAvailableStock(row, stock) {
   var quantityInput = row.querySelector('.item-quantity');
@@ -2282,6 +2315,8 @@ function calculateAmount() {
     } else {
         clearRowContent(row);
     }
+    updateSubtotal()
+    calculateTaxes()
 }
 
     // Add event listener for item select change
@@ -2298,32 +2333,39 @@ function calculateAmount() {
 </script>
 
 <script>
- function calculateSubtotal() {
+  function calculateSubtotal() {
+    var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
+    var amountInputs = table.querySelectorAll('.item-amount');
     var subtotal = 0;
 
-    // Calculate subtotal from input field with ID 'amount'
-    $('input#amount').each(function() {
-        var amount = parseFloat($(this).val());
-       
-            subtotal += amount;
-        
+    amountInputs.forEach(function(input) {
+        var amount = parseFloat(input.value) || 0;
+        subtotal += amount;
     });
 
-    // Calculate subtotal from input fields with class 'item-amount'
-    $('.item-amount').each(function() {
-        var amount = parseFloat($(this).val());
-       
-            subtotal += amount;
-        
-    });
-
-    // Update the subtotal field with the calculated subtotal
-    $('#subtotal').val(subtotal.toFixed(2));
-    console.log(subtotal)
+    return subtotal.toFixed(2);
 }
 
-// Call calculateSubtotal initially to calculate subtotal for existing rows
-calculateSubtotal();
+// Function to update the subtotal field
+function updateSubtotal() {
+    var subtotal = calculateSubtotal();
+    document.getElementById('subtotal').value = subtotal; // Assuming subtotal is an input field with id="subtotal"
+}
+
+// Attach event listeners to all item-amount fields to update subtotal on input event
+document.querySelectorAll('.item-amount').forEach(function(input) {
+    input.addEventListener('input', function(event) {
+        updateSubtotal();
+    });
+});
+
+// Call updateSubtotal when DOM content is loaded to initialize the subtotal
+document.addEventListener('DOMContentLoaded', function() {
+    updateSubtotal();
+});
+calculateTaxes(data)
+
+ 
 </script>
 
 
@@ -2344,7 +2386,10 @@ function updateAmount() {
 
     var amount = (quantity * rate) - discount;
     document.getElementById('amount').value = amount.toFixed(2);
+    updateSubtotal()
+    calculateTaxes(data)
 }
+
 </script>
 
 
@@ -2365,8 +2410,99 @@ function updateAmount() {
     document.getElementById('deliveryChallanDate').value = formatDate(currentDate);
   });
 </script>
+<script>
+    $(document).ready(function() {
+        // Attach event listener to the amount field
+        $('#subtotal').on('input', function() {
+            calculateTaxes(data);
+        });
+    });
 
-  
+    function calculateTaxes(data) {
+        var subtotal = calculateSubtotal();
+        var discount = 0;
+        var discount = 0;
+$('.item-discount').each(function() {
+    discount += parseFloat($(this).val()) || 0;
+});
+        var discountedSubtotal = subtotal - discount;
+
+        // Initialize tax variables
+        var taxAmount = 0;
+        var cgst = 0, sgst = 0, igst = 0;
+
+        // Calculate total tax amount based on item taxes
+        $('.item-tax').each(function() {
+            var taxRate = parseFloat($(this).val()) || 0;
+            taxAmount += discountedSubtotal * (taxRate / 100);
+        });
+
+        // Determine intra-state or inter-state transaction
+        var intraState = ($('#placeOfSupply').val() === data.company_state);
+
+        // Calculate CGST, SGST, and IGST based on the transaction type
+        if (intraState) {
+            cgst = sgst = taxAmount / 2; // Divide by 2 for CGST and SGST
+        } else {
+            igst = taxAmount;
+        }
+
+        // Update the tax amount fields
+        $('#taxAmount').val(taxAmount.toFixed(2));
+
+        // Update the CGST, SGST, and IGST fields
+        $('#cgst').val(cgst.toFixed(2));
+        $('#sgst').val(sgst.toFixed(2));
+        $('#igst').val(igst.toFixed(2));
+       
+
+
+        function calculateSubtotal() {
+    var subtotal = 0;
+    $('.item-amount').each(function() {
+        subtotal += parseFloat($(this).val()) || 0;
+    });
+    return subtotal.toFixed(2);
+}
+
+// Function to update subtotal and recalculate taxes
+function updateSubtotalAndTaxes() {
+    var subtotal = calculateSubtotal();
+    $('#subtotal').val(subtotal);
+    calculateTaxes(data);
+}
+
+
+$('.item-amount').on('input', function() {
+    updateSubtotalAndTaxes();
+});
+
+
+$(document).ready(function() {
+    updateSubtotalAndTaxes();
+});
+       
+    }
+</script>
+
+
+
+ 
+
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
 </body>
 
 {% endblock %}
