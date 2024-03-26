@@ -12,11 +12,15 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 <!-- Include Select2 JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
 
 
 <style>
+    
   label{
         color: white;
     }
@@ -180,6 +184,10 @@ table {
 input {
     color: white;
 }
+
+
+   
+
 </style>
 
 <body>
@@ -217,22 +225,22 @@ input {
               <div class="column">
                
                   <label for="customerName">Customer Name*</label>
-                  
-                  <select id="customerName" name="customerName">
-                    <option value="value" selected></option>
+                 
+                  <select id="customerName"  name="customerName" placeholde="select customer" class="operator">
+                    <option value="">Search here...</option>
+                   
                    {% for customer in customer %}
+                   
                    <option value="{{customer.id}}">{{customer.first_name}} {{customer.last_name}}</option>
                    {% endfor%}
                   </select>
-
-
-                  <script>
-                    $(document).ready(function() {
-                        // Initialize Select2 on the select element
-                        $('#customerName').select2();
-                    });
-                </script>
-                 
+                <script>
+    $(document).ready(function () {
+        $("#customerName").select2();
+    });
+</script>
+               
+                
                   <button type="button" id="customer" data-toggle="modal" data-target="#newCustomer" style="border: 1px solid orange;border-radius: 5px;width: 50px;height: 40px;">+</button><br>
 
                   <label for="customerEmail">Customer Email ID</label>
@@ -2103,6 +2111,13 @@ $('#mphone').on('input', function() {
           clearitemInfo();
       }
   });
+  document.getElementById('discount').addEventListener('input', function() {
+    var itemId = document.getElementById('item').value;
+
+    if (itemId) {
+        fetchitemData(itemId);
+    }
+});
   
   document.getElementById('quantity').addEventListener('input', function() {
       var quantity = parseFloat(this.value);
@@ -2124,20 +2139,33 @@ $('#mphone').on('input', function() {
             document.getElementById('hsn').value = data.hsn;
             document.getElementById('rate').value = data.rate;
 
-            var placeOfSupply = document.getElementById('placeOfSupply').value;
-            var taxType = 'GST'; 
-
-            if (placeOfSupply !== data.company_state) {
-                taxType = 'IGST';
-            }
-
-            var taxRate = (taxType === 'GST') ? data.intratax : data.intertax;
-            document.getElementById('tax').value = taxRate;
-            updateAvailableStock(data.stock, data); // Pass data object to updateAvailableStock
+            updateTaxCalculation(data);
+            updateAvailableStock(data.stock, data); 
+            calculateTaxes(data)
         },
     });
     
 }
+function updateTaxCalculation(data) {
+    var placeOfSupply = document.getElementById('placeOfSupply').value;
+    var taxType = 'GST';
+
+    if (placeOfSupply !== data.company_state) {
+        taxType = 'IGST';
+    }
+
+    var taxRate = (taxType === 'GST') ? data.intratax : data.intertax;
+    document.getElementById('tax').value = taxRate;
+}
+
+// Add event listener for placeOfSupply input field
+document.getElementById('placeOfSupply').addEventListener('change', function() {
+    // Call updateTaxCalculation function to update tax calculation when placeOfSupply value changes
+    var itemId = document.getElementById('item').value;
+    if (itemId) {
+        fetchitemData(itemId);
+    }
+});
 
 function updateAvailableStock(stock, data) { // Accept data as a parameter
     var quantity = parseFloat(document.getElementById('quantity').value);
@@ -2150,8 +2178,16 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
     var amount = (quantity * rate) - discount;
     document.getElementById('amount').value = amount.toFixed(2);
     document.getElementById('amount').value = isNaN(amount) || !isFinite(amount) ? '' : amount.toFixed(2);
-    updateSubtotal()
-    calculateTaxes(data);
+    calculateTaxes(data)
+
+    
+
+    
+  
+
+    
+   
+    
 }
 
 
@@ -2165,6 +2201,9 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
       var stockLabel = document.getElementById('availableStock');
       stockLabel.textContent = ''; 
   }
+
+ 
+   
  
 
 </script>
@@ -2196,9 +2235,9 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
         </div>
     `;
     hsn.innerHTML = '<input type="text" name="hsn" class="item-hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
-    quantity.innerHTML = '<input type="number" id="quantity" class="item-quantity" name="quantity" value="0" class="item-quantity" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label class="availableStock" style="color: orange;"></label>';
+    quantity.innerHTML = '<input type="number"  class="item-quantity" name="quantity" value="0" class="item-quantity" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label class="availableStock" style="color: orange;"></label>';
     rate.innerHTML = '<input type="number" name="rate" class="item-rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
-    discount.innerHTML = '<input type="number" id="discount" name="discount" class="item-discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+    discount.innerHTML = '<input type="number"  name="discount" class="item-discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
     tax.innerHTML = `
         <select name="tax" class="item-tax" style="width: 100%;">
             <option value="0">0% GST</option>
@@ -2219,7 +2258,7 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
     newRow.querySelector('.item-quantity').addEventListener('input', calculateAmount);
     newRow.querySelector('.item-discount').addEventListener('input', calculateAmount);
     updateSubtotal()
-    calculateTaxes(data)
+   
 }
 
 function calculateAmount() {
@@ -2247,9 +2286,9 @@ function calculateAmount() {
     } else {
         clearRowContent(row);
     }
-    updateSubtotal()
-    calculateTaxes(data)
-    updateTotal();
+    updateAmount()
+   
+    
     
   }
   
@@ -2269,98 +2308,83 @@ function calculateAmount() {
   $(document).ready(function () {
     // Function to fetch item data
     function fetchItemData(element) {
-       var itemId = element.value;
-      var row = element.closest('tr');
+    var itemId = element.value;
+    var row = element.closest('tr');
 
-      if (itemId) {
+    if (itemId) {
         $.ajax({
-          url: '/get_item_data/' + itemId + '/',
-          type: 'GET',
-          success: function (data) {
-            console.log('Received item data:', data);
-            row.querySelector('.item-hsn').value = data.hsn;
-            row.querySelector('.item-rate').value = data.rate;
-            row.querySelector('.item-tax').value = calculateTax(data);
+            url: '/get_item_data/' + itemId + '/',
+            type: 'GET',
+            success: function(data) {
+                console.log('Received item data:', data);
+                row.querySelector('.item-hsn').value = data.hsn;
+                row.querySelector('.item-rate').value = data.rate;
+                row.querySelector('.item-tax').value = calculateTax(data);
 
-            updateAvailableStock(row, data.stock);
-            calculateTaxes(data)
-          },
-          error: function (error) {
-            console.error('Error fetching item data:', error);
-          }
+                updateAvailableStock(row, data.stock);
+                calculateTaxes(data);
+            },
+            error: function(error) {
+                console.error('Error fetching item data:', error);
+            }
         });
-      } else {
+    } else {
         clearItemInfo(row);
         clearStock(row);
-      }
     }
-
-    // Function to calculate tax based on company state
-    function calculateTax(data) {
-      var placeOfSupply = document.getElementById('placeOfSupply').value;
-      return (placeOfSupply !== data.company_state) ? data.intertax : data.intratax;
-    }
-
-    
-    // Function to update available stock for the row
-    function updateAvailableStock(row, stock) {
-  var quantityInput = row.querySelector('.item-quantity');
-  var quantity = parseFloat(quantityInput.value);
-  var availableStockLabel = row.querySelector('.availableStock');
-
-  if (!isNaN(quantity) && quantity >= 0) {
-    var availableStock = Math.max(stock - quantity, 0); // Ensure available stock doesn't go below 0
-    availableStockLabel.innerText = 'Available Stock: ' + availableStock;
-    availableStockLabel.style.color = 'orange';
-  } else {
-    availableStockLabel.innerText = 'Available Stock: ' + stock;
-    availableStockLabel.style.color = 'orange';
-  }
 }
 
+// Function to calculate tax based on company state
+function calculateTax(data) {
+    var placeOfSupply = document.getElementById('placeOfSupply').value;
+    return (placeOfSupply !== data.company_state) ? data.intertax : data.intratax;
+}
 
+// Function to update available stock for the row
+function updateAvailableStock(row, stock) {
+    var quantityInput = row.querySelector('.item-quantity');
+    var quantity = parseFloat(quantityInput.value);
+    var availableStockLabel = row.querySelector('.availableStock');
 
-    // Function to clear item info fields for the row
-    function clearItemInfo(row) {
-      row.querySelector('.item-hsn').value = '';
-      row.querySelector('.item-rate').value = '';
-      row.querySelector('.item-tax').value = '';
-    }
-
-    // Function to clear stock info field for the row
-    function clearStock(row) {
-      row.querySelector('.availableStock').textContent = '';
-    }
-
-    function removeRow(button) {
-    var row = button.closest('tr');
-    var table = row.closest('table');
-    if (table.rows.length > 2) {
-        row.remove();
+    if (!isNaN(quantity) && quantity >= 0) {
+        var availableStock = Math.max(stock - quantity, 0); // Ensure available stock doesn't go below 0
+        availableStockLabel.innerText = 'Available Stock: ' + availableStock;
+        availableStockLabel.style.color = 'orange';
     } else {
-        clearRowContent(row);
+        availableStockLabel.innerText = 'Available Stock: ' + stock;
+        availableStockLabel.style.color = 'orange';
     }
-    updateSubtotal()
-    calculateTaxes(data)
-   
-    
 }
 
-    // Add event listener for item select change
-    $("#itemTable").on("change", ".item-select", function () {
-      fetchItemData(this);
-    });
+// Function to clear item info fields for the row
+function clearItemInfo(row) {
+    row.querySelector('.item-hsn').value = '';
+    row.querySelector('.item-rate').value = '';
+    row.querySelector('.item-tax').value = '';
+}
 
-    
-    $("#itemTable").on("input", ".item-quantity", function () {
-      var row = this.closest('tr');
-      fetchItemData(row.querySelector('.item-select'));
-    });
-   
+// Function to clear stock info field for the row
+function clearStock(row) {
+    row.querySelector('.availableStock').textContent = '';
+}
 
-   
+// Add event listener for item select change
+$("#itemTable").on("change", ".item-select", function() {
+    fetchItemData(this);
+});
+
+// Add event listener for input change in item quantity and discount
+$("#itemTable").on("input", ".item-quantity, .item-discount", function() {
+    var row = this.closest('tr');
+    fetchItemData(row.querySelector('.item-select'));
+});
+
+// Add event listener for input change in place of supply
+$("#itemTable").on("change", ".placeOfSupply", function() {
+    var row = this.closest('tr');
+    fetchItemData(row.querySelector('.item-select'));
+});
   });
-
   
 </script>
 
@@ -2389,7 +2413,7 @@ function updateSubtotal() {
 document.querySelectorAll('.item-amount').forEach(function(input) {
     input.addEventListener('input', function(event) {
         updateSubtotal();
-        calculateTaxes(data)
+        
         
     });
 });
@@ -2397,7 +2421,7 @@ document.querySelectorAll('.item-amount').forEach(function(input) {
 // Call updateSubtotal when DOM content is loaded to initialize the subtotal
 document.addEventListener('DOMContentLoaded', function() {
     updateSubtotal();
-    calculateTaxes(data)
+    
     updateAmount(); 
        
        
@@ -2463,7 +2487,8 @@ function updateAmount() {
     function calculateTaxes(data) {
     var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
     var amountFields = table.querySelectorAll('.item-amount');
-    var taxFields = document.querySelectorAll('.item-tax');
+    var taxFields = table.querySelectorAll('.item-tax');
+    
     var placeOfSupply = document.getElementById('placeOfSupply').value;
     var totalTaxAmount = 0;
     var totalCGST = 0;
@@ -2471,37 +2496,38 @@ function updateAmount() {
     var totalIGST = 0;
 
     for (var i = 0; i < amountFields.length; i++) {
-        var amount = parseFloat(amountFields[i].value);
-        var taxRate = parseFloat(taxFields[i].value);
-        var taxType = placeOfSupply === data.company_state ? 'GST' : 'IGST';
-        var taxAmount = (amount * taxRate) / 100;
-
+        var amount = parseFloat(amountFields[i].value) || 0;
+        var taxRate = parseFloat(taxFields[i].value) || 0;
         
+        var taxType = placeOfSupply === data.company_state ? 'GST' : 'IGST';
+    
+        var taxAmount = (amount * taxRate) / 100;
+    
         totalTaxAmount += taxAmount;
 
         if (taxType === 'GST') {
-            
             var halfTaxAmount = taxAmount / 2;
             totalCGST += halfTaxAmount;
             totalSGST += halfTaxAmount;
-            document.getElementById('igst').style.display = 'none';
         } else if (taxType === 'IGST') {
-            
             totalIGST += taxAmount;
-            document.getElementById('sgst').style.display = 'none';
-            document.getElementById('cgst').style.display = 'none';
         }
     }
 
-    
     document.getElementById('cgst').value = totalCGST.toFixed(2);
     document.getElementById('sgst').value = totalSGST.toFixed(2);
     document.getElementById('igst').value = totalIGST.toFixed(2);
-
     
     document.getElementById('taxAmount').value = totalTaxAmount.toFixed(2);
     
-    updateTotal()
+    updateTotal();
+
+    var itemTaxFields = document.querySelectorAll('.item-tax');
+    itemTaxFields.forEach(function(field) {
+        field.addEventListener('input', function() {
+            calculateTaxes(data);
+        });
+    });
 }
     function updateTotal() {
        
