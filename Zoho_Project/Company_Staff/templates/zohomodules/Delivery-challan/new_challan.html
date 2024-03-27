@@ -12,14 +12,49 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 <!-- Include Select2 JS -->
-<head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js" ></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js" defer></script>
+
 
 
 
 <style>
+
+
+
+    .select2-container--default .select2-search--dropdown{
+        background-color: black !important;
+        
+    }
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        
+        color: Black !important;
+    }
+
+    .select2-container--default .select2-results__option {
+        color: white;
+        background-color: black;
+    }
+
+    .select2-container--default .select2-selection--single{ 
+        background-color: black !important;
+        padding:4px;
+        height: 45px!important;
+        font-size: 1.2em;  
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: white !important;
+    }
+    .select2-results__option:first-child {
+    background-color: black !important;
+    color: white;
+}
+
+
     
   label{
         color: white;
@@ -185,7 +220,6 @@ input {
     color: white;
 }
 
-
    
 
 </style>
@@ -223,25 +257,36 @@ input {
             <div class="container">
               <!-- Left Column -->
               <div class="column">
-               
-                  <label for="customerName">Customer Name*</label>
+                <label for="customerName">Customer Name*</label>
+                <div style="display: flex; align-items: center;">
+                  
                  
-                  <select id="customerName"  name="customerName" placeholde="select customer" class="operator">
-                    <option value="">Search here...</option>
-                   
-                   {% for customer in customer %}
-                   
-                   <option value="{{customer.id}}">{{customer.first_name}} {{customer.last_name}}</option>
-                   {% endfor%}
-                  </select>
+        
+     <select id="customerName" name="customerName" data-live-search="true" class="custom-select" style="width: 100%;">
+    <option></option>
+    {% for customer in customer %}
+        <option value="{{ customer.id }}">{{ customer.first_name }} {{ customer.last_name }}</option>
+    {% endfor %}
+</select>
+<button type="button" id="customer" data-toggle="modal" data-target="#newCustomer" style="border: 1px solid orange;border-radius: 5px;width: 50px;height: 50px;">+</button><br>
+                </div>  
                 <script>
-    $(document).ready(function () {
-        $("#customerName").select2();
-    });
+ $('#customerName').select2({
+        placeholder: 'Select customer',
+    }).on('select2:select', function (e) {
+    var customerId = e.params.data.id;
+    console.log('Selected Customer ID:', customerId);
+    if (customerId) {
+        fetchCustomerData(customerId);
+    } else {
+        clearCustomerInfo();
+    }
+});
+
 </script>
                
                 
-                  <button type="button" id="customer" data-toggle="modal" data-target="#newCustomer" style="border: 1px solid orange;border-radius: 5px;width: 50px;height: 40px;">+</button><br>
+                  
 
                   <label for="customerEmail">Customer Email ID</label>
                   <input type="email" id="customerEmail" name="customerEmail" >
@@ -326,14 +371,18 @@ input {
                 <td>1</td>
                 <td>
                     <div style="display: flex; align-items: center;">
-                        <select name="item" id="item"  onchange="fetchItemData(this)" style="flex: 1; width: 250%;color: white;">
+                        <select name="item" id="item" class="item-select"  onchange="fetchItemData(this.value)" style="flex: 1; width: 250%;color: white;">
                           <option value="value" selected></option>
                             {% for i in item %}
                             <option value="{{i.id}}" style="color: white;" >{{i.item_name}}</option>
                             {% endfor %}
                         </select>
+                        
+                        
                         <button type="button" id="newwItem" data-toggle="modal" data-target="#newwItem" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;">+</button>
-                    </div>
+                       
+                    
+                    
                 </td>
                 <td><input type="text" id="hsn" name="hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td><input type="number" id="quantity" class="quantity" name="quantity" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label id="availableStock" class="availableStock" style="color: orange;"></label></td>
@@ -351,6 +400,7 @@ input {
                     </select>
                 </td>
                 <td><input type="text" id="amount"   class="item-amount" name="amount" style="width: 100%;" readonly  oninput="updateSubtotal()"></td>
+               
                 <td>
                   <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="removeRow(this)">-</button>
                   <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="cloneRow(this)"><i class="fa fa-clone" aria-hidden="true"></i></button>
@@ -2102,6 +2152,9 @@ $('#mphone').on('input', function() {
   </script>
 
 <script>
+
+
+
   document.getElementById('item').addEventListener('change', function() {
       var itemId = this.value;
   
@@ -2129,6 +2182,22 @@ $('#mphone').on('input', function() {
           clearStock();
       }
   });
+
+  $(document).ready(function () {
+    $('.item-select').select2({
+        placeholder: 'Select Product',
+        width: '71%',
+    });
+
+    $('.item-select').on('change', function() {
+        var itemId = $(this).val();
+        if (itemId) {
+            fetchitemData(itemId);
+        } else {
+            clearitemInfo();
+        }
+    });
+});
   
   function fetchitemData(itemId) {
     $.ajax({
@@ -2142,10 +2211,15 @@ $('#mphone').on('input', function() {
             updateTaxCalculation(data);
             updateAvailableStock(data.stock, data); 
             calculateTaxes(data)
+
+            $('.item-select').select2('close');
         },
     });
-    
+
+   
 }
+
+
 function updateTaxCalculation(data) {
     var placeOfSupply = document.getElementById('placeOfSupply').value;
     var taxType = 'GST';
@@ -2176,9 +2250,19 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
     var discount = parseFloat(document.getElementById('discount').value);
    
     var amount = (quantity * rate) - discount;
-    document.getElementById('amount').value = amount.toFixed(2);
-    document.getElementById('amount').value = isNaN(amount) || !isFinite(amount) ? '' : amount.toFixed(2);
-    calculateTaxes(data)
+    // Set amount to calculated value or '0.00' if NaN or not finite
+    var amountDisplay = isNaN(amount) || !isFinite(amount) ? '0.00' : amount.toFixed(2);
+    
+    // Get NodeList of elements with class 'item-amount'
+    var itemAmountElements = document.querySelectorAll('.item-amount');
+    
+    // Loop through each element and set its value
+    itemAmountElements.forEach(function(element) {
+        element.value = amountDisplay;
+    });
+    
+    calculateTaxes(data);
+}
 
     
 
@@ -2188,7 +2272,7 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
     
    
     
-}
+
 
 
   function clearitemInfo() {
@@ -2231,9 +2315,11 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
                 <option value="{{i.id}}" style="color: white;">{{i.item_name}}</option>
                 {% endfor %}
             </select>
+          
             <button style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="addRow()">+</button>
         </div>
     `;
+    
     hsn.innerHTML = '<input type="text" name="hsn" class="item-hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
     quantity.innerHTML = '<input type="number"  class="item-quantity" name="quantity" value="0" class="item-quantity" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label class="availableStock" style="color: orange;"></label>';
     rate.innerHTML = '<input type="number" name="rate" class="item-rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
@@ -2258,7 +2344,8 @@ function updateAvailableStock(stock, data) { // Accept data as a parameter
     newRow.querySelector('.item-quantity').addEventListener('input', calculateAmount);
     newRow.querySelector('.item-discount').addEventListener('input', calculateAmount);
     updateSubtotal()
-   
+
+    
 }
 
 function calculateAmount() {
@@ -2278,19 +2365,58 @@ function calculateAmount() {
     
 }
   
-  function removeRow(button) {
+function removeRow(button) {
     var row = button.closest('tr');
     var table = row.closest('table');
     if (table.rows.length > 2) {
+        var amountField = row.querySelector('.item-amount');
+        var taxField = row.querySelector('.item-tax');
+        
+        var amount = parseFloat(amountField.value) || 0;
+        var taxRate = parseFloat(taxField.value) || 0;
+        var subtotalField = document.getElementById('subtotal');
+        var currentSubtotal = parseFloat(subtotalField.value) || 0;
+        var newSubtotal = Math.max(currentSubtotal - amount, 0);
+        subtotalField.value = newSubtotal.toFixed(2);
+        
+        var taxAmountToRemove = (amount * taxRate) / 100;
+
+        // Subtract the tax amount of the removed row from the total tax amount
+        var totalTaxAmountField = document.getElementById('taxAmount');
+        var currentTotalTaxAmount = parseFloat(totalTaxAmountField.value) || 0;
+        var newTotalTaxAmount = Math.max(currentTotalTaxAmount - taxAmountToRemove, 0);
+        totalTaxAmountField.value = newTotalTaxAmount.toFixed(2);
+        console.log(newTotalTaxAmount)
+        
+
         row.remove();
+        updateGSTField(newTotalTaxAmount); // Update GST fields based on new tax amount
+
+        // Recalculate taxes for existing rows
+        calculateTaxes(data);
+
+        // Update other totals if needed
+        updateAmount();
     } else {
         clearRowContent(row);
     }
-    updateAmount()
-   
-    
-    
-  }
+}
+
+function updateGSTField(totalTaxAmount) {
+    var igst = parseFloat(document.getElementById('igst').value) || 0;
+    var sgst = parseFloat(document.getElementById('sgst').value) || 0;
+    var cgst = parseFloat(document.getElementById('cgst').value) || 0;
+
+    if (igst > 0) {
+        // If IGST is present, update its value
+        document.getElementById('igst').value = totalTaxAmount.toFixed(2);
+    } else {
+        // If IGST is not present, calculate and update CGST and SGST fields
+        var halfTaxAmount = totalTaxAmount / 2;
+        document.getElementById('cgst').value = halfTaxAmount.toFixed(2);
+        document.getElementById('sgst').value = halfTaxAmount.toFixed(2);
+    }
+}
   
 
   function clearRowContent(row) {
@@ -2305,87 +2431,94 @@ function calculateAmount() {
    
    
 
-  $(document).ready(function () {
+   
+
+
+   $(document).ready(function () {
     // Function to fetch item data
     function fetchItemData(element) {
-    var itemId = element.value;
-    var row = element.closest('tr');
+        var itemId = $(element).val();
+        var row = $(element).closest('tr');
 
-    if (itemId) {
-        $.ajax({
-            url: '/get_item_data/' + itemId + '/',
-            type: 'GET',
-            success: function(data) {
-                console.log('Received item data:', data);
-                row.querySelector('.item-hsn').value = data.hsn;
-                row.querySelector('.item-rate').value = data.rate;
-                row.querySelector('.item-tax').value = calculateTax(data);
+        if (itemId) {
+            $.ajax({
+                url: '/get_item_data/' + itemId + '/',
+                type: 'GET',
+                success: function(data) {
+                    console.log('Received item data:', data);
+                    $(row).find('.item-hsn').val(data.hsn);
+                    $(row).find('.item-rate').val(data.rate);
+                    $(row).find('.item-tax').val(calculateTax(data));
 
-                updateAvailableStock(row, data.stock);
-                calculateTaxes(data);
-            },
-            error: function(error) {
-                console.error('Error fetching item data:', error);
-            }
+                    updateAvailableStock(row, data.stock);
+                    calculateTaxes(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching item data:', error);
+                }
+            });
+        } else {
+            clearItemInfo(row);
+            clearStock(row);
+        }
+    }
+
+    // Function to calculate tax based on company state
+    function calculateTax(data) {
+        var placeOfSupply = $('#placeOfSupply').val();
+        return (placeOfSupply !== data.company_state) ? data.intertax : data.intratax;
+    }
+
+    // Function to update available stock for the row
+    function updateAvailableStock(row, stock) {
+        var quantityInput = $(row).find('.item-quantity');
+        var quantity = parseFloat(quantityInput.val());
+        var availableStockLabel = $(row).find('.availableStock');
+
+        if (!isNaN(quantity) && quantity >= 0) {
+            var availableStock = Math.max(stock - quantity, 0);
+            availableStockLabel.text('Available Stock: ' + availableStock);
+            availableStockLabel.css('color', 'orange');
+        } else {
+            availableStockLabel.text('Available Stock: ' + stock);
+            availableStockLabel.css('color', 'orange');
+        }
+    }
+
+    // Function to clear item info fields for the row
+    function clearItemInfo(row) {
+        $(row).find('.item-hsn').val('');
+        $(row).find('.item-rate').val('');
+        $(row).find('.item-tax').val('');
+    }
+
+    // Function to clear stock info field for the row
+    function clearStock(row) {
+        $(row).find('.availableStock').text('');
+    }
+
+    // Add event listener for item select change using event delegation
+    $(document).on("change", ".item-select", function() {
+        fetchItemData(this);
+    });
+
+    // Add event listener for input change in item quantity and discount using event delegation
+    $(document).on("input", ".item-quantity, .item-discount", function() {
+        var row = $(this).closest('tr');
+        fetchItemData(row.find('.item-select'));
+    });
+
+    // Add event listener for place of supply change
+    $('#placeOfSupply').on('change', function() {
+        // Loop through each row and fetch item data
+        $('.item-select').each(function() {
+            fetchItemData(this);
         });
-    } else {
-        clearItemInfo(row);
-        clearStock(row);
-    }
-}
+    });
 
-// Function to calculate tax based on company state
-function calculateTax(data) {
-    var placeOfSupply = document.getElementById('placeOfSupply').value;
-    return (placeOfSupply !== data.company_state) ? data.intertax : data.intratax;
-}
-
-// Function to update available stock for the row
-function updateAvailableStock(row, stock) {
-    var quantityInput = row.querySelector('.item-quantity');
-    var quantity = parseFloat(quantityInput.value);
-    var availableStockLabel = row.querySelector('.availableStock');
-
-    if (!isNaN(quantity) && quantity >= 0) {
-        var availableStock = Math.max(stock - quantity, 0); // Ensure available stock doesn't go below 0
-        availableStockLabel.innerText = 'Available Stock: ' + availableStock;
-        availableStockLabel.style.color = 'orange';
-    } else {
-        availableStockLabel.innerText = 'Available Stock: ' + stock;
-        availableStockLabel.style.color = 'orange';
-    }
-}
-
-// Function to clear item info fields for the row
-function clearItemInfo(row) {
-    row.querySelector('.item-hsn').value = '';
-    row.querySelector('.item-rate').value = '';
-    row.querySelector('.item-tax').value = '';
-}
-
-// Function to clear stock info field for the row
-function clearStock(row) {
-    row.querySelector('.availableStock').textContent = '';
-}
-
-// Add event listener for item select change
-$("#itemTable").on("change", ".item-select", function() {
-    fetchItemData(this);
 });
 
-// Add event listener for input change in item quantity and discount
-$("#itemTable").on("input", ".item-quantity, .item-discount", function() {
-    var row = this.closest('tr');
-    fetchItemData(row.querySelector('.item-select'));
-});
 
-// Add event listener for input change in place of supply
-$("#itemTable").on("change", ".placeOfSupply", function() {
-    var row = this.closest('tr');
-    fetchItemData(row.querySelector('.item-select'));
-});
-  });
-  
 </script>
 
 <script>
@@ -2413,7 +2546,7 @@ function updateSubtotal() {
 document.querySelectorAll('.item-amount').forEach(function(input) {
     input.addEventListener('input', function(event) {
         updateSubtotal();
-        
+      
         
     });
 });
@@ -2423,6 +2556,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateSubtotal();
     
     updateAmount(); 
+    calculateTaxes(data)
        
        
     
@@ -2452,6 +2586,7 @@ function updateAmount() {
     var amount = (quantity * rate) - discount;
     document.getElementById('amount').value = amount.toFixed(2);
     updateSubtotal();
+    calculateTaxes(data);
     
 
    
@@ -2484,10 +2619,9 @@ function updateAmount() {
 
 
 <script>
-    function calculateTaxes(data) {
+   function calculateTaxes(data) {
     var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
-    var amountFields = table.querySelectorAll('.item-amount');
-    var taxFields = table.querySelectorAll('.item-tax');
+    var rows = table.querySelectorAll('tr');
     
     var placeOfSupply = document.getElementById('placeOfSupply').value;
     var totalTaxAmount = 0;
@@ -2495,9 +2629,12 @@ function updateAmount() {
     var totalSGST = 0;
     var totalIGST = 0;
 
-    for (var i = 0; i < amountFields.length; i++) {
-        var amount = parseFloat(amountFields[i].value) || 0;
-        var taxRate = parseFloat(taxFields[i].value) || 0;
+    rows.forEach(function(row) {
+        var amountField = row.querySelector('.item-amount');
+        var taxField = row.querySelector('.item-tax');
+
+        var amount = parseFloat(amountField.value) || 0;
+        var taxRate = parseFloat(taxField.value) || 0;
         
         var taxType = placeOfSupply === data.company_state ? 'GST' : 'IGST';
     
@@ -2509,10 +2646,13 @@ function updateAmount() {
             var halfTaxAmount = taxAmount / 2;
             totalCGST += halfTaxAmount;
             totalSGST += halfTaxAmount;
+            totalIGST = 0; // Reset IGST to 0
         } else if (taxType === 'IGST') {
             totalIGST += taxAmount;
+            totalCGST = 0; // Reset CGST to 0
+            totalSGST = 0; // Reset SGST to 0
         }
-    }
+    });
 
     document.getElementById('cgst').value = totalCGST.toFixed(2);
     document.getElementById('sgst').value = totalSGST.toFixed(2);
@@ -2521,6 +2661,7 @@ function updateAmount() {
     document.getElementById('taxAmount').value = totalTaxAmount.toFixed(2);
     
     updateTotal();
+   
 
     var itemTaxFields = document.querySelectorAll('.item-tax');
     itemTaxFields.forEach(function(field) {
@@ -2545,20 +2686,18 @@ function updateAmount() {
 }
 
 
+
 document.getElementById('shippingCharge').addEventListener('input', updateTotal);
 document.getElementById('adjustment').addEventListener('input', updateTotal);
 document.getElementById('subtotal').addEventListener('input', updateTotal);
+
+
+
     </script>
 
 
 
-<script>
-    // Function to handle changes in the discount field
-   
-  </script>
 
-
- 
 
 
                 
