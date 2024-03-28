@@ -321,15 +321,14 @@ urlpatterns = [
     path('get_item_data/<int:item_id>/',views.get_item_data, name='get_item_data'),
     path('challan_add_customer/',views.challan_add_customer, name='challan_add_customer'),
     path('challan_customer_payment_terms_add/',views.challan_customer_payment_terms_add, name='challan_customer_payment_terms_add'),
-    path('customer_dropdown/',views.customer_dropdown, name='customer_dropdown'),
-    path('challan_create_item/',views.challan_create_item, name='challan_create_item'),
-    path('challan_item_dropdown/',views.challan_item_dropdown, name='challan_item_dropdown'),
-    path('challan_add_unit/',views.challan_add_unit, name='challan_add_unit'),
-    path('challan_unit_dropdown/',views.challan_unit_dropdown, name='challan_unit_dropdown'),
-    path('challan_add_account/',views.challan_add_account, name='challan_add_account'),
-    path('challan_account_dropdown/',views.challan_account_dropdown, name='challan_account_dropdown'),
-
-
+    path('challan_customer_dropdown/',views.challan_customer_dropdown, name='challan_customer_dropdown'),
+    path('challan_customer_check_gst/',views.challan_customer_check_gst, name='challan_customer_check_gst'),
+    path('challan_check_customer_term_exist/',views.challan_check_customer_term_exist, name='challan_check_customer_term_exist'),
+    path('challan_check_customer_email_exist/',views.challan_check_customer_email_exist, name='challan_check_customer_email_exist'),
+    path('challan_check_customer_work_phone_exist/',views.challan_check_customer_work_phone_exist, name='challan_check_customer_work_phone_exist'),
+    path('challan_check_customer_phonenumber_exist/',views.challan_check_customer_phonenumber_exist, name='challan_check_customer_phonenumber_exist'),
+    path('challan_check_customer_work_phone_exist/',views.challan_check_customer_work_phone_exist, name='challan_check_customer_work_phone_exist'),
+    path('challan_term_dropdown/',views.challan_term_dropdown, name='challan_term_dropdown'),
     #End
     
     path('Company/employeeloan_trans/<int:id>/',views.employeeloan_trans, name='employeeloan_trans'),

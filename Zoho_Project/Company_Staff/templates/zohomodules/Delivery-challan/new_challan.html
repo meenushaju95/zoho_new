@@ -379,7 +379,7 @@ input {
                         </select>
                         
                         
-                        <button type="button" id="newwItem" data-toggle="modal" data-target="#newwItem" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;">+</button>
+                        <button type="button" id="newwItem" data-toggle="modal" data-target="#newItemModal" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;">+</button>
                        
                     
                     
@@ -402,8 +402,7 @@ input {
                 <td><input type="text" id="amount"   class="item-amount" name="amount" style="width: 100%;" readonly  oninput="updateSubtotal()"></td>
                
                 <td>
-                  <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="removeRow(this)">-</button>
-                  <button type="button" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" onclick="cloneRow(this)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                   <button type="button" style="  width: 50px; height: 40px;border: none;" onclick="removeRow(this)"><span style="color: orange;"><i class="fa fa-trash" aria-hidden="true"></i></span></button>
               </td>
             </tr>
         </tbody>
@@ -447,10 +446,10 @@ input {
       <input type="text" id="taxAmount" name="taxAmount" readonly><br>
 
       <label for="shippingCharge">Shipping Charge:</label><br>
-      <input type="number" id="shippingCharge" value="{{0.00}}" name="shippingCharge"><br>
+      <input type="number" id="shippingCharge"  name="shippingCharge"><br>
 
       <label for="adjustment">Adjustment:</label><br>
-      <input type="number" id="adjustment" value="{{0.00}}" name="adjustment"><br>
+      <input type="number" id="adjustment"  name="adjustment"><br>
 
       <label for="total">Total:</label><br>
       <input type="text" id="total" name="total" ><br>
@@ -1234,7 +1233,7 @@ input {
                     </div>
                     <div class="modal-body" style="background: rgb(32, 35, 37);">
                     <div class="card p-3 m-3" style="background-color: #141414a2;">
-                        <form action="" method="post" class="needs-validation" novalidate autocomplete="off" id="modalPayment_terms">
+                        <form action="" method="post" class="needs-validation" novalidate autocomplete="off" id="modalpayment_terms" onclick="termadd()">
                         
             
             
@@ -1294,87 +1293,69 @@ input {
 
                     </div></div></div>
                    
-                <script>
-                    document.getElementById("termSave").addEventListener("click", function(event) {
-    // Prevent the default form submission behavior
-    event.preventDefault();
-    
-    // Perform form submission logic
-    
-    // Optionally close the payment modal
-    $('#newpayment').modal('hide');
-});
-
-// Handle Cancel button click
-document.querySelector("#newpayment .btn.btn-outline-warning").addEventListener("click", function(event) {
-    // Perform any necessary cleanup actions
-    
-    // Close the payment modal
-    $('#newpayment').modal('hide');
-});
-                </script>
+               
                    
                
                
                        
 
 
-                            <script>
-                              $(document).on("click", "#itemSave", function() {
-                                  var formData = new FormData(document.getElementById('myForm'));
-                              
-                                  $.ajax({
-                                      url: "{% url 'challan_add_customer' %}",
-                                      type: "POST",
-                                      data: formData,
-                                      processData: false,
-                                      contentType: false,
-                                      headers: {
-                                          "X-CSRFToken": "{{ csrf_token }}"
-                                      },
-                                      success: function(response) {
-                                          if (response.message === 'success') {
-                                              alert('Customer added successfully!');
-                                              document.getElementById("myForm").reset();
-                                              $("#img").attr("src", "");
-                                              $('#newCustomer').modal('hide');
-                              
-                                              // Reload dropdown options
-                                              reloadItem();
-                                          }
-                                      },
-                                      error: function(xhr, status, error) {
-                                          console.error(xhr.responseText);
-                                          alert('Error adding customer. Please try again.');
-                                      }
-                                  });
-                              });
-                              
-                              function reloadItem() {
-                                  $.ajax({
-                                      url: "{% url 'customer_dropdown' %}",
-                                      type: "GET",
-                                      dataType: "json",
-                                      success: function(data) {
-                                          var dropdown = $('#customerName');
-                                          dropdown.empty();
-                              
-                                          $.each(data, function(key, value) {
-                                              dropdown.append($('<option></option>').attr('value', key).text(value));
-                                          });
-                                          dropdown.css({
-                                              'font-size': '16px',
-                                              'color': 'white',
-                                              // You can set the background color here
-                                          });
-                                      },
-                                      error: function(xhr, status, error) {
-                                          console.error(xhr.responseText);
-                                          alert('Error reloading dropdown options.');
-                                      }
-                                  });
-                              }
-                              </script>
+                    <script>
+                        function submitForm() {
+                            var formData = new FormData(document.getElementById('myForm'));
+                        
+                            $.ajax({
+                                url: "{% url 'challan_add_customer' %}",
+                                type: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                headers: {
+                                    "X-CSRFToken": "{{ csrf_token }}"
+                                },
+                                success: function(response) {
+                                    if (response.message === 'success') {
+                                        alert('Customer added successfully!');
+                                        document.getElementById("myForm").reset();
+                                        $("#img").attr("src", "");
+                                        $('#newCustomer').modal('hide');
+                        
+                                        // Reload dropdown options
+                                        reloadItem();
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error(xhr.responseText);
+                                    alert('Error adding customer. Please try again.');
+                                }
+                            });
+                        }
+                        
+                        function reloadItem() {
+                            $.ajax({
+                                url: "{% url 'challan_customer_dropdown' %}",
+                                type: "GET",
+                                dataType: "json",
+                                success: function(data) {
+                                    var dropdown = $('#customerName');
+                                    dropdown.empty();
+                        
+                                    $.each(data, function(key, value) {
+                                        dropdown.append($('<option></option>').attr('value', key).text(value));
+                                    });
+                                    dropdown.css({
+                                        'font-size': '16px',
+                                        'color': 'white',
+                                        // You can set the background color here
+                                    });
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error(xhr.responseText);
+                                    alert('Error reloading dropdown options.');
+                                }
+                            });
+                        }
+                        </script>
                    
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" ></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" ></script>
@@ -1498,7 +1479,7 @@ document.querySelector("#newpayment .btn.btn-outline-warning").addEventListener(
                 $('#gstMessage').text('GST number is valid.').css('color', 'green');
                 // GST number is valid, call AJAX to check if it exists
                 $.ajax({
-                    url: "{% url 'customer_check_gst' %}",
+                    url: "{% url 'challan_customer_check_gst' %}",
                     headers: {'X-CSRFToken': csrftoken}, 
                     type: 'POST',
                     data: {gstNumber: gstNumber},
@@ -1897,56 +1878,136 @@ function updateOutputFields() {
         
     }
 </script>
-
+<!---------------------------------------------------
 <script>
-    $(document).ready(function() {
-        // Flag to track whether the payment modal should be closed or not
-        var shouldClosePaymentModal = false;
+    var shouldClosePaymentModal = false; 
+    
+    function addterm() {
+        var formData = new FormData(document.getElementById('modalpayment_terms')); 
 
-        // Intercept the close event of the parent modal
-        $('#newCustomer').on('hide.bs.modal', function (e) {
-            if (!shouldClosePaymentModal) {
-                // Prevent the parent modal from closing
-                e.preventDefault();
-            }
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'challan_customer_payment_terms_add' %}",
+            data: {
+                name: $("#tname").val(),
+                days: $("#tdays").val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (response) {
+                $("#tname").val('');
+                $("#tdays").val('');
+                var paytearmSelect = $('#paytearm-select');
+                paytearmSelect.empty(); 
+
+                paytearmSelect.append('<option value="Due on Receipt" selected>Due on Receipt</option>');
+
+                $.each(response.payment_list, function (index, pay_terms) {
+                    paytearmSelect.append('<option value="' + pay_terms.id + '">' + pay_terms.name + '</option>');
+                });
+
+                shouldClosePaymentModal = true;
+
+                $('#newpayment').modal('hide');
+            },
         });
+    }
 
-        // Event handler for saving payment terms
-        $(document).on("click", "#termSave", function (event) {
-            event.preventDefault(); // Prevent default form submission behavior
-
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'challan_customer_payment_terms_add' %}",
-                data: {
-                    name: $("#tname").val(),
-                    days: $("#tdays").val(),
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    $("#tname").val('');
-                    $("#tdays").val('');
-                    var paytearmSelect = $('#paytearm-select');
-                    paytearmSelect.empty(); // Clear existing options
-
-                    // Add "Select" option
-                    paytearmSelect.append('<option value="Due on Receipt" selected>Due on Receipt</option>');
-
-                    // Add new options based on the Ajax response
-                    $.each(response.payment_list, function (index, pay_terms) {
-                        paytearmSelect.append('<option value="' + pay_terms.id + '">' + pay_terms.name + '</option>');
-                    });
-
-                    // Set the flag to allow closing the payment modal
-                    shouldClosePaymentModal = true;
-
-                    // Close the payment modal
-                    $('#newpayment').modal('hide');
-                },
-            });
-        });
+    
+    $('#newpayment').on('click', function (event) {
+        event.stopPropagation();
     });
 </script>
+<!--------------------------------------------------------->
+
+<script>
+    // Function to handle form submission
+    $(document).ready(function() {
+        $('#modalpayment_terms').submit(function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            // Call the additem function
+            additem();
+        });
+    });
+
+    // Function to add item
+    function additem() {
+        var formData = new FormData(document.getElementById('modalpayment_terms'));
+    
+        $.ajax({
+            url: "{% url 'challan_customer_payment_terms_add' %}",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            success: function(response) {
+                if (response.message === 'success') {
+                    alert('Term added successfully!');
+                    document.getElementById("modalpayment_terms").reset();
+                    $("#img").attr("src", "");
+                    $('#newpayment').modal('hide');
+    
+                    // Reload dropdown options
+                    reloaditem();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Error adding Terms. Please try again.');
+            }
+        });
+    }
+
+    // Function to reload dropdown options
+    function reloaditem() {
+        $.ajax({
+            url: "{% url 'challan_term_dropdown' %}",
+            type: "GET",
+            dataType: "json",
+            success: function(data) {
+                var dropdown = $('#customerName');
+                dropdown.empty();
+    
+                $.each(data, function(key, value) {
+                    dropdown.append($('<option></option>').attr('value', key).text(value));
+                });
+                dropdown.css({
+                    'font-size': '16px',
+                    'color': 'white',
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Error reloading dropdown options.');
+            }
+        });
+    }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <script>
     // Get the input element
     const inputElement = document.getElementById("tname");
@@ -1967,7 +2028,7 @@ $(document).ready(function() {
        
         $.ajax({
             type: 'GET',
-            url:'{% url "check_customer_term_exist" %}',
+            url:'{% url "challan_check_customer_term_exist" %}',
             data: {
                 term_name: termName
             },
@@ -1996,7 +2057,7 @@ $('#vendor-email').on('input', function() {
     console.log(vendorEmail)
     $.ajax({
         type: 'GET',
-        url:'{% url "check_customer_email_exist" %}',
+        url:'{% url "challan_check_customer_email_exist" %}',
         data: {
             vendor_email: vendorEmail
         },
@@ -2022,7 +2083,7 @@ $('#workphone').on('input', function() {
     
     $.ajax({
         type: 'GET',
-        url:'{% url "check_customer_work_phone_exist" %}',
+        url:'{% url "challan_check_customer_work_phone_exist" %}',
         data: {
             w_Phone: wPhone
         },
@@ -2049,7 +2110,7 @@ $('#mphone').on('input', function() {
     
     $.ajax({
         type: 'GET',
-        url:'{% url "check_customer_phonenumber_exist" %}',
+        url:'{% url "challan_check_customer_phonenumber_exist" %}',
         data: {
             m_Phone: mPhone
         },
@@ -2155,142 +2216,143 @@ $('#mphone').on('input', function() {
 
 
 
-  document.getElementById('item').addEventListener('change', function() {
-      var itemId = this.value;
-  
-      if (itemId) {
-          fetchitemData(itemId);
-      } else {
-          clearitemInfo();
-      }
-  });
-  document.getElementById('discount').addEventListener('input', function() {
-    var itemId = document.getElementById('item').value;
-
-    if (itemId) {
-        fetchitemData(itemId);
-    }
-});
-  
-  document.getElementById('quantity').addEventListener('input', function() {
-      var quantity = parseFloat(this.value);
-      var itemId = document.getElementById('item').value;
-  
-      if (quantity >= 0 && itemId) {
-          fetchitemData(itemId);
-      } else {
-          clearStock();
-      }
-  });
-
-  $(document).ready(function () {
-    $('.item-select').select2({
-        placeholder: 'Select Product',
-        width: '71%',
-    });
-
-    $('.item-select').on('change', function() {
-        var itemId = $(this).val();
+    document.getElementById('item').addEventListener('change', function() {
+        var itemId = this.value;
+    
         if (itemId) {
             fetchitemData(itemId);
         } else {
             clearitemInfo();
         }
     });
-});
+    document.getElementById('discount').addEventListener('input', function() {
+      var itemId = document.getElementById('item').value;
   
-  function fetchitemData(itemId) {
-    $.ajax({
-        url: '/get_item_data/' + itemId + '/',
-        type: 'GET',
-        success: function(data) {
-            console.log('Received item data:', data);
-            document.getElementById('hsn').value = data.hsn;
-            document.getElementById('rate').value = data.rate;
-
-            updateTaxCalculation(data);
-            updateAvailableStock(data.stock, data); 
-            calculateTaxes(data)
-
-            $('.item-select').select2('close');
-        },
-    });
-
-   
-}
-
-
-function updateTaxCalculation(data) {
-    var placeOfSupply = document.getElementById('placeOfSupply').value;
-    var taxType = 'GST';
-
-    if (placeOfSupply !== data.company_state) {
-        taxType = 'IGST';
-    }
-
-    var taxRate = (taxType === 'GST') ? data.intratax : data.intertax;
-    document.getElementById('tax').value = taxRate;
-}
-
-// Add event listener for placeOfSupply input field
-document.getElementById('placeOfSupply').addEventListener('change', function() {
-    // Call updateTaxCalculation function to update tax calculation when placeOfSupply value changes
-    var itemId = document.getElementById('item').value;
-    if (itemId) {
-        fetchitemData(itemId);
-    }
-});
-
-function updateAvailableStock(stock, data) { // Accept data as a parameter
-    var quantity = parseFloat(document.getElementById('quantity').value);
-    var availableStock = stock - quantity;
-    document.getElementById('availableStock').innerText = 'Available Stock: ' + availableStock;
-    
-    var rate = parseFloat(data.rate);
-    var discount = parseFloat(document.getElementById('discount').value);
-   
-    var amount = (quantity * rate) - discount;
-    // Set amount to calculated value or '0.00' if NaN or not finite
-    var amountDisplay = isNaN(amount) || !isFinite(amount) ? '0.00' : amount.toFixed(2);
-    
-    // Get NodeList of elements with class 'item-amount'
-    var itemAmountElements = document.querySelectorAll('.item-amount');
-    
-    // Loop through each element and set its value
-    itemAmountElements.forEach(function(element) {
-        element.value = amountDisplay;
-    });
-    
-    calculateTaxes(data);
-}
-
-    
-
-    
+      if (itemId) {
+          fetchitemData(itemId);
+      }
+  });
   
-
+    document.getElementById('quantity').addEventListener('input', function() {
+        var quantity = parseFloat(this.value);
+        var itemId = document.getElementById('item').value;
     
-   
+        if (quantity >= 0 && itemId) {
+            fetchitemData(itemId);
+            updateavailableStock(data.stock,stock)
+        } else {
+            clearStock();
+        }
+    });
+  
+    $(document).ready(function () {
+      $('.item-select').select2({
+          placeholder: 'Select Product',
+          width: '71%',
+      });
+  
+      $('.item-select').on('change', function() {
+          var itemId = $(this).val();
+          if (itemId) {
+              fetchitemData(itemId);
+          } else {
+              clearitemInfo();
+          }
+      });
+  });
     
-
-
-
-  function clearitemInfo() {
-      document.getElementById('hsn').value = '';
-      document.getElementById('rate').value = '';
-      document.getElementById('tax').value = '';
+    function fetchitemData(itemId) {
+      $.ajax({
+          url: '/get_item_data/' + itemId + '/',
+          type: 'GET',
+          success: function(data) {
+              console.log('Received item data:', data);
+              document.getElementById('hsn').value = data.hsn;
+              document.getElementById('rate').value = data.rate;
+  
+              updateTaxCalculation(data);
+              updateavailableStock(data.stock, data); 
+              calculateTaxes(data)
+  
+              $('.item-select').select2('close');
+          },
+      });
+  
+     
   }
   
-  function clearStock() {
-      var stockLabel = document.getElementById('availableStock');
-      stockLabel.textContent = ''; 
+  
+  function updateTaxCalculation(data) {
+      var placeOfSupply = document.getElementById('placeOfSupply').value;
+      var taxType = 'GST';
+  
+      if (placeOfSupply !== data.company_state) {
+          taxType = 'IGST';
+      }
+  
+      var taxRate = (taxType === 'GST') ? data.intratax : data.intertax;
+      document.getElementById('tax').value = taxRate;
   }
-
- 
+  
+  // Add event listener for placeOfSupply input field
+  document.getElementById('placeOfSupply').addEventListener('change', function() {
+      // Call updateTaxCalculation function to update tax calculation when placeOfSupply value changes
+      var itemId = document.getElementById('item').value;
+      if (itemId) {
+          fetchitemData(itemId);
+      }
+  });
+  
+  function updateavailableStock(stock, data) { // Accept data as a parameter
+      var quantity = parseFloat(document.getElementById('quantity').value);
+      var availableStock = stock - quantity;
+      document.getElementById('availableStock').innerText = 'Available Stock: ' + availableStock;
+      
+      var rate = parseFloat(data.rate);
+      var discount = parseFloat(document.getElementById('discount').value);
+     
+      var amount = (quantity * rate) - discount;
+      // Set amount to calculated value or '0.00' if NaN or not finite
+      var amountDisplay = isNaN(amount) || !isFinite(amount) ? '' : amount.toFixed(2);
+      
+      // Get NodeList of elements with class 'item-amount'
+      var itemAmountElements = document.querySelectorAll('.item-amount');
+      
+      // Loop through each element and set its value
+      itemAmountElements.forEach(function(element) {
+          element.value = amountDisplay;
+      });
+      
+      calculateTaxes(data);
+  }
+  
+      
+  
+      
+    
+  
+      
+     
+      
+  
+  
+  
+    function clearitemInfo() {
+        document.getElementById('hsn').value = '';
+        document.getElementById('rate').value = '';
+        document.getElementById('tax').value = '';
+    }
+    
+    function clearStock() {
+        var stockLabel = document.getElementById('availableStock');
+        stockLabel.textContent = ''; 
+    }
+  
    
- 
-
-</script>
+     
+   
+  
+  </script>
 <script>
   function addRow() {
     var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
@@ -2502,13 +2564,13 @@ function updateGSTField(totalTaxAmount) {
         fetchItemData(this);
     });
 
-    // Add event listener for input change in item quantity and discount using event delegation
+    
     $(document).on("input", ".item-quantity, .item-discount", function() {
         var row = $(this).closest('tr');
         fetchItemData(row.find('.item-select'));
     });
 
-    // Add event listener for place of supply change
+    
     $('#placeOfSupply').on('change', function() {
         // Loop through each row and fetch item data
         $('.item-select').each(function() {
@@ -2520,7 +2582,244 @@ function updateGSTField(totalTaxAmount) {
 
 
 </script>
+<script>
+     
+    function addRow() {
+      var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
+      var newRow = table.insertRow(table.rows.length);
+      var index = table.rows.length;
+      var row = newRow.insertCell(0);
+      var item = newRow.insertCell(1);
+      var hsn = newRow.insertCell(2);
+      var quantity = newRow.insertCell(3);
+      var rate = newRow.insertCell(4);
+      var discount = newRow.insertCell(5);
+      var tax = newRow.insertCell(6);
+      var amount = newRow.insertCell(7);
+      var action = newRow.insertCell(8);
+      row.innerHTML = index;
+  
+      item.innerHTML = `
+          <div style="display: flex; align-items: center;">
+              <select name="item" id="item${index}" class="item-select" onchange="fetchItemData(this)" style="flex: 1; width: 250%;color: white;">
+                  <option value="" selected></option>
+                  {% for i in item %}
+                  <option value="{{i.id}}" style="color: white;">{{i.item_name}}</option>
+                  {% endfor %}
+              </select>
+            
+              <button type="button" id="newwItem" data-toggle="modal" data-target="#newwItem" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" >+</button>
+          </div>
+      `;
+      
+      hsn.innerHTML = '<input type="text" name="hsn" class="item-hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+      quantity.innerHTML = '<input type="number"  class="item-quantity" name="quantity" value="0" class="item-quantity" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label class="availableStock" style="color: orange;"></label>';
+      rate.innerHTML = '<input type="number" name="rate" class="item-rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+      discount.innerHTML = '<input type="number"  name="discount" class="item-discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+      tax.innerHTML = `
+          <select name="tax" class="item-tax" style="width: 100%;">
+              <option value="0">0% GST</option>
+              <option value="3">3% GST</option>
+              <option value="5">5% GST</option>
+              <option value="12">12% GST</option>
+              <option value="18">18% GST</option>
+              <option value="28">28% GST</option>
+          </select>
+      `;
+      amount.innerHTML = '<input type="text"  name="amount" class="item-amount" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"  oninput="updateSubtotal()">';
+      action.innerHTML = `
+      <button type="button" style="  width: 50px; height: 40px;border: none;" onclick="removeRow(this)"><span style="color: orange;"><i class="fa fa-trash" aria-hidden="true"></i></span></button>
+      `;
+  
+      $('#item' + index).select2({
+              placeholder: '',
+              width: '71%',
+          });
+  
+          // Event listener for item select change
+          $('.item-select').on('change', function() {
+             
+                  fetchItemData(this);
+             
+          })
+  
+     
+      // Add event listeners for quantity and discount inputs in the new row
+      newRow.querySelector('.item-quantity').addEventListener('input', calculateAmount);
+      newRow.querySelector('.item-discount').addEventListener('input', calculateAmount);
+      updateSubtotal()
+  
+      
+  }
+  
+  function calculateAmount() {
+      var row = this.closest('tr');
+      var quantity = parseFloat(row.querySelector('.item-quantity').value);
+      var rate = parseFloat(row.querySelector('.item-rate').value);
+      var discount = parseFloat(row.querySelector('.item-discount').value);
+  
+      // Calculate the amount
+      var amount = (quantity * rate) - discount;
+  
+      // Update the amount field in the same row
+      var amountField = row.querySelector('.item-amount');
+      amountField.value = isNaN(amount) || !isFinite(amount) ? '' : amount.toFixed(2);
+      updateSubtotal()
+     
+      
+  }
+    
+  function removeRow(button) {
+      var row = button.closest('tr');
+      var table = row.closest('table');
+      if (table.rows.length > 2) {
+          var amountField = row.querySelector('.item-amount');
+          var taxField = row.querySelector('.item-tax');
+          
+          var amount = parseFloat(amountField.value) || 0;
+          var taxRate = parseFloat(taxField.value) || 0;
+          var subtotalField = document.getElementById('subtotal');
+          var currentSubtotal = parseFloat(subtotalField.value) || 0;
+          var newSubtotal = Math.max(currentSubtotal - amount, 0);
+          subtotalField.value = newSubtotal.toFixed(2);
+          
+          var taxAmountToRemove = (amount * taxRate) / 100;
+  
+          // Subtract the tax amount of the removed row from the total tax amount
+          var totalTaxAmountField = document.getElementById('taxAmount');
+          var currentTotalTaxAmount = parseFloat(totalTaxAmountField.value) || 0;
+          var newTotalTaxAmount = Math.max(currentTotalTaxAmount - taxAmountToRemove, 0);
+          totalTaxAmountField.value = newTotalTaxAmount.toFixed(2);
+          console.log(newTotalTaxAmount)
+          
+  
+          row.remove();
+          updateGSTField(newTotalTaxAmount); // Update GST fields based on new tax amount
+  
+          // Recalculate taxes for existing rows
+          calculateTaxes(data);
+  
+          // Update other totals if needed
+          updateAmount();
+      } else {
+          clearRowContent(row);
+      }
+  }
+  
+  function updateGSTField(totalTaxAmount) {
+      var igst = parseFloat(document.getElementById('igst').value) || 0;
+      var sgst = parseFloat(document.getElementById('sgst').value) || 0;
+      var cgst = parseFloat(document.getElementById('cgst').value) || 0;
+  
+      if (igst > 0) {
+          // If IGST is present, update its value
+          document.getElementById('igst').value = totalTaxAmount.toFixed(2);
+      } else {
+          // If IGST is not present, calculate and update CGST and SGST fields
+          var halfTaxAmount = totalTaxAmount / 2;
+          document.getElementById('cgst').value = halfTaxAmount.toFixed(2);
+          document.getElementById('sgst').value = halfTaxAmount.toFixed(2);
+      }
+  }
+    
+  
+    function clearRowContent(row) {
+      var cells = row.cells;
+      for (var i = 0; i < cells.length; i++) {
+          cells[i].innerHTML = '';
+      }
+  
+      
+  
+    }
+  </script>
 
+  
+  <script>
+    
+      
+  
+          // Function to fetch item data
+          function fetchItemData(element) {
+              var itemId = $(element).val();
+              var row = $(element).closest('tr');
+  
+              if (itemId) {
+                  $.ajax({
+                      url: '/get_item_data/' + itemId + '/',
+                      type: 'GET',
+                      success: function(data) {
+                          console.log('Received item data:', data);
+                          $(row).find('.item-hsn').val(data.hsn);
+                          $(row).find('.item-rate').val(data.rate);
+                          $(row).find('.item-tax').val(calculateTax(data));
+  
+                          updateAvailableStock(row, data.stock);
+                          calculateTaxes(data);
+                          $('#item'+ index).select2('close');
+                      },
+                      error: function(error) {
+                          console.error('Error fetching item data:', error);
+                      }
+                  });
+              } else {
+                  clearItemInfo(row);
+                  clearStock(row);
+              }
+              
+          }
+  
+          // Function to calculate tax based on company state
+          function calculateTax(data) {
+              var placeOfSupply = $('#placeOfSupply').val();
+              return (placeOfSupply !== data.company_state) ? data.intertax : data.intratax;
+          }
+  
+          // Function to update available stock for the row
+          function updateAvailableStock(row, stock) {
+              var quantityInput = $(row).find('.item-quantity');
+              var quantity = parseFloat(quantityInput.val());
+              var availableStockLabel = $(row).find('.availableStock');
+  
+              if (!isNaN(quantity) && quantity >= 0) {
+                  var availableStock = Math.max(stock - quantity, 0);
+                  availableStockLabel.text('Available Stock: ' + availableStock);
+                  availableStockLabel.css('color', 'orange');
+              } else {
+                  availableStockLabel.text('Available Stock: ' + stock);
+                  availableStockLabel.css('color', 'orange');
+              }
+          }
+  
+          // Function to clear item info fields for the row
+          function clearItemInfo(row) {
+              $(row).find('.item-hsn').val('');
+              $(row).find('.item-rate').val('');
+              $(row).find('.item-tax').val('');
+          }
+  
+          // Function to clear stock info field for the row
+          function clearStock(row) {
+              $(row).find('.availableStock').text('');
+          }
+  
+          // Event listener for input change in item quantity and discount
+          $(document).on("input", ".item-quantity, .item-discount", function() {
+              var row = $(this).closest('tr');
+              fetchItemData(row.find('.item-select'));
+          });
+  
+          // Event listener for place of supply change
+          $('#placeOfSupply').on('change', function() {
+              // Loop through each row and fetch item data
+              $('.item-select').each(function() {
+                  fetchItemData(this);
+              });
+          });
+      
+  </script>
+  
+  
 <script>
   function calculateSubtotal() {
     var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
@@ -2710,7 +3009,23 @@ document.getElementById('subtotal').addEventListener('input', updateTotal);
 
 
 
-
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeFields('.item-amount', '0.00'); 
+        initializeFields('#igst, #cgst, #sgst, #taxAmount, #shippingCharge, #adjustment, #total', '0.00'); // Initialize other fields to '0.00'
+    });
+    
+    function initializeFields(selector, defaultValue) {
+        var fields = document.querySelectorAll(selector);
+        fields.forEach(function(field) {
+            // Check if the value is NaN or not a finite number
+            if (isNaN(parseFloat(field.value)) || !isFinite(field.value)) {
+                // If NaN or not finite, set the value to the default value
+                field.value = defaultValue;
+            }
+        });
+    }
+    </script>
 
 
 </body>
