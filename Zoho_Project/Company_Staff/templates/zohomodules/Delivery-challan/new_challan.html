@@ -112,10 +112,7 @@
   }
   
   
-  .column {
-    width: 48%; /* Adjust as needed */
-    margin-bottom: 20px;
-  }
+  
 
   /* Input field styles */
   input[type="text"],
@@ -149,7 +146,7 @@
     background-color: #000;
   }
   input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(1); /* Invert color for the calendar icon */
+      filter: invert(1); 
     }
 
 
@@ -175,12 +172,12 @@ table {
   
 #itemTable th:nth-child(1),
   #itemTable td:nth-child(1) {
-    width: 30px; /* Decrease width of Index column */
+    width: 30px; 
   }
 
   #itemTable th:nth-child(2),
   #itemTable td:nth-child(2) {
-    width: 200px; /* Increase width of Item column */
+    width: 200px; 
   }
 
 
@@ -252,23 +249,24 @@ input {
               </div>
           {% endfor %}
       {% endif %}
-          <form method="post" action="">
+          <form method="post" action="{% url 'add_delivery_challan' %}">
             {% csrf_token %}
             <div class="container">
               <!-- Left Column -->
-              <div class="column">
-                <label for="customerName">Customer Name*</label>
-                <div style="display: flex; align-items: center;">
+              <div class="col-md-6">
+                <div class="m-3" style="display: flex; align-items: center;">
+                <label for="customerName" style="width: 30%;">Customer Name : </label>&nbsp;&nbsp;
+                
                   
                  
         
-     <select id="customerName" name="customerName" data-live-search="true" class="custom-select" style="width: 100%;">
+     <select id="customerName" name="customerName" data-live-search="true" class="custom-select" style="width: 60%;" required>
     <option></option>
     {% for customer in customer %}
         <option value="{{ customer.id }}">{{ customer.first_name }} {{ customer.last_name }}</option>
     {% endfor %}
 </select>
-<button type="button" id="customer" data-toggle="modal" data-target="#newCustomer" style="border: 1px solid orange;border-radius: 5px;width: 50px;height: 50px;">+</button><br>
+<button type="button" id="customer" data-toggle="modal" data-target="#newCustomer" style="border: 1px solid orange;border-radius: 5px;width: 50px;height: 50px;">+</button><br><br>
                 </div>  
                 <script>
  $('#customerName').select2({
@@ -287,27 +285,29 @@ input {
                
                 
                   
-
-                  <label for="customerEmail">Customer Email ID</label>
-                  <input type="email" id="customerEmail" name="customerEmail" >
-            
-                  <label for="billingAddress">Billing Address</label>
-                  <textarea id="billingAddress" name="billingAddress"></textarea><br>
+<div class="m-3" style="display: flex; align-items: center;">
+                  <label for="customerEmail" style="width: 30%;">Customer Email ID :</label>&nbsp
+                  <input type="email" id="customerEmail" name="customerEmail" style="width: 60%;" required></div>
+                  
+                  <div class="m-3" style="display: flex; align-items: center;">
+                  <label for="billingAddress" style="width: 30%">Billing Address :</label>
+                  <textarea id="billingAddress" name="billingAddress" style="width: 60%;" required></textarea><br></div>
                  
-            
-                  <label for="gstTreatment">GST Treatment</label>
-                  <input type="text" id="gstTreatment" name="gstTreatment" readonly >
-            
-                  <label id="gstNumberLabel"  for="gstNumber" >GST Number</label>
-                  <input type="text" id="gstNumber" name="gstNumber" readonly >
+                  <div class="m-3" style="display: flex; align-items: center;">
+                  <label for="gstTreatment" style="width: 30%;">GST Treatment:</label>
+                  <input type="text" id="gstTreatment" name="gstTreatment" readonly style="width:60%" ></div>
+                 
+                  <div class="m-3" style="display: flex; align-items: center;">
+                  <label id="gstNumberLabel"  for="gstNumber" style="width: 30%;" >GST Number:</label>
+                  <input type="text" id="gstNumber" name="gstNumber" readonly style="width: 60%;"></div>
                
               </div>
             
               <!-- Right Column -->
-              <div class="column">
-                
-                  <label for="placeOfSupply">Place of Supply</label>
-                  <select id="placeOfSupply" name="placeOfSupply">
+              <div class="col-md-6">
+                <div class="m-3" style="display: flex; align-items: center;">
+                  &nbsp;<label for="placeOfSupply" style="width: 30%;">Place of Supply:</label>
+                  <select id="placeOfSupply" name="placeOfSupply" style="width: 60%;" required>
                     <option value="value" selected></option>
                     <option value="[AN]-Andaman And Nicobar Islands">[AN]-Andaman And Nicobar Islands</option> <option value="[AD]-Andhra Pradesh">[AD]-Andhra Pradesh</option>
                     <option value="[AR]-Arunachal Pradesh">[AR]-Arunachal Pradesh	</option> <option value="volvo">[AS]-Assam</option>
@@ -326,24 +326,29 @@ input {
                     <option value="[TS]-Telenghana">[TS]-Telenghana</option><option value="[TR]-Tripura">[TR]-Tripura</option><option value="[UP]-Uttar Pradesh">[UP]-Uttar Pradesh</option>
                     <option value="[UK]-Utharakhand">[UK]-Utharakhand</option><option value="[WB]-West Bengal">[WB]-West Bengal</option>
                     <option value="[OT]-Other Territory">[OT]-Other Territory</option>
-                  </select>
+                  </select></div>
+                
+                  <div class="m-3" style="display: flex; align-items: center;">
+                  <label for="deliveryChallan" style="width: 30%;">Delivery Challan No:</label>
+                  <input type="text" id="deliveryChallan" style="width: 60%;" name="deliveryChallan" oninput="updateChallanPattern()" required>
+                  </div>
+
+                  <div class="m-3" style="display: flex; align-items: center;">
+                  <label for="referenceNumber" style="width: 30%;">Reference Number:</label>
+                  <input type="text" id="referenceNumber" name="referenceNumber" value="{{reference_number}}" style="width: 60%;" readonly></div>
             
-                  <label for="deliveryChallan">Delivery Challan No</label>
-                  <input type="text" id="deliveryChallan" name="deliveryChallan" oninput="updateChallanPattern()">
+                  <div class="m-3" style="display: flex; align-items: center;">
+                  <label for="deliveryChallanDate" style="width: 30%;">Delivery Challan Date:</label>
+                  <input type="date" id="deliveryChallanDate" name="deliveryChallanDate" style="width: 60%;" required><br></div>
             
-                  <label for="referenceNumber">Reference Number</label>
-                  <input type="text" id="referenceNumber" name="referenceNumber" >
-            
-                  <label for="deliveryChallanDate">Delivery Challan Date</label>
-                  <input type="date" id="deliveryChallanDate" name="deliveryChallanDate"><br>
-            
-                  <label for="challanType">Challan Type</label>
-                  <select id="challanType" name="challanType">
+                  <div class="m-3" style="display: flex; align-items: center;">
+                  <label for="challanType" style="width: 30%;">Challan Type:</label>
+                  <select id="challanType" name="challanType" style="width: 60%;" required>
                     <option value="Supply Of Liquid Gas">Supply Of Liquid Gas</option>
                     <option value="Job Work">Job Work</option>
                     <option value="Supply Of Approval">Supply Of Approval</option>
                     <option value="Others">Others</option>
-                  </select>
+                  </select></div>
                 
               </div>
             </div>
@@ -371,7 +376,7 @@ input {
                 <td>1</td>
                 <td>
                     <div style="display: flex; align-items: center;">
-                        <select name="item" id="item" class="item-select"  onchange="fetchItemData(this.value)" style="flex: 1; width: 250%;color: white;">
+                        <select name="item[]" id="item" class="item-select"  onchange="fetchItemData(this.value)" style="flex: 1; width: 250%;color: white;" required>
                           <option value="value" selected></option>
                             {% for i in item %}
                             <option value="{{i.id}}" style="color: white;" >{{i.item_name}}</option>
@@ -384,12 +389,12 @@ input {
                     
                     
                 </td>
-                <td><input type="text" id="hsn" name="hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
-                <td><input type="number" id="quantity" class="quantity" name="quantity" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label id="availableStock" class="availableStock" style="color: orange;"></label></td>
-                <td><input type="number" id="rate" name="rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
-                <td><input type="number" id="discount" name="discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
+                <td><input type="text" id="hsn" name="hsn[]" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" readonly></td>
+                <td><input type="number" id="quantity" class="quantity" name="quantity[]" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" required><label id="availableStock" class="availableStock" style="color: orange;"></label></td>
+                <td><input type="number" id="rate" name="rate[]" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" readonly></td>
+                <td><input type="number" id="discount" name="discount[]" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td>
-                    <select id="tax" name="tax" class="item-tax" style="width: 100%;">
+                    <select id="tax" name="tax[]" class="item-tax" style="width: 100%;">
                        
                         <option value="0">0% GST</option>
                         <option value="3">3% GST</option>
@@ -399,7 +404,7 @@ input {
                         <option value="28">28% GST</option>
                     </select>
                 </td>
-                <td><input type="text" id="amount"   class="item-amount" name="amount" style="width: 100%;" readonly  oninput="updateSubtotal()"></td>
+                <td><input type="text" id="amount"   class="item-amount" name="amount[]" style="width: 100%;" readonly  oninput="updateSubtotal()"></td>
                
                 <td>
                    <button type="button" style="  width: 50px; height: 40px;border: none;" onclick="removeRow(this)"><span style="color: orange;"><i class="fa fa-trash" aria-hidden="true"></i></span></button>
@@ -409,7 +414,7 @@ input {
     </table>
     <button type="button" onclick="addRow()" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;">+</button>
 </div>
-</div>
+
       
 
 
@@ -417,54 +422,98 @@ input {
 
 <div class="container mt-5">
   <!-- Left Column -->
-  <div class="column">
-      <label for="note">Add Note</label><br>
-      <textarea id="note" name="note"></textarea><br>
-      <input type="file" name="file"><br><br><br><br><br>
+  <div class="col-md-6">
 
-      <input type="checkbox" id="termsAndConditions" name="termsAndConditions" required>
-<label for="termsAndConditions">Agree to Terms and Conditions</label>
+    <div class="m-3" style="display: flex; align-items: center;">
+      <label for="note" style="width: 30%;">Add Note:</label><br>
+      <textarea id="note" name="note" style="width: 60%;" required></textarea><br></div>
+      &nbsp;&nbsp;<input type="file" name="file"><br><br><br><br><br>
+
+      <div class="m-3" style="display: flex; align-items: center;">
+      <input type="checkbox" id="termsAndConditions" name="termsAndConditions" required style="width: 10%;">
+<label for="termsAndConditions" style="width: 60%">Agree to Terms  and Conditions</label>
+  </div>
   </div>
 
   <!-- Right Column -->
-  <div class="column ">
+  <div class="col-md-6 ">
       
+    
+        <!-- Container for Sub Total to Tax Amount fields -->
+        <div class="container mb-3" style="border: 1px solid ;align-items: center;justify-content: center;border-radius: 10px;">
+            <div class="m-3" style="display: flex; align-items: center;">
+                <label for="subtotal" style="width: 120px;">Sub Total:</label>
+                <input type="text" id="subtotal" name="subtotal" readonly onchange="calculateTaxes(data)" style="width:100%;">
+            </div>
+        
+            <div class="m-3" style="display: flex; align-items: center;">
+                <label for="igst" style="width: 120px;">IGST:</label>
+                <input type="text" id="igst" name="igst" readonly style="width:100%">
+            </div>
+        
+            <div class="m-3" style="display: flex; align-items: center;">
+                <label for="cgst" style="width: 120px;">CGST:</label>
+                <input type="text" id="cgst" name="cgst" readonly style="width: 100%;">
+            </div>
+        
+            <div class="m-3" style="display: flex; align-items: center;">
+                <label for="sgst" style="width: 120px;">SGST:</label>
+                <input type="text" id="sgst" name="sgst" readonly style="width:100%;">
+            </div>
+        
+            <div class="m-3" style="display: flex; align-items: center;">
+                <label for="taxAmount" style="width: 140px;">Tax Amount:</label>
+                <input type="text" id="taxAmount" name="taxAmount" readonly style="width: 100%">
+            </div>
 
-      <label for="subtotal">Sub Total:</label><br>
-      <input type="text" id="subtotal" name="subtotal" readonly onchange="calculateTaxes(data)"><br>
 
-      <label for="igst">IGST:</label><br>
-      <input type="text" id="igst" name="igst" readonly><br>
+            <div class="m-3" style="display: flex; align-items: center;">
+                <label for="taxAmount" style="width: 140px;">shipping charge:</label>
+                <input type="text" id="shippingCharge" name="shippingCharge"  style="width: 100%" >
+            </div>
 
-      <label for="cgst">CGST:</label><br>
-      <input type="text" id="cgst" name="cgst" readonly><br>
 
-      <label for="sgst">SGST:</label><br>
-      <input type="text" id="sgst" name="sgst" readonly><br>
 
-      <label for="taxAmount">Tax Amount:</label><br>
-      <input type="text" id="taxAmount" name="taxAmount" readonly><br>
+            <div class="m-3" style="display: flex; align-items: center;">
+                <label for="taxAmount" style="width: 140px;">Adjustment:</label>
+                <input type="text" id="adjustment" name="adjustment"  style="width: 100%">
+            </div>
 
-      <label for="shippingCharge">Shipping Charge:</label><br>
-      <input type="number" id="shippingCharge"  name="shippingCharge"><br>
+            <div class="m-3" style="display: flex; align-items: center;">
+                <label for="taxAmount" style="width: 140px;">Total:</label>
+                <input type="text" id="total" name="total" readonly style="width: 100%">
+            </div>
 
-      <label for="adjustment">Adjustment:</label><br>
-      <input type="number" id="adjustment"  name="adjustment"><br>
+        </div>
+        
+        <!-- Container for Advance to Balance fields -->
+        <div class="container" style="border: 1px solid ;justify-content: center;border-radius: 10px;">
+            <div class="m-3" style="display: flex; align-items: center;">
+                <label for="advance" style="width: 120px;">Advance:</label>
+                <input type="text" id="advance" name="advance" style="width: 100%;">
+            </div>
+        
+            <div class="m-3" style="display: flex; align-items: center;">
+                <label for="balance" style="width: 120px;">Balance:</label>
+                <input type="text" id="balance" name="balance" style="width: 100%;">
+            </div>
+        
+        </div></div>
+  
+  
 
-      <label for="total">Total:</label><br>
-      <input type="text" id="total" name="total" ><br>
-  </div>
-</div>
+
+
 
 <div class="button-container">
   <button class="draft-button">Draft</button>
-  <button class="sent-button">Sent</button>
+  <button class="sent-button">Save</button>
 </form>
   <button class="cancel-button">Cancel</button>
-</div>
+        </div>
 
-
-
+      
+      
 <!-------------ITEM MODAL---------------------------------------->
 
 
@@ -1233,7 +1282,7 @@ input {
                     </div>
                     <div class="modal-body" style="background: rgb(32, 35, 37);">
                     <div class="card p-3 m-3" style="background-color: #141414a2;">
-                        <form action="" method="post" class="needs-validation" novalidate autocomplete="off" id="modalpayment_terms" onclick="termadd()">
+                        <form action="" method="post" class="needs-validation" novalidate autocomplete="off" id="paymentterms" >
                         
             
             
@@ -1260,7 +1309,7 @@ input {
                             <div class="col-lg-12 col-md-12 col-sm-12">
                             <div class="d-flex">
                                 <button class="btn save_btn rounded-pill text-grey w-50 my-1 mx-1 btn-outline-warning "
-                                type="submit" onclick="uploadItem()"  data-dismiss="modal" id="termSave">Save
+                                type="submit" onclick="termadd()"  data-dismiss="modal" id="term_Save">Save
                                 </button> 
                                 
             
@@ -1920,71 +1969,44 @@ function updateOutputFields() {
 <!--------------------------------------------------------->
 
 <script>
-    // Function to handle form submission
-    $(document).ready(function() {
-        $('#modalpayment_terms').submit(function(event) {
-            event.preventDefault(); // Prevent default form submission
-
-            // Call the additem function
-            additem();
-        });
-    });
-
-    // Function to add item
-    function additem() {
-        var formData = new FormData(document.getElementById('modalpayment_terms'));
     
-        $.ajax({
-            url: "{% url 'challan_customer_payment_terms_add' %}",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-            success: function(response) {
-                if (response.message === 'success') {
-                    alert('Term added successfully!');
-                    document.getElementById("modalpayment_terms").reset();
-                    $("#img").attr("src", "");
-                    $('#newpayment').modal('hide');
-    
-                    // Reload dropdown options
-                    reloaditem();
+
+    async function termadd() {
+        try {
+            const response = await $.ajax({
+                type: 'POST',
+                url: "{% url 'challan_customer_payment_terms_add' %}",
+                data: {
+                    name: $("#tname").val(),
+                    days: $("#tdays").val(),
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-                alert('Error adding Terms. Please try again.');
-            }
-        });
+            });
+
+            // Handle success response
+            $("#tname").val('');
+            $("#tdays").val('');
+            var paytearmSelect = $('#paytearm-select'); 
+            paytearmSelect.empty();  
+            paytearmSelect.append('<option value="Due on Receipt" selected>Due on Receipt</option>');
+            $.each(response.payment_list, function(index, pay_terms) {
+                paytearmSelect.append('<option value="' + pay_terms.id + '">' + pay_terms.name + '</option>');
+            });
+            
+            // Close the inner modal manually
+            $('#newpayment').modal('hide');
+            
+        } catch (error) {
+            // Handle error
+            console.error("Error:", error);
+        }
     }
 
-    // Function to reload dropdown options
-    function reloaditem() {
-        $.ajax({
-            url: "{% url 'challan_term_dropdown' %}",
-            type: "GET",
-            dataType: "json",
-            success: function(data) {
-                var dropdown = $('#customerName');
-                dropdown.empty();
+    document.getElementById('newpayment').addEventListener('click', function (event) {
+            event.stopPropagation();
+    })
+
     
-                $.each(data, function(key, value) {
-                    dropdown.append($('<option></option>').attr('value', key).text(value));
-                });
-                dropdown.css({
-                    'font-size': '16px',
-                    'color': 'white',
-                });
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-                alert('Error reloading dropdown options.');
-            }
-        });
-    }
 </script>
 
 
@@ -2601,7 +2623,7 @@ function updateGSTField(totalTaxAmount) {
   
       item.innerHTML = `
           <div style="display: flex; align-items: center;">
-              <select name="item" id="item${index}" class="item-select" onchange="fetchItemData(this)" style="flex: 1; width: 250%;color: white;">
+              <select name="item[]" id="item${index}" class="item-select" onchange="fetchItemData(this)" style="flex: 1; width: 250%;color: white;">
                   <option value="" selected></option>
                   {% for i in item %}
                   <option value="{{i.id}}" style="color: white;">{{i.item_name}}</option>
@@ -2612,12 +2634,12 @@ function updateGSTField(totalTaxAmount) {
           </div>
       `;
       
-      hsn.innerHTML = '<input type="text" name="hsn" class="item-hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
-      quantity.innerHTML = '<input type="number"  class="item-quantity" name="quantity" value="0" class="item-quantity" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label class="availableStock" style="color: orange;"></label>';
-      rate.innerHTML = '<input type="number" name="rate" class="item-rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
-      discount.innerHTML = '<input type="number"  name="discount" class="item-discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+      hsn.innerHTML = '<input type="text" name="hsn[]" class="item-hsn" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+      quantity.innerHTML = '<input type="number"  class="item-quantity" name="quantity[]" value="0" class="item-quantity" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"><label class="availableStock" style="color: orange;"></label>';
+      rate.innerHTML = '<input type="number" name="rate[]" class="item-rate" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
+      discount.innerHTML = '<input type="number"  name="discount[]" class="item-discount" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;">';
       tax.innerHTML = `
-          <select name="tax" class="item-tax" style="width: 100%;">
+          <select name="tax[]" class="item-tax" style="width: 100%;">
               <option value="0">0% GST</option>
               <option value="3">3% GST</option>
               <option value="5">5% GST</option>
@@ -2626,7 +2648,7 @@ function updateGSTField(totalTaxAmount) {
               <option value="28">28% GST</option>
           </select>
       `;
-      amount.innerHTML = '<input type="text"  name="amount" class="item-amount" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"  oninput="updateSubtotal()">';
+      amount.innerHTML = '<input type="text"  name="amount[]" class="item-amount" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"  oninput="updateSubtotal()">';
       action.innerHTML = `
       <button type="button" style="  width: 50px; height: 40px;border: none;" onclick="removeRow(this)"><span style="color: orange;"><i class="fa fa-trash" aria-hidden="true"></i></span></button>
       `;
@@ -2685,7 +2707,7 @@ function updateGSTField(totalTaxAmount) {
           
           var taxAmountToRemove = (amount * taxRate) / 100;
   
-          // Subtract the tax amount of the removed row from the total tax amount
+          
           var totalTaxAmountField = document.getElementById('taxAmount');
           var currentTotalTaxAmount = parseFloat(totalTaxAmountField.value) || 0;
           var newTotalTaxAmount = Math.max(currentTotalTaxAmount - taxAmountToRemove, 0);
@@ -3003,7 +3025,29 @@ document.getElementById('subtotal').addEventListener('input', updateTotal);
 
 
 
+<script>
+    
+    function calculateBalance() {
+        
+        var advance = parseFloat(document.getElementById("advance").value);
+        var total = parseFloat(document.getElementById("total").value);
 
+        
+        if (!isNaN(advance)) {
+            
+            var balance = total - advance;
+
+            
+            document.getElementById("balance").value = balance.toFixed(2); // Assuming 2 decimal places for balance
+        } else {
+            
+            document.getElementById("balance").value = "";
+        }
+    }
+
+    // Event listener for input in advance field
+    document.getElementById("advance").addEventListener("input", calculateBalance);
+</script>
 
 
 
@@ -3012,22 +3056,22 @@ document.getElementById('subtotal').addEventListener('input', updateTotal);
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         initializeFields('.item-amount', '0.00'); 
-        initializeFields('#igst, #cgst, #sgst, #taxAmount, #shippingCharge, #adjustment, #total', '0.00'); // Initialize other fields to '0.00'
+        initializeFields('#igst, #cgst, #sgst, #taxAmount, #shippingCharge, #adjustment, #total,#advance,#balance', '0.00'); // Initialize other fields to '0.00'
     });
     
     function initializeFields(selector, defaultValue) {
         var fields = document.querySelectorAll(selector);
         fields.forEach(function(field) {
-            // Check if the value is NaN or not a finite number
+            
             if (isNaN(parseFloat(field.value)) || !isFinite(field.value)) {
-                // If NaN or not finite, set the value to the default value
+                
                 field.value = defaultValue;
             }
         });
     }
     </script>
 
-
+                
 </body>
 
 {% endblock %}

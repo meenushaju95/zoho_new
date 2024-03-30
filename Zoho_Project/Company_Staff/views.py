@@ -30,7 +30,7 @@ from django.urls import reverse
 from django.shortcuts import render,redirect,get_object_or_404
 from . models import *
 from decimal import Decimal
-from Company_Staff.models import Vendor, Vendor_comments_table, Vendor_doc_upload_table, Vendor_mail_table,Vendor_remarks_table,VendorContactPerson,VendorHistory
+from Company_Staff.models import Vendor, Vendor_comments_table, Vendor_doc_upload_table, Vendor_mail_table,Vendor_remarks_table,VendorContactPerson,VendorHistory,Delivery_challan,Delivery_challan_item,Delivery_challan_reference,Delivery_challan_history
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, HttpResponseNotFound, JsonResponse
 from email.message import EmailMessage
@@ -13105,18 +13105,22 @@ def delivery_challan(request):
 
             
         allmodules= ZohoModules.objects.get(company=comp_details,status='New')
-        allmodules= ZohoModules.objects.get(company=comp_details,status='New')
+        
         customer=Customer.objects.filter(company=comp_details,customer_status='Active')
         item=Items.objects.filter(company=comp_details,activation_tag='Active')
         
         
         comp_payment_terms=Company_Payment_Term.objects.filter(company=comp_details)
         price_lists=PriceList.objects.filter(company=comp_details,type='Sales',status='Active')
+        last_reference = Delivery_challan_reference.objects.last()
+        if last_reference:
+            next_reference_number = last_reference.reference_number + 1
+        else:
+            next_reference_number = 1
 
        
-        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item}) 
-     else:
-        return redirect('/')  
+        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':next_reference_number}) 
+     
 
        
      
@@ -13518,4 +13522,45 @@ def challan_check_customer_phonenumber_exist(request):
             return JsonResponse({'exists': exists})          
     else:
         return JsonResponse({'exists': False}) 
+    
+
+
+def add_delivery_challan(request):
+     if request.method == 'POST':
+        if 'login_id' in request.session:
+            if request.session.has_key('login_id'):
+                log_id = request.session['login_id']
+            
+            else:
+                return redirect('/')
+        
+            log_details= LoginDetails.objects.get(id=log_id)
+            if log_details.user_type=='Staff':
+                dash_details = StaffDetails.objects.get(login_details=log_details)
+                comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
+
+            else:    
+                dash_details = CompanyDetails.objects.get(login_details=log_details)
+                comp_details=CompanyDetails.objects.get(login_details=log_details)
+
+            if 'draft' in request.POST:  
+                cname = request.POST['customerName'] 
+                customer = Customer.objects.get(id=cname)
+                dc_number = request.POST['deliveryChallan']
+                ref_number = request.POST['referenceNumber']
+                dc_date = request.POST['deliveryChallanDate']
+                dc_type = request.POST['challanType']
+                description = request.POST['note']
+                file = request.FIELS('file')
+                
+
+
+
+
+
+
+
+
+            
+                return redirect('delivery_challan')
 

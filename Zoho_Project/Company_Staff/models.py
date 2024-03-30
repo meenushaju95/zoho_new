@@ -902,13 +902,15 @@ class RecurringInvoice(models.Model):
     place_of_supply = models.CharField(max_length=100, null=True, blank=True)
     entry_type = models.CharField(max_length=20, null=True, blank=True)
     profile_name = models.CharField(max_length=100, null=True, blank=True)
-    reference_no = models.IntegerField(null=True, blank=True)
+    reference_no = models.BigIntegerField(null=True, blank=True)
     rec_invoice_no = models.CharField(max_length=100)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     salesOrder_no = models.CharField(max_length=100, null=True, blank=True)
     repeat_every = models.ForeignKey(CompanyRepeatEvery, on_delete=models.CASCADE,null=True)
     payment_terms = models.ForeignKey(Company_Payment_Term, on_delete=models.CASCADE,null=True)
+    price_list_applied = models.BooleanField(null=True, default=False)
+    price_list = models.ForeignKey(PriceList, on_delete = models.SET_NULL,null=True)
     payment_method = models.CharField(max_length=20, null=True,blank=True)
     cheque_number = models.CharField(max_length=100, null=True, blank=True)
     upi_number = models.CharField(max_length=100, null=True, blank=True)
@@ -932,6 +934,8 @@ class RecurringInvoice(models.Model):
     ]
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
 
+    def getNumFieldName(self):
+        return 'rec_invoice_no'
 
 class RecurringInvoiceHistory(models.Model):
     company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE)
@@ -974,7 +978,7 @@ class Delivery_challan(models.Model):
     login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
     company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
     customer=models.ForeignKey(Customer, on_delete=models.CASCADE,null=True,blank=True)
-   
+    place_of_supply = models.CharField(max_length=200,null=True)
     challan_date=  models.DateField(auto_now_add=True, null=True)
     reference_number = models.IntegerField(null=True)  
     challan_number = models.CharField(max_length=200,null=True)
@@ -992,6 +996,10 @@ class Delivery_challan(models.Model):
     advance = models.FloatField(default=0.0, null=True, blank=True)
     balance = models.FloatField(default=0.0, null=True, blank=True)
     status = models.CharField(max_length=50,null=True)
+
+    def getNumFieldName(self):
+        return 'challan_number'
+
      #---invoice reccurring invoice
     
 
