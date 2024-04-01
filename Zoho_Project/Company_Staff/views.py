@@ -13112,14 +13112,29 @@ def delivery_challan(request):
         
         comp_payment_terms=Company_Payment_Term.objects.filter(company=comp_details)
         price_lists=PriceList.objects.filter(company=comp_details,type='Sales',status='Active')
-        last_reference = Delivery_challan_reference.objects.last()
+        last_reference = Delivery_challan.objects.filter(company=comp_details).last()
         if last_reference:
             next_reference_number = last_reference.reference_number + 1
         else:
             next_reference_number = 1
+        last_challan = Delivery_challan.objects.filter(company=comp_details).last()
+        if last_challan:
+            
+            challan_number = last_challan.challan_number
+            prefix = ''.join(filter(str.isalpha, challan_number))
+            integer_part = ''.join(filter(str.isdigit, challan_number))
+            
+           
+            integer_part = int(integer_part) + 1
+            
+            
+            next_challan_number = f'{prefix}{integer_part}'
+        else:
+           
+            next_challan_number = 'DC01'
 
        
-        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':next_reference_number}) 
+        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':next_reference_number,'challan_number':next_challan_number}) 
      
 
        
@@ -13546,21 +13561,107 @@ def add_delivery_challan(request):
             if 'draft' in request.POST:  
                 cname = request.POST['customerName'] 
                 customer = Customer.objects.get(id=cname)
+                place_of_supply = request.POST['placeOfSupply']
                 dc_number = request.POST['deliveryChallan']
                 ref_number = request.POST['referenceNumber']
                 dc_date = request.POST['deliveryChallanDate']
                 dc_type = request.POST['challanType']
                 description = request.POST['note']
-                file = request.FIELS('file')
+                file = request.FILES.get('file')
+                item_lists = request.POST.getlist('item[]')
                 
+                hsn_list = request.POST.getlist('hsn[]')
+                quantity_list = request.POST.getlist('quantity[]')
+                rate_list = request.POST.getlist('rate[]')
+                dicount_list = request.POST.getlist('discount[]')
+                tax_list = request.POST.getlist('tax[]')
+                amount_list = request.POST.getlist('amount[]')
+                subtotal = request.POST['subtotal']
+                igst = request.POST['igst']
+                cgst = request.POST['cgst']
+                sgst = request.POST['sgst']
+                taxamount = request.POST['taxAmount']
+                shipping = request.POST['shippingCharge']
+                adjustment = request.POST['adjustment']
+                grand_total = request.POST['total']
+                advance = request.POST['advance']
+                balance = request.POST['balance']
+
+                
+                product = request.POST.getlist("item[]")
+                quantity = request.POST.getlist("quantity[]")
+                total_texts = request.POST.getlist("total[]")
+                total = [float(value) for value in total_texts]
+                discount = request.POST.getlist("discount[]")
+                hsn = request.POST.getlist("hsn[]")
+                rate = request.POST.getlist("rate[]")
+                tax = request.POST.getlist("tax[]")
+
+                if '0' in quantity:
+                    messages.info(request, 'Quantity of one item is 0')
+                    return redirect('delivery_challan')
+
+                if all(int(qty) > 0 for qty in quantity):
+                    dc = Delivery_challan(
+                        login_details=log_details,
+                        company=comp_details,
+                        customer=customer,
+                        place_of_supply=place_of_supply,
+                        challan_date=dc_date,
+                        reference_number=ref_number,
+                        challan_number=dc_number,
+                        challan_type=dc_type,
+                        description=description,
+                        document=file,
+                        sub_total=subtotal,
+                        igst=igst,
+                        cgst=cgst,
+                        sgst=sgst,
+                        tax_amount=taxamount,
+                        shipping_charge=shipping,
+                        adjustment=adjustment,
+                        grand_total=grand_total,
+                        advance=advance,
+                        balance=balance,
+                        status='Draft'
+                    )
+                   
+                    dc.save()
+
+                    if len(product) == len(quantity) == len(discount) == len(total) == len(hsn) == len(tax) == len(rate):
+                       
+
+    
+                    
+                        group = zip(product, quantity, discount, total, hsn, tax, rate)
+                        mapped=list(group)
+                        for itemsNew in mapped:
+                            itemsTable = Delivery_challan_item(item = int(itemsNew[0]),quantity=int(itemsNew[1]),discount=float(itemsNew[2]),total=float(itemsNew[3]),hsn=int(itemsNew[4]),tax_rate=int(itemsNew[5]),price=float(itemsNew[6]),delivery_challan=dc,login_details=log_detaails,company=comp_details)
+                            itemsTable.save()
+
+                    dc_reference = Delivery_challan_reference(
+                        login_details=log_details,
+                        company=comp_details,
+                        reference_number=ref_number
+                    )
+                    dc_reference.save()
+
+                    current_date = date.today()
+                    dc_history = Delivery_challan_history(
+                        login_details=log_details,
+                        company=comp_details,
+                        delivery_challan=dc,
+                        date=current_date,
+                        action='Created'
+                    )
+                    dc_history.save()
+
+                    messages.info(request, 'successfull!!!')
+                    return redirect('delivery_challan')
+                
+        return redirect('/')
 
 
 
-
-
-
-
-
-            
-                return redirect('delivery_challan')
-
+                
+                

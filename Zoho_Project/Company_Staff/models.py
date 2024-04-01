@@ -987,6 +987,7 @@ class Delivery_challan(models.Model):
     terms_condition = models.CharField(max_length=200,null=True)
     document=models.FileField(upload_to="images/",null=True)
     sub_total = models.FloatField(default=0.0, null=True, blank=True)
+    igst = models.FloatField(default=0.0, null=True, blank=True)
     cgst = models.FloatField(default=0.0, null=True, blank=True)
     sgst = models.FloatField(default=0.0, null=True, blank=True)
     tax_amount = models.FloatField(default=0.0, null=True, blank=True)
@@ -1022,7 +1023,7 @@ class Delivery_challan_reference(models.Model):
     login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
     company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
     
-    reference_number = models.CharField(max_length=200,null=True)
+    reference_number = models.IntegerField(max_length=200,null=True)
 
 class Delivery_challan_history(models.Model):
     login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
