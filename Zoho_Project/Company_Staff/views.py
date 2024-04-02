@@ -13589,13 +13589,13 @@ def add_delivery_challan(request):
 
                 
                 product = request.POST.getlist("item[]")
-                quantity = request.POST.getlist("quantity[]")
-                total_texts = request.POST.getlist("total[]")
+                quantity = [int(qty) for qty in request.POST.getlist("quantity[]")]
+                total_texts = request.POST.getlist("amount[]")
                 total = [float(value) for value in total_texts]
-                discount = request.POST.getlist("discount[]")
-                hsn = request.POST.getlist("hsn[]")
-                rate = request.POST.getlist("rate[]")
-                tax = request.POST.getlist("tax[]")
+                discount = [float(disc) for disc in request.POST.getlist("discount[]")]
+                hsn = [int(code) for code in request.POST.getlist("hsn[]")]
+                rate = [float(r) for r in request.POST.getlist("rate[]")]
+                tax = [float(t) for t in request.POST.getlist("tax[]")]
 
                 if '0' in quantity:
                     messages.info(request, 'Quantity of one item is 0')
@@ -13625,25 +13625,48 @@ def add_delivery_challan(request):
                         balance=balance,
                         status='Draft'
                     )
-                   
+                    
                     dc.save()
 
                     if len(product) == len(quantity) == len(discount) == len(total) == len(hsn) == len(tax) == len(rate):
-                       
+                    
 
     
                     
-                        group = zip(product, quantity, discount, total, hsn, tax, rate)
-                        mapped=list(group)
-                        for itemsNew in mapped:
-                            itemsTable = Delivery_challan_item(item = int(itemsNew[0]),quantity=int(itemsNew[1]),discount=float(itemsNew[2]),total=float(itemsNew[3]),hsn=int(itemsNew[4]),tax_rate=int(itemsNew[5]),price=float(itemsNew[6]),delivery_challan=dc,login_details=log_detaails,company=comp_details)
-                            itemsTable.save()
 
+                        group = zip(product, hsn, quantity, rate, tax, discount, total)
+
+                        try:
+                            mapped = list(group)
+                            print(mapped)
+                        except Exception as e:
+                            print("Exception occurred during conversion:", e)
+
+                        print(mapped)
+                        print('HI')
+
+                        for itemsNew in mapped:
+                            item_id = int(itemsNew[0])  
+                            item_instance = Items.objects.get(id=item_id)
+                            itemsTable = Delivery_challan_item(
+                                item=item_instance, 
+                                hsn=itemsNew[1], 
+                                quantity=itemsNew[2], 
+                                price=itemsNew[3], 
+                                tax_rate=itemsNew[4], 
+                                discount=itemsNew[5], 
+                                total=itemsNew[6], 
+                                delivery_challan=dc, 
+                                login_details=log_details, 
+                                company=comp_details
+                            )
+                            itemsTable.save()
                     dc_reference = Delivery_challan_reference(
                         login_details=log_details,
                         company=comp_details,
                         reference_number=ref_number
                     )
+                    print('afer afer loop')
                     dc_reference.save()
 
                     current_date = date.today()
@@ -13657,7 +13680,7 @@ def add_delivery_challan(request):
                     dc_history.save()
 
                     messages.info(request, 'successfull!!!')
-                    return redirect('delivery_challan')
+                    return redirect('challan_list')
                 
         return redirect('/')
 

@@ -3079,12 +3079,9 @@ document.getElementById('subtotal').addEventListener('input', updateTotal);
             var placeholder = input.placeholder;
             var enteredValue = input.value;
             
-           
             if (enteredValue !== placeholder) {
-               
                 document.getElementById('challanError').innerText = 'Challan number is not continuous';
             } else {
-                
                 document.getElementById('challanError').innerText = '';
             }
         }
