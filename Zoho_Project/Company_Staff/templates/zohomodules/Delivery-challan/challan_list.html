@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-...your-integrity-code-here..." crossorigin="anonymous" />
 
 
+
+
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
 
@@ -59,6 +61,9 @@
         cursor: pointer;
         padding: 5px;
     }
+    .dropdown-menu .dropdown-item:hover {
+    background-color: transparent; 
+}
 </style>
 
 <body>
@@ -89,7 +94,7 @@
                             <div class="dropdown-menu dropdown-menu-right" style="background-color: black;color: white;">
                               <button class="dropdown-item" type="button" id="sortAll" style="color: white;">All</button>
                               <button class="dropdown-item" type="button" id="sortName" style="color: white;">Customer Name</button>
-                              <button class="dropdown-item" type="button" id="sortMonth" style="color: white;">DC NO</button>
+                              <button class="dropdown-item" type="button" id="sortNo" style="color: white;">DC NO</button>
                             </div>
                           </div>
                     </div>
@@ -101,17 +106,16 @@
                         
                        
                         <div class="d-flex justify-content-end ">
-                            <div class="dropdown " >
-                                <a class="btn orange-link mt-5" data-bs-toggle="dropdown" aria-haspopup="true"
-                                    aria-expanded="false" role="button">
-                                    <i class="fa fa-filter mt-1"></i>
-                                </a>
-                                <div class="dropdown-menu m-1" style="background-color: black; color: white;">
-                                  <a class="dropdown-item dropdown-item-filter" href="javascript:void(0);" style="background-color: black; color: white;">All</a>
-                                  <a class="dropdown-item dropdown-item-filter" href="javascript:void(0);" style="background-color: black; color: white;">Draft</a>
-                                  <a class="dropdown-item dropdown-item-filter" href="javascript:void(0);" style="background-color: black; color: white;">Sent</a>
+                            <div class="btn-group">
+                                <button type="button" class="btn orange-link mt-5 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fa fa-filter" aria-hidden="true"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right" style="background-color: black;color: white;">
+                                  <button class="dropdown-item" type="button" id="filterAll" style="color: white;">All</button>
+                                  <button class="dropdown-item" type="button" id="filterDraft" style="color: white;">Draft</button>
+                                  <button class="dropdown-item" type="button" id="filterSave" style="color: white;">Save</button>
                                 </div>
-                            </div>
+                              </div>
                         <a href="#" class="orange-link mt-5  "  id="importExcel" data-toggle="modal" data-target="#importModal" onclick="excelmodel()"><i class="fa fa-share-square-o" aria-hidden="true"></i> Import</a>
                         
                         <a href="#" class="orange-link mt-5  "  id="ExportExcel"><i class="fa fa-share-square-o" aria-hidden="true"></i> Export</a>
@@ -148,7 +152,7 @@
             
 
             <div class="table-responsive">
-                <table id="attendanceTable" class="table mt-lg-5 mt-2 rounded" style="background-color: rgb(0, 0, 0);color: white;text-align: center;">
+                <table id="attendanceTable" class="table mt-lg-5 mt-2 rounded " style="background-color: rgb(0, 0, 0);color: white;text-align: center;">
                     <thead>
                         <tr class="border-bottom border-dark">
                             <th scope="col"><b>#</b></th>
@@ -164,16 +168,29 @@
                     </thead>
                     <tbody>
                         
-                        
-                            <tr class="border-bottom border-dark clickable-row" data-href="">
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                
-                                <td></td> 
-                            </tr>
+                        {% for dc in d_challan %}
+                        <tr class="border-bottom border-dark clickable-row" data-href="{% url 'challan_overview' dc.id %}">
+                            <td>{{forloop.counter}}</td>
+                            <td>{{dc.challan_date}}</td>
+                            <td>{{dc.challan_number}}</td>
+                            <td>{{dc.customer.first_name}} {{dc.customer.last_name}}</td>
+                            <td>{{dc.customer.customer_email}}</td>
+                            <td>{{dc.grand_total}}</td> 
+                            <td>{{dc.status}}</td> 
+                            <td>{{dc.balance}}</td> 
+                            <td>
+                                <div class="dropdown" >
+                                    <a class="btn orange-link" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button">
+                                        Convert
+                                    </a>
+                                    <div class="dropdown-menu m-1" style="background-color: black; color: white;">
+                                        <a class="dropdown-item dropdown-item-filter" href="#" style="background-color: black; color: white;">Invoice</a>
+                                        <a class="dropdown-item dropdown-item-filter" href="#" style="background-color: black; color: white;">Recurring Invoice</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                            {% endfor %}
                         
                         
                       
@@ -190,6 +207,135 @@
             </div>
         </div>
     </div>
+
+    <script>
+        
+        function stopDropdownItemClickPropagation() {
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+            });
+        }
+    
+        
+        function excludeLastTDFromClick() {
+            document.querySelectorAll('.clickable-row td:last-child').forEach(td => {
+                td.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+            });
+        }
+    
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            stopDropdownItemClickPropagation();
+            excludeLastTDFromClick();
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var rows = document.querySelectorAll(".clickable-row");
+    
+            document.getElementById("searchInput").addEventListener("input", function() {
+                var searchValue = this.value.toLowerCase();
+    
+                rows.forEach(function(row) {
+                    var rowText = row.textContent.toLowerCase();
+                    row.style.display = rowText.includes(searchValue) ? "" : "none";
+                });
+            });
+    
+            rows.forEach(function(row) {
+                row.addEventListener("click", function() {
+                    var href = this.getAttribute("data-href");
+                    if (href) {
+                        window.location.href = href;
+                    }
+                });
+            });
+        });
+    </script>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+   
+    document.querySelectorAll('.clickable-row').forEach(row => {
+        row.addEventListener('click', () => {
+            
+            console.log('Row clicked');
+        });
+    });
+
+    
+    function sortTable(columnIndex, isNumeric) {
+        const tbody = document.querySelector('#attendanceTable tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort((a, b) => {
+            const aValue = isNumeric ? parseFloat(a.cells[columnIndex].textContent.trim()) : a.cells[columnIndex].textContent.trim();
+            const bValue = isNumeric ? parseFloat(b.cells[columnIndex].textContent.trim()) : b.cells[columnIndex].textContent.trim();
+            return aValue.localeCompare(bValue, undefined, { numeric: isNumeric });
+        });
+
+        
+        tbody.innerHTML = '';
+        rows.forEach(row => {
+            tbody.appendChild(row);
+        });
+    }
+
+   
+    document.getElementById('sortName').addEventListener('click', function () {
+        sortTable(3, false); // Sort by customer name (column index 3), assuming it's the 4th column
+    });
+
+    
+    document.getElementById('sortNo').addEventListener('click', function () {
+        sortTable(2, false); // Sort by Challan Number (column index 2), assuming it's the 3rd column
+    });
+
+    
+    document.getElementById('sortAll').addEventListener('click', function () {
+        
+        location.reload();
+    });
+});
+</script>
+
+<script>
+   document.addEventListener('DOMContentLoaded', function () {
+    
+    function filterRows(filter) {
+        const rows = document.querySelectorAll('#attendanceTable tbody tr');
+        rows.forEach(row => {
+            const statusCell = row.querySelectorAll('td')[6]; 
+            const status = statusCell.textContent.trim();
+            if (filter === 'All' || status === filter) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Event listeners for filter options
+    document.getElementById('filterAll').addEventListener('click', function () {
+        filterRows('All');
+    });
+
+    document.getElementById('filterDraft').addEventListener('click', function () {
+        filterRows('Draft');
+    });
+
+    document.getElementById('filterSave').addEventListener('click', function () {
+        filterRows('Save');
+    });
+});
+</script>
+    
 </body>
 
 {% endblock %}

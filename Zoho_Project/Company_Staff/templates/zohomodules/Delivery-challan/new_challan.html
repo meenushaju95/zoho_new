@@ -3073,19 +3073,20 @@ document.getElementById('subtotal').addEventListener('input', updateTotal);
         });
     }
     </script>
-    <script>
-        function updateChallanPattern() {
-            var input = document.getElementById('deliveryChallan');
-            var placeholder = input.placeholder;
-            var enteredValue = input.value;
-            
-            if (enteredValue !== placeholder) {
-                document.getElementById('challanError').innerText = 'Challan number is not continuous';
-            } else {
-                document.getElementById('challanError').innerText = '';
-            }
+   <script>
+    function updateChallanPattern() {
+        var input = document.getElementById('deliveryChallan');
+        var placeholder = input.placeholder;
+        var enteredValue = input.value;
+
+        // Check if the placeholder is not empty and the entered value is not equal to the placeholder
+        if (placeholder && enteredValue !== placeholder) {
+            document.getElementById('challanError').innerText = 'Challan number is not continuous';
+        } else {
+            document.getElementById('challanError').innerText = '';
         }
-    </script>
+    }
+</script>
 
                 
 </body>
