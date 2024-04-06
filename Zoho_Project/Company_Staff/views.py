@@ -13404,7 +13404,7 @@ def challan_customer_payment_terms_add(request):
             day = request.POST.get('days')
             normalized_data = terms.replace(" ", "")
             pay_tm = add_space_before_first_digit(normalized_data)
-            ptr = Company_Payment_Term(term_name=pay_tm, days=day, company=dash_details)
+            ptr = Company_Payment_Term(term_name=pay_tm, days=day, company=comp_details)
             ptr.save()
             payterms_obj = Company_Payment_Term.objects.filter(company=comp_details).values('id', 'term_name')
 
@@ -13680,7 +13680,7 @@ def add_delivery_challan(request):
                     )
                     dc_history.save()
 
-                    messages.info(request, 'successfull!!!')
+                    
                     return redirect('challan_list')
 
             if 'save' in request.POST:  
@@ -13804,7 +13804,7 @@ def add_delivery_challan(request):
                     )
                     dc_history.save()
 
-                    messages.info(request, 'successfull!!!')
+                    
                     return redirect('challan_list')
                 
         return redirect('/')
@@ -13816,8 +13816,227 @@ def challan_overview(request,id):
    
     return render(request,'zohomodules/Delivery-challan/challan_overview.html',{'challan':challan,'d_challan':all_challan,'items':items}) 
         
+def convert_save(request,id):
+    dc = Delivery_challan.objects.get(id=id)
+    dc.status = 'Save'
+    dc.save()
+    return redirect(reverse('challan_overview', args=[id]))
 
 
+def challan_edit(request,id):
+    
+   if 'login_id' in request.session:
+        if request.session.has_key('login_id'):
+            log_id = request.session['login_id']
+           
+        else:
+            return redirect('/')
+    
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type=='Staff':
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+            comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
+
+        else:    
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+            comp_details=CompanyDetails.objects.get(login_details=log_details)
+
+            
+        allmodules= ZohoModules.objects.get(company=comp_details,status='New')
+        
+        customer=Customer.objects.filter(company=comp_details,customer_status='Active')
+        item=Items.objects.filter(company=comp_details,activation_tag='Active')
+        
+        
+        comp_payment_terms=Company_Payment_Term.objects.filter(company=comp_details)
+        price_lists=PriceList.objects.filter(company=comp_details,type='Sales',status='Active')
+        
+        
+
+        
+        dc = Delivery_challan.objects.get(id=id)
+        dct = Delivery_challan_item.objects.filter(delivery_challan=dc,company=comp_details)
+        
+        return render(request,'zohomodules/Delivery-challan/challan_edit.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'challan':dc,'citem':dct}) 
+     
+def edit_challan(request,id):
+    if request.method == 'POST':
+            if 'login_id' in request.session:
+                if request.session.has_key('login_id'):
+                    log_id = request.session['login_id']
+                
+                else:
+                    return redirect('/')
+            
+                log_details= LoginDetails.objects.get(id=log_id)
+                if log_details.user_type=='Staff':
+                    dash_details = StaffDetails.objects.get(login_details=log_details)
+                    comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
+
+                else:    
+                    dash_details = CompanyDetails.objects.get(login_details=log_details)
+                    comp_details=CompanyDetails.objects.get(login_details=log_details)
+
+                  
+                cname = request.POST['customerName'] 
+                customer = Customer.objects.get(id=cname)
+                place_of_supply = request.POST['placeOfSupply']
+                dc_number = request.POST['deliveryChallan']
+                ref_number = request.POST['referenceNumber']
+                dc_date = request.POST['deliveryChallanDate']
+                dc_type = request.POST['challanType']
+                description = request.POST['note']
+                file = request.FILES.get('file')
+                item_lists = request.POST.getlist('item[]')
+                    
+                    
+                    
+                subtotal = request.POST['subtotal']
+                igst = request.POST['igst']
+                cgst = request.POST['cgst']
+                sgst = request.POST['sgst']
+                taxamount = request.POST['taxAmount']
+                shipping = request.POST['shippingCharge']
+                adjustment = request.POST['adjustment']
+                grand_total = request.POST['total']
+                advance = request.POST['advance']
+                balance = request.POST['balance']
+
+                    
+                product = request.POST.getlist("item[]")
+                quantity = [int(qty) for qty in request.POST.getlist("quantity[]")]
+                total_texts = request.POST.getlist("amount[]")
+                total = [float(value) for value in total_texts]
+                discount = [float(disc) for disc in request.POST.getlist("discount[]")]
+                hsn = [int(code) for code in request.POST.getlist("hsn[]")]
+                rate = [float(r) for r in request.POST.getlist("rate[]")]
+                tax = [float(t) for t in request.POST.getlist("tax[]")]
+
+                if quantity<=0:
+                        messages.info(request, 'Quantity of one item is 0')
+                        return redirect('challan_edit',id=id)
+
+                if all(int(qty) > 0 for qty in quantity):
+                        dc = Delivery_challan(
+                            login_details=log_details,
+                            company=comp_details,
+                            customer=customer,
+                            place_of_supply=place_of_supply,
+                            challan_date=dc_date,
+                            reference_number=ref_number,
+                            challan_number=dc_number,
+                            challan_type=dc_type,
+                            description=description,
+                            document=file,
+                            sub_total=subtotal,
+                            igst=igst,
+                            cgst=cgst,
+                            sgst=sgst,
+                            tax_amount=taxamount,
+                            shipping_charge=shipping,
+                            adjustment=adjustment,
+                            grand_total=grand_total,
+                            advance=advance,
+                            balance=balance,
+                            status='Save'
+                        )
+                        
+                        dc.save()
+
+                        if len(product) == len(quantity) == len(discount) == len(total) == len(hsn) == len(tax) == len(rate):
+                        
+
+        
+                        
+
+                            group = zip(product, hsn, quantity, rate, tax, discount, total)
+
+                            try:
+                                mapped = list(group)
+                                print(mapped)
+                            except Exception as e:
+                                print("Exception occurred during conversion:", e)
+
+                            
+
+                            for itemsNew in mapped:
+                                item_id = int(itemsNew[0])  
+                                item_instance = Items.objects.get(id=item_id)
+                                itemsTable = Delivery_challan_item(
+                                    item=item_instance, 
+                                    hsn=itemsNew[1], 
+                                    quantity=itemsNew[2], 
+                                    price=itemsNew[3], 
+                                    tax_rate=itemsNew[4], 
+                                    discount=itemsNew[5], 
+                                    total=itemsNew[6], 
+                                    delivery_challan=dc, 
+                                    login_details=log_details, 
+                                    company=comp_details
+                                )
+                                itemsTable.save()
+                        dc_reference = Delivery_challan_reference(
+                            login_details=log_details,
+                            company=comp_details,
+                            reference_number=ref_number
+                        )
+                        
+                        dc_reference.save()
+
+                        current_date = date.today()
+                        dc_history = Delivery_challan_history(
+                            login_details=log_details,
+                            company=comp_details,
+                            delivery_challan=dc,
+                            date=current_date,
+                            action='Edited'
+                        )
+                        dc_history.save()
+
+                        
+                        return redirect('challan_list')
+
+
+def challan_add_comment(request):
+    if request.method == 'POST':
+        if 'login_id' not in request.session:
+            return JsonResponse({'error': 'User not logged in'}, status=401)
+
+        log_id = request.session['login_id']
+        log_details = LoginDetails.objects.get(id=log_id)
+
+        if log_details.user_type == 'Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            company = staff.company
+        elif log_details.user_type == 'Company':
+            company = CompanyDetails.objects.get(login_details=log_details)
+
+        challan_id = request.POST.get('challan_id')
+        challan = Delivery_challan.objects.get(id=challan_id)
+        
+        comment_text = request.POST.get('comment')
+        date = date.today()
+        
+        if comment_text:  
+            comment = Delivery_challan_comment(
+                comment=comment_text,
+                delivery_challan=challan,
+                date = date,
+                company=company,
+                login_details=log_details
+            )
+            comment.save()
+
+            return JsonResponse({'message': 'Comment added successfully'})
+        else:
+            return JsonResponse({'error': 'Comment text is required'}, status=400)  
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+def delete_attendance_comment(request,id):
+    comment = Attendance_comment.objects.get(id=id)    
+    comment.delete()  
+    return redirect('attendance_calendar', employee_id=comment.employee.id, target_year=comment.year, target_month=comment.month)       
+                
 
                 
                 

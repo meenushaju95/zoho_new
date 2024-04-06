@@ -331,6 +331,10 @@ urlpatterns = [
     path('challan_term_dropdown/',views.challan_term_dropdown, name='challan_term_dropdown'),
     path('add_delivery_challan',views.add_delivery_challan,name='add_delivery_challan'),
     path('challan_overview/<int:id>',views.challan_overview,name='challan_overview'),
+    path('convert_save/<int:id>',views.convert_save,name='convert_save'),
+    path('challan_edit/<int:id>',views.challan_edit,name='challan_edit'),
+    path('edit_challan/<int:id>',views.edit_challan,name='edit_challan'),
+    path('challan_add_comment/',views.challan_add_comment,name='challan_add_comment'),
     #End
     
     path('Company/employeeloan_trans/<int:id>/',views.employeeloan_trans, name='employeeloan_trans'),

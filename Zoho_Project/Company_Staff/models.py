@@ -1033,6 +1033,15 @@ class Delivery_challan_history(models.Model):
    
     action = models.CharField(max_length=200,null=True)
 
+class Delivery_challan_comment(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    delivery_challan=models.ForeignKey(Delivery_challan, on_delete=models.CASCADE,null=True,blank=True)
+    date=  models.DateField(auto_now_add=True, null=True)
+    comment = models.TextField(null=True)  
+    action = models.CharField(max_length=200,null=True)
+
+
 
 
 

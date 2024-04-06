@@ -21,6 +21,15 @@
     .clickable-row {
         cursor: pointer;
     }
+    .button {
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.active {
+    background-color: orange;
+    color: white;
+}
     .orange-link {
         display: inline-block;
         padding: 10px;
@@ -296,9 +305,9 @@
         <div class="col-md-5 mt-5">
             
             
-                <button class="btn orange-link " style="background-color: orange;color: white;"> <i class="fa fa-eye"></i> Overview</button>
-                <button class="btn orange-link " >Templates</button>
-                <button class="btn orange-link " >Slip</button>
+                <button class="btn orange-link  " id="btn-overview" > <i class="fa fa-eye"></i> Overview</button>
+                <button id="btn-template" class="btn orange-link  " >Templates</button>
+                <button id="btn-slip" class="btn orange-link  " >Slip</button>
             
         </div>
         
@@ -306,27 +315,28 @@
         
        
         <div class="col-md-7 mt-5">
-            <a class="btn orange-link " ><i class="fa fa-pencil" aria-hidden="true"></i></a>
-            <a class="btn orange-link " ><i class="fa fa-trash" aria-hidden="true"></i></a>
-            <a class="btn orange-link " ><i class="fa fa-comment-o" aria-hidden="true"></i></a>
-            <a class="btn orange-link " ><i class="fa fa-history" aria-hidden="true"></i></a>
-            <a class="btn orange-link " ><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>
-            <a class="btn orange-link " ><i class="fa fa-print" aria-hidden="true"></i></a>
-            <a class="btn orange-link " ><i class="fa fa-share-square" aria-hidden="true"></i></a>
+            <a class="btn orange-link " href="{% url 'challan_edit' challan.id %}" id="pencil" title="edit" ><i class="fa fa-pencil" aria-hidden="true"></i></a>
+            <a class="btn orange-link " id="trash" title="delete"><i class="fa fa-trash" aria-hidden="true"></i></a>
+            <a class="btn orange-link " id="comment" title="comment" data-toggle="modal" data-target="#commentModal"><i class="fa fa-comment-o" aria-hidden="true"></i></a>
+            <a class="btn orange-link " id="history" title="history" ><i class="fa fa-history" aria-hidden="true"></i></a>
+            <a class="btn orange-link " id="pdf" title="pdf" style="display: none;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>
+            <a class="btn orange-link " id="print" title="print" style="display: none;"><i class="fa fa-print" aria-hidden="true"></i></a>
+            <a class="btn orange-link " id="share" title="share" style="display: none;"><i class="fa fa-share-square" aria-hidden="true"></i></a>
+            <a class="btn orange-link " id="attach" title="attach" ><i class="fa fa-paperclip" aria-hidden="true"></i></a>
             
                 <button  class="btn orange-link dropdown-toggle" data-status="{{ challan.status }}" type="button" id="dropDraft" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >
                     Convert
                 </button>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="background-color: black;">
-                    <a class="dropdown-item" href="#" style="color: white;">Save</a>
+                    <a class="dropdown-item" href="{% url 'convert_save' challan.id %}" style="color: white;">Save</a>
                 </div>
            <input type="hidden" id="challanStatus" value="{{challan.status}}">
         </div>   
         
-        <div class="container-fluid mt-5 p-3" style="background-color: white; border-radius: 1px; font-size: 16px; color: black;">
+        <div class="container-fluid mt-5 p-3 " id="overview" style="background-color: white; border-radius: 1px; font-size: 16px; color: black;">
             <div class="row">
-                <div class="col-md-7">
-                    <span style="color: green;">Created By :</span> {{ challan.login_details.first_name }} {{ challan.login_details.last_name }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{ challan.challan_date }}<br>
+                <div class="col-md-6">
+                    <span style="color: green;font-size: 20px;">Created By :</span> <span style="font-size: 20px;"> {{challan.login_details.first_name }} {{ challan.login_details.last_name }}</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{ challan.challan_date }}<br>
                     <span style="font-size: 24px;">#</span>
         
                     <div class="container-fluid m-2" style="border-top: 2px solid black;">
@@ -428,27 +438,41 @@
 
 
         
-                <div class="col-md-4">
-                    <div class="container"  style="background-color: black;color: white;">
-                        <div class="container-fluid m-2" style="border-top: 2px solid black;">
-                            <div style="font-weight: bold;">Delivery Challan Tax Details</div>
-                            <div class="row mt-3">
+                <div class="col-md-6 d-flex flex-column">
+                    <div class="container d-flex flex-grow-1 bg-dark"  style="color: white;border-radius: 10px;">
+                        <div class="container-fluid m-2" >
+                            <div style="font-weight: bold;font-size: 20px;">Delivery Challan Tax Details</div>
+                            <div class="row mb-3 mt-3">
                                 <div class="col-md-5"><b>Challan Status:</b></div>
-                                <div class="col-md-7">{{ challan.status }}</div>
+                                <div class="col-md-7" style="color: orange;font-size: 18px;">{{ challan.status }}</div>
                             </div>
-                            <div class="row">
+                            <div class="row mb-3">
                                 <div class="col-md-5"><b>Subtotal:</b></div>
-                                <div class="col-md-7">{{ challan.subtotal }}</div>
+                                <div class="col-md-7">{{ challan.sub_total }}</div>
                             </div>
-                            <div class="row">
+                            <div class="row mb-3">
                                 <div class="col-md-5"><b>Tax Amount:</b></div>
                                 <div class="col-md-7">{{ challan.tax_amount }}</div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-5"><b>GST:</b></div>
-                                <div class="col-md-7">{{ challan.GST }}</div>
+                            <div class="row mb-3">
+                                <div class="col-md-5"><b>
+                                    {% if challan.igst > 0 %}
+                                        IGST:
+                                    {% else %}
+                                       <div style="margin-bottom: 1px;"> CGST:</div><br>
+                                        SGST:
+                                    {% endif %}
+                                </b></div>
+                                <div class="col-md-7">
+                                    {% if challan.igst > 0 %}
+                                        {{ challan.igst }}
+                                    {% else %}
+                                       <div style="margin-bottom: 1px;"> {{ challan.cgst }}</div><br> 
+                                         {{ challan.sgst }}
+                                    {% endif %}
+                                </div>
                             </div>
-                            <div class="row">
+                            <div class="row mb-3">
                                 <div class="col-md-5"><b>Grand Total:</b></div>
                                 <div class="col-md-7">{{ challan.grand_total }}</div>
                             </div>
@@ -458,8 +482,133 @@
             </div>
         
 
-
-
+            <div class="modal fade"  id="commentModal" tabindex="-1" role="dialog" aria-labelledby="commentModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content bg-dark">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="commentModalLabel" style="color: white;">Add Comment</h5>
+                      
+                        
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" action="" id="commentForm">
+                            {% csrf_token %}
+                            <input type="hidden"  name="challan_id" value="{{challan.id}}">     
+                      <textarea id="commentText" name="comment" class="form-control" rows="4" placeholder="Add Comments here" style="color: white;font-size: 16px;" required></textarea>
+                     
+                      
+                      <table class="table mt-3">
+                        <thead>
+                          <tr>
+                            <th scope="col" style="color: white;">Sl No</th>
+                            <th scope="col" style="color: white;">Comment</th>
+                            <th scope="col" style="color: white;">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                         
+                          {% for comment in comments %}
+                          <tr >
+                            <td style="color: white;font-size: 16px;">{{ forloop.counter }}</td>
+                            <td style="color: white;font-size: 16px;">{{ comment.comment }}</td>
+                            
+                            <td>
+                             
+                              <a href="#" class="btn delete-comment" data-id="{{ comment.id }}">
+                                <i class="fa fa-trash" aria-hidden="true" style="color: white;"></i>
+                            </a>
+                            </td>
+                          </tr>
+                          {% empty %}
+                         
+                          <tr>
+                            <td colspan="3" class="text-center">No comments found</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="modal-footer">
+                      
+                      <button type="button" class="btn" data-dismiss="modal" style="background-color: orange;color: white;">Close</button>
+                      
+                      <button type="submit" class="btn" style="background-color: orange;color: white;" onclick="saveComment()">Save</button>
+                    </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            
+              <script>
+                function saveComment() {
+                const form = document.getElementById('commentForm');
+                const formData = new FormData(form);
+            
+                fetch("{% url 'challan_add_comment' %}", {
+                    method: "POST",
+                    body: formData,
+                    
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json(); // Parse the response body as JSON
+                    } else {
+                        throw new Error("Failed to save comment");
+                    }
+                })
+                .then(data => {
+                    // Check if the response contains a message
+                    if (data.message) {
+                        alert(data.message); // Display the message from the server
+                        // Optionally, you can reload the page or update the comments section here
+                    } else {
+                        throw new Error("Invalid response from server");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error saving comment:", error);
+                    alert("An error occurred while saving comment. Please try again later.");
+                });    
+                
+                
+            }
+            
+              </script>
+              <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                const deleteLinks = document.querySelectorAll('.delete-comment');
+                deleteLinks.forEach(link => {
+                    link.addEventListener('click', function(event) {
+                        event.preventDefault(); // Prevent the default link behavior (navigating to a new page)
+            
+                        // Extract the comment ID from the data-id attribute
+                        const commentId = link.dataset.id;
+            
+                        // Send an AJAX request to delete the comment
+                        fetch("{% url 'attendance_delete_comment' 0 %}".replace('0', commentId), {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                
+                                link.closest('tr').remove(); 
+                            } else {
+                                throw new Error('Failed to delete comment');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error deleting comment:', error);
+                            alert('An error occurred while deleting comment. Please try again later.');
+                        });
+                    });
+                });
+            });
+              </script>
+            
+            
 
 
 
@@ -467,10 +616,39 @@
         </div>
         </div>
             
-           
-            
-    
+        
+        <!-----------------------------------------------------------TEMPLATE-------------------------------->
+<div class="container p-3 mt-5" id="template" style="background-color:white;color: black;display: none;">
+    jkkkkkkkkkkkkkkkk
     </div>
+    
+
+
+<!-----------------------------------------------------------SLIP--------------------------------->
+
+<div class="container p-3 mt-5" id="slip" style="background-color:white;color: black;display: none;">
+    jkkkkkkkkkkkkkkkk slip
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+
+
+
    
      
     <script>
@@ -492,6 +670,59 @@
        
         document.addEventListener('DOMContentLoaded', toggleDropdownVisibility);
     </script>
+
+<script>
+    document.getElementById('btn-template').addEventListener('click', function() {
+        document.getElementById('overview').style.display = 'none';
+        document.getElementById('template').style.display = 'block';
+        document.getElementById('btn-template').style.backgroundColor = 'orange';
+        document.getElementById('btn-template').style.color = 'white';
+        document.getElementById('btn-overview').style.backgroundColor = '';
+        document.getElementById('btn-overview').style.color = 'orange';
+        document.getElementById('btn-slip').style.color = 'orange';
+        document.getElementById('btn-slip').style.backgroundColor = '';
+        document.getElementById('pdf').style.display = '';
+        document.getElementById('print').style.display = '';
+        document.getElementById('share').style.display = '';
+        document.getElementById('slip').style.display = 'none';
+       
+    });
+    
+    document.getElementById('btn-slip').addEventListener('click', function() {
+        document.getElementById('overview').style.display = 'none';
+        document.getElementById('template').style.display = 'none';
+        document.getElementById('slip').style.display = 'block';
+        document.getElementById('btn-slip').style.backgroundColor = 'orange';
+        document.getElementById('btn-overview').style.backgroundColor = '';
+        document.getElementById('btn-template').style.color = 'orange';
+        document.getElementById('btn-overview').style.color = 'orange';
+        document.getElementById('btn-template').style.backgroundColor = '';
+        document.getElementById('btn-slip').style.color = 'white';
+        document.getElementById('pdf').style.display = '';
+        document.getElementById('print').style.display = '';
+        document.getElementById('share').style.display = '';
+        
+    });
+    
+    document.getElementById('btn-overview').addEventListener('click', function() {
+        document.getElementById('overview').style.display = 'block';
+        document.getElementById('btn-overview').style.backgroundColor = 'orange';
+        document.getElementById('btn-overview').style.color = 'white';
+        document.getElementById('btn-template').style.backgroundColor = '';
+        document.getElementById('btn-template').style.color = 'orange';
+        document.getElementById('btn-slip').style.color = 'orange';
+        document.getElementById('btn-slip').style.backgroundColor = '';
+        document.getElementById('template').style.display = 'none';
+        document.getElementById('slip').style.display = 'none';
+        document.getElementById('pdf').style.display = 'none';
+        document.getElementById('print').style.display = 'none';
+        document.getElementById('share').style.display = 'none';
+        
+    });
+    </script>
+
+
+
 
 
 </div>
