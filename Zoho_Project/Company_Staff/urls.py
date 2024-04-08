@@ -335,6 +335,7 @@ urlpatterns = [
     path('challan_edit/<int:id>',views.challan_edit,name='challan_edit'),
     path('edit_challan/<int:id>',views.edit_challan,name='edit_challan'),
     path('challan_add_comment/',views.challan_add_comment,name='challan_add_comment'),
+    path('delete_challan_comment/<int:id>/',views.delete_challan_comment,name='delete_challan_comment'),
     #End
     
     path('Company/employeeloan_trans/<int:id>/',views.employeeloan_trans, name='employeeloan_trans'),

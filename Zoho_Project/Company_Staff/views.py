@@ -30,7 +30,7 @@ from django.urls import reverse
 from django.shortcuts import render,redirect,get_object_or_404
 from . models import *
 from decimal import Decimal
-from Company_Staff.models import Vendor, Vendor_comments_table, Vendor_doc_upload_table, Vendor_mail_table,Vendor_remarks_table,VendorContactPerson,VendorHistory,Delivery_challan,Delivery_challan_item,Delivery_challan_reference,Delivery_challan_history
+from Company_Staff.models import Vendor, Vendor_comments_table, Vendor_doc_upload_table, Vendor_mail_table,Vendor_remarks_table,VendorContactPerson,VendorHistory,Delivery_challan,Delivery_challan_item,Delivery_challan_reference,Delivery_challan_history,Delivery_challan_comment
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, HttpResponseNotFound, JsonResponse
 from email.message import EmailMessage
@@ -13810,12 +13810,30 @@ def add_delivery_challan(request):
         return redirect('/')
 
 def challan_overview(request,id):
-    challan = Delivery_challan.objects.get(id=id)
-    all_challan = Delivery_challan.objects.all()
-    items = Delivery_challan_item.objects.filter(delivery_challan=challan)
-   
-    return render(request,'zohomodules/Delivery-challan/challan_overview.html',{'challan':challan,'d_challan':all_challan,'items':items}) 
+    if 'login_id' in request.session:
+            if request.session.has_key('login_id'):
+                log_id = request.session['login_id']
+            
+            else:
+                return redirect('/')
         
+            log_details= LoginDetails.objects.get(id=log_id)
+            if log_details.user_type=='Staff':
+                dash_details = StaffDetails.objects.get(login_details=log_details)
+                comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
+
+            else:    
+                dash_details = CompanyDetails.objects.get(login_details=log_details)
+                comp_details=CompanyDetails.objects.get(login_details=log_details)
+
+            challan = Delivery_challan.objects.get(id=id)
+            all_challan = Delivery_challan.objects.all()
+            items = Delivery_challan_item.objects.filter(company=comp_details,delivery_challan=challan)
+            comments = Delivery_challan_comment.objects.filter(company=comp_details,delivery_challan=challan)
+            history = Delivery_challan_history.objects.filter(company=comp_details,delivery_challan=challan)
+        
+            return render(request,'zohomodules/Delivery-challan/challan_overview.html',{'challan':challan,'d_challan':all_challan,'items':items,'comments':comments,'history':history}) 
+                
 def convert_save(request,id):
     dc = Delivery_challan.objects.get(id=id)
     dc.status = 'Save'
@@ -13856,6 +13874,7 @@ def challan_edit(request,id):
         
         dc = Delivery_challan.objects.get(id=id)
         dct = Delivery_challan_item.objects.filter(delivery_challan=dc,company=comp_details)
+       
         
         return render(request,'zohomodules/Delivery-challan/challan_edit.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'challan':dc,'citem':dct}) 
      
@@ -14015,13 +14034,13 @@ def challan_add_comment(request):
         challan = Delivery_challan.objects.get(id=challan_id)
         
         comment_text = request.POST.get('comment')
-        date = date.today()
+        current_date = date.today()
         
         if comment_text:  
             comment = Delivery_challan_comment(
                 comment=comment_text,
                 delivery_challan=challan,
-                date = date,
+                date = current_date,
                 company=company,
                 login_details=log_details
             )
@@ -14032,10 +14051,10 @@ def challan_add_comment(request):
             return JsonResponse({'error': 'Comment text is required'}, status=400)  
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
-def delete_attendance_comment(request,id):
-    comment = Attendance_comment.objects.get(id=id)    
+def delete_challan_comment(request,id):
+    comment = Delivery_challan_comment.objects.get(id=id)    
     comment.delete()  
-    return redirect('attendance_calendar', employee_id=comment.employee.id, target_year=comment.year, target_month=comment.month)       
+    return redirect('challan_overview',id=comment.delivery_challan.id )       
                 
 
                 

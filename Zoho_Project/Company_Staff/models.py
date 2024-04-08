@@ -1013,7 +1013,7 @@ class Delivery_challan_item(models.Model):
     hsn = models.CharField(max_length=200,null=True)
     quantity = models.IntegerField(null=True)
     price=  models.FloatField(default=0.0, null=True, blank=True)
-    tax_rate= models.FloatField(default=0.0, null=True, blank=True)
+    tax_rate= models.IntegerField(null=True, blank=True)
     discount= models.FloatField(default=0.0, null=True, blank=True)
     total =  models.FloatField(default=0.0, null=True, blank=True)
 

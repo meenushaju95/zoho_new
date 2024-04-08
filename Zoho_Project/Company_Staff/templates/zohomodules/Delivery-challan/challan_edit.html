@@ -384,11 +384,12 @@ input {
                 <td>
                     
                     <div style="display: flex; align-items: center;">
-                        <select name="item[]" id="item" class="item-select"  onchange="fetchItemData(this.value)" style="flex: 1; width: 250%;color: white;" required>
+                        <select name="item[]" id="item" class="item-select"  onchange="fetchItemData(this)" style="flex: 1; width: 250%;color: white;" required>
                             
-                              {% for i in item %}
-                              <option value="{{i.id}}"{% if i.id == items.id %} selected  {% endif %} style="color: white;" selected >{{i.item_name}}</option>
-                              {% endfor %}
+                              {% for i in item %}{% if items.item_id == i.id %}
+                              <option selected value="{{i.id}}">{{i.item_name}}</option>{% else %}<option value="{{i.id}}">{{i.item_name}}</option>{% endif %}{% endfor %}
+                              
+                             
                           </select>
                         
                         
@@ -398,11 +399,11 @@ input {
                     
                 </td>
                 <td><input type="text" id="hsn" name="hsn[]" value="{{items.hsn}}" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" readonly></td>
-                <td><input type="number" id="quantity" class="quantity" name="quantity[]" value="{{items.quantity}}" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" ><label id="availableStock" class="availableStock" style="color: orange;"></label></td>
+                <td><input type="number" id="quantity" oninput="recalculateAmount(this)" class="quantity" name="quantity[]" value="{{items.quantity}}" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" >{% for item_data in items_data %} <label id="availableStock" class="availableStock" style="color: orange;">Avaialble Stock :{{item_data.available_stock}}</label><input type="hidden" value="{{item_data.current_stock}}">{% endfor %}</td>
                 <td><input type="number" id="rate" name="rate[]" value="{{items.price}}" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" readonly></td>
-                <td><input type="number" id="discount" name="discount[]" value="{{items.discount}}" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
+                <td><input type="number" id="discount" name="discount[]" oninput="recalculateAmount(this)" value="{{items.discount}}" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td>
-                    <select id="tax" name="tax[]" class="item-tax" style="width: 100%;">
+                    <select id="tax" name="tax[]" oninput="recalculateAmount(this)" class="item-tax" style="width: 100%;">
                        <option value="{{items.tax_rate}}" selected>{{items.tax_rate}}</option>
                         <option value="0">0% GST</option>
                         <option value="3">3% GST</option>
@@ -428,7 +429,27 @@ input {
       
 
 
+<script>
+    function recalculateAmount(input) {
+        var row = input.closest('tr');
+        var quantity = parseFloat(row.querySelector('.quantity').value);
+        var rate = parseFloat(row.querySelector('#rate').value);
+        var discount = parseFloat(row.querySelector('#discount').value);
+        var taxRate = parseFloat(row.querySelector('#tax').value);
 
+        var amount = (quantity * rate) - discount;
+
+        // Calculate tax amount
+        var taxAmount = (amount * taxRate) / 100;
+
+        // Update the amount field in the same row
+        var amountField = row.querySelector('#amount');
+        amountField.value = isNaN(amount) ? '' : amount.toFixed(2);
+
+        // Trigger the change event of amount field to update subtotal
+        amountField.dispatchEvent(new Event('input'));
+    }
+</script>
 
 <div class="container mt-5">
   <!-- Left Column -->
@@ -2305,6 +2326,7 @@ $('#mphone').on('input', function() {
               updateTaxCalculation(data);
               updateavailableStock(data.stock, data); 
               calculateTaxes(data)
+              recalculateAmount(row);
   
               $('.item-select').select2('close');
           },
@@ -2385,6 +2407,9 @@ $('#mphone').on('input', function() {
    
   
   </script>
+
+
+
 <script>
   function addRow() {
     var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];

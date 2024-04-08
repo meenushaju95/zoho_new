@@ -318,7 +318,7 @@
             <a class="btn orange-link " href="{% url 'challan_edit' challan.id %}" id="pencil" title="edit" ><i class="fa fa-pencil" aria-hidden="true"></i></a>
             <a class="btn orange-link " id="trash" title="delete"><i class="fa fa-trash" aria-hidden="true"></i></a>
             <a class="btn orange-link " id="comment" title="comment" data-toggle="modal" data-target="#commentModal"><i class="fa fa-comment-o" aria-hidden="true"></i></a>
-            <a class="btn orange-link " id="history" title="history" ><i class="fa fa-history" aria-hidden="true"></i></a>
+            <a class="btn orange-link " id="history" title="history" data-toggle="modal" data-target="#historyModal" ><i class="fa fa-history" aria-hidden="true"></i></a>
             <a class="btn orange-link " id="pdf" title="pdf" style="display: none;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>
             <a class="btn orange-link " id="print" title="print" style="display: none;"><i class="fa fa-print" aria-hidden="true"></i></a>
             <a class="btn orange-link " id="share" title="share" style="display: none;"><i class="fa fa-share-square" aria-hidden="true"></i></a>
@@ -414,7 +414,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-5"><b>Tax :</b></div>
-                        <div class="col-md-7">{{ item.tax_rate }}</div>
+                        <div class="col-md-7">{{ item.tax_rate }}%</div>
                     </div>
                     <div class="row">
                         <div class="col-md-5"><b>HSN:</b></div>
@@ -515,7 +515,7 @@
                             <td>
                              
                               <a href="#" class="btn delete-comment" data-id="{{ comment.id }}">
-                                <i class="fa fa-trash" aria-hidden="true" style="color: white;"></i>
+                                <i class="fa fa-trash" aria-hidden="true" style="color: orange;"></i>
                             </a>
                             </td>
                           </tr>
@@ -557,18 +557,15 @@
                     }
                 })
                 .then(data => {
-                    // Check if the response contains a message
+                   
                     if (data.message) {
-                        alert(data.message); // Display the message from the server
-                        // Optionally, you can reload the page or update the comments section here
+                        alert(data.message); 
+                        
                     } else {
                         throw new Error("Invalid response from server");
                     }
                 })
-                .catch(error => {
-                    console.error("Error saving comment:", error);
-                    alert("An error occurred while saving comment. Please try again later.");
-                });    
+                
                 
                 
             }
@@ -576,37 +573,88 @@
               </script>
               <script>
                 document.addEventListener('DOMContentLoaded', function() {
-                const deleteLinks = document.querySelectorAll('.delete-comment');
-                deleteLinks.forEach(link => {
-                    link.addEventListener('click', function(event) {
-                        event.preventDefault(); // Prevent the default link behavior (navigating to a new page)
-            
-                        // Extract the comment ID from the data-id attribute
-                        const commentId = link.dataset.id;
-            
-                        // Send an AJAX request to delete the comment
-                        fetch("{% url 'attendance_delete_comment' 0 %}".replace('0', commentId), {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRFToken': '{{ csrf_token }}'
-                            }
-                        })
-                        .then(response => {
-                            if (response.ok) {
-                                
-                                link.closest('tr').remove(); 
-                            } else {
-                                throw new Error('Failed to delete comment');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error deleting comment:', error);
-                            alert('An error occurred while deleting comment. Please try again later.');
+                    const deleteLinks = document.querySelectorAll('.delete-comment');
+                    deleteLinks.forEach(link => {
+                        link.addEventListener('click', function(event) {
+                            event.preventDefault(); 
+                            
+                            const commentId = link.dataset.id;
+                            
+                            fetch("{% url 'delete_challan_comment' 0 %}".replace('0', commentId), {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                }
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    link.closest('tr').remove(); 
+                                } else {
+                                    throw new Error('Failed to delete comment');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error deleting comment:', error);
+                                alert('An error occurred while deleting comment. Please try again later.');
+                            });
                         });
                     });
                 });
-            });
-              </script>
+            </script>
+
+
+<div class="modal fade"  id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content bg-dark">
+        <div class="modal-header">
+          <h5 class="modal-title" id="commentModalLabel" style="color: white;">Attendance history</h5>
+          
+            
+        </div>
+        <div class="modal-body">
+           
+          <table class="table mt-3 bg-black">
+            <thead>
+              <tr>
+                <th scope="col" style="color: white;">Sl No</th>
+                <th scope="col" style="color: white;">Date</th>
+                <th scope="col" style="color: white;">Action</th>
+                <th scope="col" style="color: white;">By</th>
+              </tr>
+            </thead>
+            <tbody>
+                
+             
+              {% for history in history %}
+              <tr >
+                <td style="color: white;font-size: 16px;">{{ forloop.counter }}</td>
+                <td style="color: white;font-size: 16px;">{{ history.date|date }}</td>
+                <td style="color: white;font-size: 16px;">{{ history.action }}</td>
+                <td style="color: white;font-size: 16px;">{{ history.login_details.first_name }} {{ history.login_details.last_name }}</td>
+                
+                
+              </tr>
+              {% empty %}
+             
+              <tr>
+                <td colspan="3" class="text-center">No history found</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          
+          <button type="button" class="btn" data-dismiss="modal" style="background-color: orange;color: white;">Close</button>
+          
+          
+        </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
             
             
 
