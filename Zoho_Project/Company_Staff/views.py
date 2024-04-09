@@ -13874,7 +13874,8 @@ def challan_edit(request,id):
         
         dc = Delivery_challan.objects.get(id=id)
         dct = Delivery_challan_item.objects.filter(delivery_challan=dc,company=comp_details)
-       
+        for item1 in dct:
+            item1.available_stock = item1.item.current_stock - item1.quantity
         
         return render(request,'zohomodules/Delivery-challan/challan_edit.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'challan':dc,'citem':dct}) 
      
@@ -13931,7 +13932,7 @@ def edit_challan(request,id):
                 rate = [float(r) for r in request.POST.getlist("rate[]")]
                 tax = [float(t) for t in request.POST.getlist("tax[]")]
 
-                if quantity<=0:
+                if all(qty <= 0 for qty in quantity):
                         messages.info(request, 'Quantity of one item is 0')
                         return redirect('challan_edit',id=id)
 
