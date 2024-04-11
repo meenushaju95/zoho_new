@@ -316,7 +316,7 @@
        
         <div class="col-md-7 mt-5">
             <a class="btn orange-link " href="{% url 'challan_edit' challan.id %}" id="pencil" title="edit" ><i class="fa fa-pencil" aria-hidden="true"></i></a>
-            <a class="btn orange-link " id="trash" title="delete"><i class="fa fa-trash" aria-hidden="true"></i></a>
+            <a class="btn orange-link " href="{% url 'challan_delete' challan.id %}" id="trash" title="delete"><i class="fa fa-trash" aria-hidden="true"></i></a>
             <a class="btn orange-link " id="comment" title="comment" data-toggle="modal" data-target="#commentModal"><i class="fa fa-comment-o" aria-hidden="true"></i></a>
             <a class="btn orange-link " id="history" title="history" data-toggle="modal" data-target="#historyModal" ><i class="fa fa-history" aria-hidden="true"></i></a>
             <a class="btn orange-link " id="pdf" title="pdf" style="display: none;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>
@@ -343,19 +343,20 @@
                         <div style="font-weight: bold;">Company Details</div>
                         <div class="row mt-3">
                             <div class="col-md-5"><b>Company:</b></div>
-                            <div class="col-md-7">{{ challan.login_details.first_name }} {{ challan.login_details.last_name }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-5"><b>Email:</b></div>
-                            <div class="col-md-7">{{ challan.login_details.email }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-5"><b>Mobile:</b></div>
-                            <div class="col-md-7">{{ challan.login_details.Mobile_no }}</div>
+                            <div class="col-md-7">{{ challan.company.company_name}}</div>
                         </div>
                         <div class="row">
                             <div class="col-md-5"><b>Address:</b></div>
-                            <div class="col-md-7">{{ challan.login_details.address }}</div>
+                            <div class="col-md-7">{{ challan.company.address }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-5"><b>Mobile:</b></div>
+                            <div class="col-md-7">{{ challan.company.contact }}</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-5"><b>place of supply:</b></div>
+                            <div class="col-md-7">{{ challan.place_of_supply }}</div>
                         </div>
                     </div>
         
@@ -666,12 +667,357 @@
             
         
         <!-----------------------------------------------------------TEMPLATE-------------------------------->
-<div class="container p-3 mt-5" id="template" style="background-color:white;color: black;display: none;">
-    jkkkkkkkkkkkkkkkk
+
+
+       <div class="container-fluid mt-5" id="template1" style="background-color: white;display: none;">
+        <div class="row p-3 text-center" style="background-color: orange; color: white;">
+            <div style="font-size: 25px;">DELIVERY CHALLAN</div>
+            <div style="font-size: 15px;">{{challan.company.company_name}}</div>
+            <div style="font-size: 15px;">{{challan.company.address}}</div>
+            <div style="font-size: 15px;">{{challan.company.city}}</div>
+            <div style="font-size: 15px;">{{challan.company.state}}</div>
+            <div style="font-size: 15px;">{{challan.company.pincode}}</div>
+            <div style="font-size: 15px;">{{challan.company.contact}}</div>
+        </div>
+        <div class="row p-3 text-center" style="background-color: white; color: black;">
+            <div class="row">
+                <div class="col-md-6">
+                    <div style="font-size: 15px;font-weight: bold;">TO:</div>
+                    <div style="font-size: 15px;">{{challan.customer.title}} {{challan.customer.first_name}} {{challan.customer.last_name}}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="row mb-3">
+                        <div class="col-md-5"><b>Challan No:</b></div>
+                        <div class="col-md-7">{{ challan.challan_number }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5"><b>Challan Date:</b></div>
+                        <div class="col-md-7">{{ challan.challan_date }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5"><b>Challan Status:</b></div>
+                        <div class="col-md-7">{{ challan.status }}</div>
+                    </div>
+                </div>
+</div>
+
+
+<div class="row p-3 text-center" style="background-color: white; color: black;">
+    <div class="table-responsive">
+        <table class="table table-bordered" style="color: black;">
+            <thead style="background-color: orange;">
+                <tr>
+                    <th>Items</th>
+                    <th>HSN</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Tax</th>
+                    <th>Discount</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in items %}
+                <tr>
+                    <td>{{ i.item.item_name }}</td>
+                    <td>{{ i.hsn }}</td>
+                    <td>{{ i.quantity }}</td>
+                    <td>{{ i.price }}</td>
+                    <td>{{ i.tax_rate }}</td>
+                    <td>{{ i.discount }}</td>
+                    <td>{{ i.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+</div>
+
+<div class="row p-3 " style="background-color: white; color: black;">
+    <div class="col-md-6"></div>
+    <div class="col-md-6">
+    <div class="row mb-3">
+        <div class="col-md-5"><b>Subtotal:</b></div>
+        <div class="col-md-7">{{ challan.sub_total }}</div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-5"><b>Tax Amount:</b></div>
+        <div class="col-md-7">{{ challan.tax_amount }}</div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-5"><b>
+            {% if challan.igst > 0 %}
+                IGST:
+            {% else %}
+               <div style="margin-bottom: 1px;"> CGST:</div><br>
+                SGST:
+            {% endif %}
+        </b></div>
+        <div class="col-md-7">
+            {% if challan.igst > 0 %}
+                {{ challan.igst }}
+            {% else %}
+               <div style="margin-bottom: 1px;"> {{ challan.cgst }}</div><br> 
+                 {{ challan.sgst }}
+            {% endif %}
+        </div>
+    </div>
+    {% if challan.shipping_charge > 0 %}
+    <div class="row mb-3">
+        <div class="col-md-5"><b>Shipping Charge:</b></div>
+        <div class="col-md-7">{{ challan.shipping_charge }}</div>
+    </div>
+    {% endif %}
+    {% if challan.adjustment > 0 %}
+    <div class="row mb-3">
+        <div class="col-md-5"><b>Adjustment:</b></div>
+        <div class="col-md-7">{{ challan.adjustment }}</div>
+    </div>
+    {% endif %}
+    <div class="row mb-3">
+        <div class="col-md-5"><b>Total Amount:</b></div>
+        <div class="col-md-7">{{ challan.grand_total }}</div>
+    </div>
+
+</div></div></div></div>
+
+
+
+
+<div class="container-fluid mt-5 p-3" id="template2" style="background-color: white;display: none;font-family: 'Times New Roman', Times, serif;">
+    <div class="row p-3 text-center" style="background-color: white; color: black;border-bottom: 1px solid black;">
+        
+        <div class="col-md-3" style="border: 1px solid orange;background-color: orange;color: black;font-size: 18px;">{{challan.status}}</div>
+    <div class="col-md-5" style="font-size: 25px;">DELIVERY CHALLAN</div>
+    <div class="col-md-4" style="font-size: 18px;">Chllan Number :{{challan.challan_number}}</div>
+    </div>
+    <div class="row p-3 text-center" style="background-color: white; color: black;">
+        <div class="row">
+            <div class="col-md-6">
+                <div style="font-size: 15px;font-weight: bold;">TO:</div>
+                <div style="font-size: 15px;">{{challan.customer.title}} {{challan.customer.first_name}} {{challan.customer.last_name}}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="row mb-3">
+                    <div class="col-md-5"><b>Challan No:</b></div>
+                    <div class="col-md-7">{{ challan.challan_number }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5"><b>Challan Date:</b></div>
+                    <div class="col-md-7">{{ challan.challan_date }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5"><b>Challan Status:</b></div>
+                    <div class="col-md-7">{{ challan.status }}</div>
+                </div>
+            </div>
+</div>
+
+
+<div class="row p-3 text-center" style="background-color: white; color: black;">
+<div class="table-responsive">
+    <table class="table table-bordered" style="color: black;">
+        <thead style="background-color: orange;">
+            <tr>
+                <th>Items</th>
+                <th>HSN</th>
+                <th>Quantity</th>
+                <th>Rate</th>
+                <th>Tax</th>
+                <th>Discount</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in items %}
+            <tr>
+                <td>{{ i.item.item_name }}</td>
+                <td>{{ i.hsn }}</td>
+                <td>{{ i.quantity }}</td>
+                <td>{{ i.price }}</td>
+                <td>{{ i.tax_rate }}</td>
+                <td>{{ i.discount }}</td>
+                <td>{{ i.total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div>
+
+<div class="row p-3 " style="background-color: white; color: black;">
+<div class="col-md-6"></div>
+<div class="col-md-6">
+<div class="row mb-3">
+    <div class="col-md-5"><b>Subtotal:</b></div>
+    <div class="col-md-7">{{ challan.sub_total }}</div>
+</div>
+<div class="row mb-3">
+    <div class="col-md-5"><b>Tax Amount:</b></div>
+    <div class="col-md-7">{{ challan.tax_amount }}</div>
+</div>
+<div class="row mb-3">
+    <div class="col-md-5"><b>
+        {% if challan.igst > 0 %}
+            IGST:
+        {% else %}
+           <div style="margin-bottom: 1px;"> CGST:</div><br>
+            SGST:
+        {% endif %}
+    </b></div>
+    <div class="col-md-7">
+        {% if challan.igst > 0 %}
+            {{ challan.igst }}
+        {% else %}
+           <div style="margin-bottom: 1px;"> {{ challan.cgst }}</div><br> 
+             {{ challan.sgst }}
+        {% endif %}
+    </div>
+</div>
+{% if challan.shipping_charge > 0 %}
+<div class="row mb-3">
+    <div class="col-md-5"><b>Shipping Charge:</b></div>
+    <div class="col-md-7">{{ challan.shipping_charge }}</div>
+</div>
+{% endif %}
+{% if challan.adjustment > 0 %}
+<div class="row mb-3">
+    <div class="col-md-5"><b>Adjustment:</b></div>
+    <div class="col-md-7">{{ challan.adjustment }}</div>
+</div>
+{% endif %}
+<div class="row mb-3">
+    <div class="col-md-5"><b>Total Amount:</b></div>
+    <div class="col-md-7">{{ challan.grand_total }}</div>
+</div>
+
+</div></div></div></div>
+
+
+
+
+
+<div class="container-fluid mt-5" id="template3" style="background-color: white;display: none;">
+    <div class="row p-3 text-center" style="background-color: orange; color: white;">
+        <div style="font-size: 25px;">DELIVERY CHALLAN</div>
+        <div style="font-size: 15px;">{{challan.company.company_name}}</div>
+        <div style="font-size: 15px;">{{challan.company.address}}</div>
+        <div style="font-size: 15px;">{{challan.company.city}}</div>
+        <div style="font-size: 15px;">{{challan.company.state}}</div>
+        <div style="font-size: 15px;">{{challan.company.pincode}}</div>
+        <div style="font-size: 15px;">{{challan.company.contact}}</div>
+    </div>
+    <div class="row p-3 text-center" style="background-color: white; color: black;">
+        <div class="row">
+            <div class="col-md-6">
+                <div style="font-size: 15px;font-weight: bold;">TO:</div>
+                <div style="font-size: 15px;">{{challan.customer.title}} {{challan.customer.first_name}} {{challan.customer.last_name}}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="row mb-3">
+                    <div class="col-md-5"><b>Challan No:</b></div>
+                    <div class="col-md-7">{{ challan.challan_number }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5"><b>Challan Date:</b></div>
+                    <div class="col-md-7">{{ challan.challan_date }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5"><b>Challan Status:</b></div>
+                    <div class="col-md-7">{{ challan.status }}</div>
+                </div>
+            </div>
+</div>
+
+
+<div class="row p-3 text-center" style="background-color: white; color: black;">
+<div class="table-responsive">
+    <table class="table table-bordered" style="color: black;">
+        <thead style="background-color: orange;">
+            <tr>
+                <th>Items</th>
+                <th>HSN</th>
+                <th>Quantity</th>
+                <th>Rate</th>
+                <th>Tax</th>
+                <th>Discount</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in items %}
+            <tr>
+                <td>{{ i.item.item_name }}</td>
+                <td>{{ i.hsn }}</td>
+                <td>{{ i.quantity }}</td>
+                <td>{{ i.price }}</td>
+                <td>{{ i.tax_rate }}</td>
+                <td>{{ i.discount }}</td>
+                <td>{{ i.total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div>
+
+<div class="row p-3 " style="background-color: white; color: black;">
+<div class="col-md-6"></div>
+<div class="col-md-6">
+<div class="row mb-3">
+    <div class="col-md-5"><b>Subtotal:</b></div>
+    <div class="col-md-7">{{ challan.sub_total }}</div>
+</div>
+<div class="row mb-3">
+    <div class="col-md-5"><b>Tax Amount:</b></div>
+    <div class="col-md-7">{{ challan.tax_amount }}</div>
+</div>
+<div class="row mb-3">
+    <div class="col-md-5"><b>
+        {% if challan.igst > 0 %}
+            IGST:
+        {% else %}
+           <div style="margin-bottom: 1px;"> CGST:</div><br>
+            SGST:
+        {% endif %}
+    </b></div>
+    <div class="col-md-7">
+        {% if challan.igst > 0 %}
+            {{ challan.igst }}
+        {% else %}
+           <div style="margin-bottom: 1px;"> {{ challan.cgst }}</div><br> 
+             {{ challan.sgst }}
+        {% endif %}
+    </div>
+</div>
+{% if challan.shipping_charge > 0 %}
+<div class="row mb-3">
+    <div class="col-md-5"><b>Shipping Charge:</b></div>
+    <div class="col-md-7">{{ challan.shipping_charge }}</div>
+</div>
+{% endif %}
+{% if challan.adjustment > 0 %}
+<div class="row mb-3">
+    <div class="col-md-5"><b>Adjustment:</b></div>
+    <div class="col-md-7">{{ challan.adjustment }}</div>
+</div>
+{% endif %}
+<div class="row mb-3">
+    <div class="col-md-5"><b>Total Amount:</b></div>
+    <div class="col-md-7">{{ challan.grand_total }}</div>
+</div>
+
+</div></div></div></div>
+    
     
 
+<div class="container text-center mt-3" id="temp-button" style="display: none;">
+    <button id="button1" class="orange-link" style="background-color: black;" onclick="showTemplate(1)">1</button>
+    <button id="button2" class="orange-link" style="background-color: black;" onclick="showTemplate(2)">2</button>
+    <button id="button3" class="orange-link" style="background-color: black;" onclick="showTemplate(3)">3</button>
+</div>
 
+</div>  
 <!-----------------------------------------------------------SLIP--------------------------------->
 
 <div class="container p-3 mt-5" id="slip" style="background-color:white;color: black;display: none;">
@@ -697,7 +1043,26 @@
 
 
 
+   <script>
+    function showTemplate(templateNumber) {
+    // Hide all template containers
+    document.getElementById('template1').style.display = 'none';
+    document.getElementById('template2').style.display = 'none';
+    document.getElementById('template3').style.display = 'none';
+
+    
+    document.getElementById('template' + templateNumber).style.display = 'block';
+
    
+    document.getElementById('button1').style.backgroundColor = 'black';
+    document.getElementById('button2').style.backgroundColor = 'black';
+    document.getElementById('button3').style.backgroundColor = 'black';
+
+    
+    document.getElementById('button' + templateNumber).style.backgroundColor = 'orange';
+    document.getElementById('button' + templateNumber).style.color = 'white';
+}
+   </script>
      
     <script>
         function toggleDropdownVisibility() {
@@ -722,9 +1087,13 @@
 <script>
     document.getElementById('btn-template').addEventListener('click', function() {
         document.getElementById('overview').style.display = 'none';
-        document.getElementById('template').style.display = 'block';
+        document.getElementById('template1').style.display = 'block';
+        document.getElementById('temp-button').style.display = 'block';
+        document.getElementById('button1').style.backgroundColor = 'orange';
+        document.getElementById('button1').style.color = 'white';
         document.getElementById('btn-template').style.backgroundColor = 'orange';
         document.getElementById('btn-template').style.color = 'white';
+        document.getElementById('btn-overview').style.backgroundColor = '';
         document.getElementById('btn-overview').style.backgroundColor = '';
         document.getElementById('btn-overview').style.color = 'orange';
         document.getElementById('btn-slip').style.color = 'orange';
@@ -733,6 +1102,11 @@
         document.getElementById('print').style.display = '';
         document.getElementById('share').style.display = '';
         document.getElementById('slip').style.display = 'none';
+        document.getElementById('comment').style.display = 'none';
+    document.getElementById('trash').style.display = 'none';
+    document.getElementById('pencil').style.display = 'none';
+    document.getElementById('history').style.display = 'none';
+    document.getElementById('attach').style.display = 'none';
        
     });
     
@@ -749,6 +1123,13 @@
         document.getElementById('pdf').style.display = '';
         document.getElementById('print').style.display = '';
         document.getElementById('share').style.display = '';
+        document.getElementById('comment').style.display = 'none';
+    document.getElementById('trash').style.display = 'none';
+    document.getElementById('pencil').style.display = 'none';
+    document.getElementById('history').style.display = 'none';
+    document.getElementById('attach').style.display = 'none';
+    document.getElementById('share').style.display = 'none';
+        
         
     });
     
@@ -760,13 +1141,15 @@
         document.getElementById('btn-template').style.color = 'orange';
         document.getElementById('btn-slip').style.color = 'orange';
         document.getElementById('btn-slip').style.backgroundColor = '';
-        document.getElementById('template').style.display = 'none';
+        document.getElementById('temp').style.display = 'none';
         document.getElementById('slip').style.display = 'none';
         document.getElementById('pdf').style.display = 'none';
         document.getElementById('print').style.display = 'none';
         document.getElementById('share').style.display = 'none';
+       
+});
         
-    });
+    
     </script>
 
 

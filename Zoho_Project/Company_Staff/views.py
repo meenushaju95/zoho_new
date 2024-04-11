@@ -13937,64 +13937,75 @@ def edit_challan(request,id):
                         return redirect('challan_edit',id=id)
 
                 if all(int(qty) > 0 for qty in quantity):
-                        dc = Delivery_challan(
-                            login_details=log_details,
-                            company=comp_details,
-                            customer=customer,
-                            place_of_supply=place_of_supply,
-                            challan_date=dc_date,
-                            reference_number=ref_number,
-                            challan_number=dc_number,
-                            challan_type=dc_type,
-                            description=description,
-                            document=file,
-                            sub_total=subtotal,
-                            igst=igst,
-                            cgst=cgst,
-                            sgst=sgst,
-                            tax_amount=taxamount,
-                            shipping_charge=shipping,
-                            adjustment=adjustment,
-                            grand_total=grand_total,
-                            advance=advance,
-                            balance=balance,
-                            status='Save'
-                        )
+                        dc = Delivery_challan.objects.get(id=id)
+                        
+                       
+                        dc.customer=customer
+                        dc.place_of_supply=place_of_supply
+                        dc.challan_date=dc_date
+                        dc.reference_number=ref_number
+                        dc.challan_number=dc_number
+                        dc.challan_type=dc_type
+                        dc.description=description
+                        dc.document=file
+                        dc.sub_total=subtotal
+                        dc.igst=igst
+                        dc.cgst=cgst
+                        dc.sgst=sgst
+                        dc.tax_amount=taxamount
+                        dc.shipping_charge=shipping
+                        dc.adjustment=adjustment
+                        dc.grand_total=grand_total
+                        dc.advance=advance
+                        dc.balance=balance
+                        dc.status='Save'
+                        
                         
                         dc.save()
 
                         if len(product) == len(quantity) == len(discount) == len(total) == len(hsn) == len(tax) == len(rate):
-                        
-
-        
-                        
-
                             group = zip(product, hsn, quantity, rate, tax, discount, total)
 
                             try:
-                                mapped = list(group)
-                                print(mapped)
+                                    mapped = list(group)
+                                    print(mapped)
                             except Exception as e:
-                                print("Exception occurred during conversion:", e)
-
-                            
+                                    print("Exception occurred during conversion:", e)
 
                             for itemsNew in mapped:
-                                item_id = int(itemsNew[0])  
-                                item_instance = Items.objects.get(id=item_id)
-                                itemsTable = Delivery_challan_item(
-                                    item=item_instance, 
-                                    hsn=itemsNew[1], 
-                                    quantity=itemsNew[2], 
-                                    price=itemsNew[3], 
-                                    tax_rate=itemsNew[4], 
-                                    discount=itemsNew[5], 
-                                    total=itemsNew[6], 
-                                    delivery_challan=dc, 
-                                    login_details=log_details, 
-                                    company=comp_details
-                                )
-                                itemsTable.save()
+                                    item_id = int(itemsNew[0])
+                                    item_instance = Items.objects.get(id=item_id)
+
+                                    
+                                    try:
+                                        existing_item = Delivery_challan_item.objects.get(item=item_instance, delivery_challan=dc,company=comp_details)
+                                    except Delivery_challan_item.DoesNotExist:
+                                        existing_item = None
+
+                                    
+                                    if existing_item:
+                                        existing_item.hsn = itemsNew[1]
+                                        existing_item.quantity = itemsNew[2]
+                                        existing_item.price = itemsNew[3]
+                                        existing_item.tax_rate = itemsNew[4]
+                                        existing_item.discount = itemsNew[5]
+                                        existing_item.total = itemsNew[6]
+                                        existing_item.save()
+                                    else:
+                                        # If the item does not exist, create a new Delivery_challan_item object
+                                        itemsTable = Delivery_challan_item(
+                                            item=item_instance, 
+                                            hsn=itemsNew[1], 
+                                            quantity=itemsNew[2], 
+                                            price=itemsNew[3], 
+                                            tax_rate=itemsNew[4], 
+                                            discount=itemsNew[5], 
+                                            total=itemsNew[6], 
+                                            delivery_challan=dc, 
+                                            login_details=log_details, 
+                                            company=comp_details
+                                        )
+                                        itemsTable.save()
                         dc_reference = Delivery_challan_reference(
                             login_details=log_details,
                             company=comp_details,
@@ -14055,7 +14066,12 @@ def challan_add_comment(request):
 def delete_challan_comment(request,id):
     comment = Delivery_challan_comment.objects.get(id=id)    
     comment.delete()  
-    return redirect('challan_overview',id=comment.delivery_challan.id )       
+    return redirect('challan_overview',id=comment.delivery_challan.id )  
+
+def challan_delete(request,id):
+    challan = Delivery_challan.objects.get(id=id)  
+    challan.delete()   
+    return redirect('challan_list')
                 
 
                 
