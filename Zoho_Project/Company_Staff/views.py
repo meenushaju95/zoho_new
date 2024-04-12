@@ -13130,7 +13130,7 @@ def delivery_challan(request):
             if numeric_part:
                 next_numeric_part = str(int(numeric_part) + 1).zfill(len(numeric_part))
             else:
-                next_numeric_part = '001'  # If no numeric part exists, start with '001'
+                next_numeric_part = '001'  
             
             next_challan_number = f'{prefix}{next_numeric_part}'
         else:
@@ -14028,7 +14028,7 @@ def edit_challan(request,id):
                         return redirect('challan_list')
 
 
-def challan_add_comment(request):
+def challan_add_comment(request,id):
     if request.method == 'POST':
         if 'login_id' not in request.session:
             return JsonResponse({'error': 'User not logged in'}, status=401)
@@ -14042,8 +14042,8 @@ def challan_add_comment(request):
         elif log_details.user_type == 'Company':
             company = CompanyDetails.objects.get(login_details=log_details)
 
-        challan_id = request.POST.get('challan_id')
-        challan = Delivery_challan.objects.get(id=challan_id)
+        
+        challan = Delivery_challan.objects.get(id=id)
         
         comment_text = request.POST.get('comment')
         current_date = date.today()

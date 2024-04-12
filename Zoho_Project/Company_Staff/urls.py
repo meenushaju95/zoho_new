@@ -334,7 +334,7 @@ urlpatterns = [
     path('convert_save/<int:id>',views.convert_save,name='convert_save'),
     path('challan_edit/<int:id>',views.challan_edit,name='challan_edit'),
     path('edit_challan/<int:id>',views.edit_challan,name='edit_challan'),
-    path('challan_add_comment/',views.challan_add_comment,name='challan_add_comment'),
+    path('challan_add_comment/<int:id>',views.challan_add_comment,name='challan_add_comment'),
     path('delete_challan_comment/<int:id>/',views.delete_challan_comment,name='delete_challan_comment'),
      path('challan_delete/<int:id>/',views.challan_delete,name='challan_delete'),
     #End

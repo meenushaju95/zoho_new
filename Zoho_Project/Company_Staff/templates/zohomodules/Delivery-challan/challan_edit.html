@@ -405,13 +405,13 @@ input {
                 <td><input type="number" id="discount" name="discount[]" oninput="recalculateAmount(this)" class="item-discount" value="{{items.discount}}" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td>
                     <select id="tax" name="tax[]" oninput="recalculateAmount(this)" class="item-tax" style="width: 100%;">
-                       <option value="{{items.tax_rate }}" selected>{{items.tax_rate }}%</option>
-                        <option value="0">0% GST</option>
-                        <option value="3">3% GST</option>
-                        <option value="5">5% GST</option>
-                        <option value="12">12% GST</option>
-                        <option value="18">18% GST</option>
-                        <option value="28">28% GST</option>
+                      
+                        <option  {% if items.tax_rate == 0 %} selected {% endif %} value="0">0% GST</option>
+                        <option  {% if items.tax_rate == 3 %} selected {% endif %} value="3">3% GST</option>
+                        <option  {% if items.tax_rate == 5 %} selected {% endif %} value="5">5% GST</option>
+                        <option  {% if items.tax_rate == 12 %} selected {% endif %} value="12">12% GST</option>
+                        <option  {% if items.tax_rate == 18 %} selected {% endif %} value="18">18% GST</option>
+                        <option  {% if items.tax_rate == 28 %} selected {% endif %} value="28">28% GST</option>
                     </select>
                 </td>
                 <td><input type="text" id="amount" value="{{items.total}}"  class="item-amount" name="amount[]" style="width: 100%;" readonly  oninput="updateSubtotal()"></td>
@@ -431,19 +431,24 @@ input {
 
 
 <script>
+    document.querySelectorAll('.item-tax').forEach(function(select) {
+        select.addEventListener('change', function() {
+            handleTaxChange(this); // Pass the dropdown element as an argument
+        });
+    });
     function handleTaxChange(select) {
     var row = select.closest('tr');
     var quantity = parseFloat(row.querySelector('.item-quantity').value);
     var rate = parseFloat(row.querySelector('.item-rate').value);
     var discount = parseFloat(row.querySelector('.item-discount').value);
-    var taxRate = parseInt(select.value); // Get the newly selected tax rate
+    var taxRate = parseInt(select.value); 
     var amount = (quantity * rate) - discount;
     var taxAmount = (amount * taxRate) / 100;
 
-    var taxAmountField = row.querySelector('.item-tax-amount'); // Assuming you have a field for tax amount
+    var taxAmountField = row.getElementById('taxAmount'); // Assuming you have a field for tax amount
     taxAmountField.value = isNaN(taxAmount) ? '' : taxAmount.toFixed(2);
 
-    calculateTaxes(data); // Recalculate all taxes
+    calculateTaxes(data); 
 }
 </script>
 
