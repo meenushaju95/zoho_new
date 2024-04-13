@@ -23,7 +23,22 @@
 
 <style>
 
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; /* Allow buttons to wrap to the next line */
+  }
 
+  .button-container button {
+    margin: 5px; /* Add some space between buttons */
+  }
+
+  @media screen and (max-width: 600px) {
+    .button-container {
+      flex-direction: column; /* Stack buttons vertically on small screens */
+    }
+  }
 
     .select2-container--default .select2-search--dropdown{
         background-color: black !important;
@@ -295,7 +310,7 @@ input {
                   
                   <div class="m-3" style="display: flex; align-items: center;">
                   <label for="billingAddress" style="width: 30%">Billing Address :</label>
-                  <textarea id="billingAddress" name="billingAddress"  style="width: 60%;" required>{{challan.customer.billing_address}}</textarea><br></div>
+                  <textarea id="billingAddress" name="billingAddress"  style="width: 60%;" >{{challan.customer.billing_address}}</textarea><br></div>
                  
                   <div class="m-3" style="display: flex; align-items: center;">
                   <label for="gstTreatment" style="width: 30%;">GST Treatment:</label>
@@ -462,7 +477,7 @@ input {
     <div class="m-3" style="display: flex; align-items: center;">
       <label for="note" style="width: 30%;">Add Note:</label><br>
       <textarea id="note" name="note" style="width: 60%;" required>{{challan.description}}</textarea><br></div>
-      &nbsp;&nbsp;<input type="file" name="file" value="{{challan.document}}"><br><br><br><br><br>
+      &nbsp;&nbsp;<input type="file" name="file" ><br><br><br><br><br>
 
       <div class="m-3" style="display: flex; align-items: center;">
       <input type="checkbox" id="termsAndConditions" name="termsAndConditions" required style="width: 10%;" checked>
@@ -544,8 +559,14 @@ input {
   
   <button class="sent-button" name="save">Edit</button>
 </form>
-  <button class="cancel-button">Cancel</button>
+  <button class="cancel-button" onclick="cancelButtonClicked()">Cancel</button>
         </div>
+
+        <script>
+            function cancelButtonClicked() {
+    window.location.href = "{% url 'challan_overview' challan.id %}";
+}
+        </script>
 
       
       

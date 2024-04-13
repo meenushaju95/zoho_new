@@ -360,7 +360,7 @@
           
           <li class="breadcrumb-item"><a href="{% url 'challan_list' %}" class="text-warning-emphasis">All Delivery Challan</a></li>
           <li class="breadcrumb-item"><a href="{% url 'challan_overview' challan.id %}" class="text-warning-emphasis">Challan Overview</a></li>
-          <li class="breadcrumb-item">Edit Delivery Challan</li>
+         
           
       </ol>
     </nav>
@@ -389,7 +389,7 @@
                   </a>
                   <div class="dropdown-menu">
                     <a class="dropdown-item text-black" onclick="filterTable('All')">All</a>
-                    <a class="dropdown-item text-black" onclick="filterTable('Saved')">Saved</a>
+                    <a class="dropdown-item text-black" onclick="filterTable('Save')">Saved</a>
                     <a class="dropdown-item text-black" onclick="filterTable('Draft')">Draft</a>
                   </div>
                   <a class="btn btn-outline-warning small_btn mt-4" role="button" href="{% url 'delivery_challan' %}">
@@ -454,14 +454,14 @@
                     <div class="col-md-6">
                       <div class="d-sm-flex" style="float: right;">
                         {% if challan.status == 'Draft' %}
-                        <a class="btn btn-outline-warning small_btn mt-2 ms-1" onclick="return confirm('Do you want to convert this Draft to Saved ?')" title="CONVERT" id="convert_btn" href="{% url 'convertRecurringInvoice' invoice.id %}">
+                        <a class="btn btn-outline-warning small_btn mt-2 ms-1" onclick="return confirm('Do you want to convert this Draft to Saved ?')" title="CONVERT" id="convert_btn" href="{% url 'convert_save' challan.id %}">
                           <i class="fa fa-exchange"></i>
                         </a>
                         {% endif %}
                         <a class="btn btn-outline-warning small_btn mt-2 ms-1" title="EDIT" id="edit_btn" href="{% url 'challan_edit' challan.id %}">
                           <i class="fa fa-pencil"></i>
                         </a>
-                        <a class="btn btn-outline-warning small_btn mt-2 ms-1" href="{% url 'challan_delete' challan.id %}" onclick="return confirm('Are you sure you want to delete this Recurring Invoice - {{invoice.rec_invoice_no}} ?')" title="DELETE" id="delete_btn">
+                        <a class="btn btn-outline-warning small_btn mt-2 ms-1" href="{% url 'challan_delete' challan.id %}" onclick="return confirm('Are you sure you want to delete this - {{challan.challan_number}} ?')" title="DELETE" id="delete_btn">
                           <i class="fa fa-trash"></i>
                         </a>
                         <a class="btn btn-outline-warning small_btn mt-2 ms-1" style="display: none;" title="SHARE" id="share_btn" data-bs-toggle="dropdown" aria-expanded="false">
@@ -478,15 +478,15 @@
                       </a>
                       <div class="dropdown-menu" aria-labelledby="attach_btn">
                           <a class="dropdown-item text-black" data-toggle="modal" data-target="#bnk_files">Add Document</a>
-                          {% if invoice.document != "" %} 
-                          <a class="dropdown-item text-black" download href="{{invoice.document.url}}">Download Document</a>
+                          {% if challan.document != "" %} 
+                          <a class="dropdown-item text-black" download href="{{challan.document.url}}">Download Document</a>
                           {% endif %}
                       </div>
                       
-                        <a href="" class="btn btn-outline-warning small_btn mt-2 ms-1" style="display: none;" title="PDF" id="pdf_btn"> 
+                        <a href="{% url 'challan_pdf' challan.id %}" class="btn btn-outline-warning small_btn mt-2 ms-1" style="display: none;" title="PDF" id="pdf_btn"> 
                           <i class="fa fa-file-pdf"></i>
                         </a>
-                        <a class="btn btn-outline-warning small_btn mt-2 ms-1" style="display: none;" onclick="slipPdf()" title="SLIP PDF" id="slipPdf_btn"> 
+                        <a  class="btn btn-outline-warning small_btn mt-2 ms-1" style="display: none;" onclick="slipPdf()" title="SLIP PDF" id="slipPdf_btn"> 
                           <i class="fa fa-file-pdf"></i>
                         </a>
                         <a class="btn btn-outline-warning small_btn mt-2 ms-1" style="display: none;" onclick="slipPrint()" title="PRINT" id="slipPrint_btn">
@@ -536,7 +536,7 @@
                       <div class="d-flex px-3 justify-content-between text-black mb-2">
                         <h6 class="mb-0">Address</h6>
                         <p class="mb-0">
-                          {{ challa.company.address}}, {{challa.company.city}}<br>
+                          {{ challan.company.address}}, {{challan.company.city}}<br>
                           {{challan.company.state}} - {{challan.company.pincode}} 
                         </p>
                       </div>
@@ -559,6 +559,11 @@
                       <div class="d-flex px-3 justify-content-between text-black mb-2">
                         <h6 class="mb-0">Customer</h6>
                         <p class="mb-0 text-right fw-bold">{{challan.customer.first_name}} {{challan.customer.last_name}}</p>
+                      </div>
+
+                      <div class="d-flex px-3 justify-content-between text-black mb-2">
+                        <h6 class="mb-0">Place Of Supply</h6>
+                        <p class="mb-0 text-right fw-bold">{{challan.place_of_supply}} </p>
                       </div>
 
                       
@@ -960,7 +965,7 @@
                                               <tr >
                                                   <th style="color: #000;">Grand Total</th>
                                                   <th style="color: #000;">:</th>
-                                                  <th class="text-right" style="color: #000;">{{challan.grandtotal}} /-</th>
+                                                  <th class="text-right" style="color: #000;">{{challan.grand_total}} /-</th>
                                               </tr>
                                           </tbody>
                                       </table>
@@ -1251,7 +1256,7 @@
                                                   <tr >
                                                       <td style="color: #000;">Tax Amount</td>
                                                       <td style="color: #000;">:</td>
-                                                      <td class="text-right" style="color: #000;">{{invoice.tax_amount}}</td>
+                                                      <td class="text-right" style="color: #000;">{{challan.tax_amount}}</td>
                                                   </tr>
                                                   {% if challan.shipping_charge != 0 %}
                                                   <tr >
@@ -1276,7 +1281,7 @@
                                                   <tr >
                                                       <th style="color: #000;">Grand Total</th>
                                                       <th style="color: #000;">:</th>
-                                                      <th class="text-right" style="color: #000;">{{challan.grandtotal}}</th>
+                                                      <th class="text-right" style="color: #000;">{{challan.grand_total}}</th>
                                                   </tr>
                                                   <tr >
                                               </tbody>
@@ -1312,13 +1317,13 @@
   <div class="modal-dialog">
     <div class="modal-content" style="background-color: #3b3b3b;">
       <div class="modal-header">
-        <h3 class="modal-title text-light" id="exampleModalLabel">Share Recurring Invoice</h3>
+        <h3 class="modal-title text-light" id="exampleModalLabel">Share Delivery Challan</h3>
         <button type="button" class="btn close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true" style="font-size: x-large;">&times;</span>
         </button>
       </div>
       <div class="modal-body mx-3" style="background-color: #000;">
-        <form action="" method="post" id="share_to_email_form" class="needs-validation" novalidate enctype="multipart/form-data">
+        <form action="{% url 'challan_email' challan.id %}" method="post" id="share_to_email_form" class="needs-validation" novalidate enctype="multipart/form-data">
           {%csrf_token%}
           <div class="form-group">
               <label for="emailIds">Email IDs</label>
@@ -1356,7 +1361,7 @@
         </button>
       </div>
       <div class="modal-body mx-3" style="background-color: #000;">
-        <form action="" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
+        <form action="{% url 'challan_attach_pdf' challan.id %}" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
           {%csrf_token%}
           <div class="row mt-2">
             <div class="col-md-3">
@@ -1415,7 +1420,7 @@
                             {% for c in comments %}
                             <tr class="">
                                 <td class="text-center">{{forloop.counter }}</td>
-                                <td class="text-center">{{c.comments}}</td>
+                                <td class="text-center">{{c.comment}}</td>
                                 <td class="text-center"><a class="text-danger" href="{% url 'delete_challan_comment' c.id %}" onclick="return confirm('Are you sure you want to delete.?')"><i class="fa fa-trash" style="font-size: 1.1rem;"></i></a></td>
                             </tr>
                             {% endfor %}
@@ -1559,11 +1564,12 @@
     var rows = Array.from(tbody.querySelectorAll('tr'));
     if (col == 1){
       rows.sort(function(a, b) {
-          var balanceA = parseFloat(a.querySelector('.amt').innerText.replace(/[^\d.-]/g, ''));
-          var balanceB = parseFloat(b.querySelector('.amt').innerText.replace(/[^\d.-]/g, ''));
+          var balanceA = parseFloat(a.querySelector('.invNo').innerText.replace(/[^\d.-]/g, ''));
+          var balanceB = parseFloat(b.querySelector('.invNo').innerText.replace(/[^\d.-]/g, ''));
           return balanceA - balanceB;
       });
-    }else{
+    }
+    else{
       rows.sort(function(a, b) {
           var nameA = a.querySelector('.name').innerText.toLowerCase();
           var nameB = b.querySelector('.name').innerText.toLowerCase();
@@ -1730,16 +1736,16 @@
 <script>
   function export_as_pdf() {
     const content = document.getElementById('Templates');
-    html2pdf().from(content).save('{{invoice.bnk_name }}.pdf');
+    html2pdf().from(content).save('{{challan.company.company_name }}.pdf');
   }
 
   function slipPdf(){
-    var recInvNo = `{{invoice.rec_invoice_no }}`;
+    var recInvNo = `{{challan.challan_number }}`;
     var element = document.getElementById('slip_container');
     var opt =
     {
         margin: 1,
-        filename: 'RecurringInvoice_slip_'+ recInvNo + '.pdf',
+        filename: 'DeliveryChallan_slip_'+ recInvNo + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
@@ -1840,4 +1846,5 @@ function slipPrint(){
       document.getElementById('body_wrapper').scrollIntoView();
     }
 </script>
+
 {%endblock%}

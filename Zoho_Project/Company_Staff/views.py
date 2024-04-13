@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage
 from xhtml2pdf import pisa
 from django.template.loader import get_template
 from bs4 import BeautifulSoup
@@ -13601,6 +13602,14 @@ def add_delivery_challan(request):
                 if '0' in quantity:
                     messages.info(request, 'Quantity of one item is 0')
                     return redirect('delivery_challan')
+                
+                try:
+    
+                    existing_challan = Delivery_challan.objects.get(challan_number=dc_number)
+                    messages.info(request, 'A delivery challan with this number already exists')
+                    return redirect('delivery_challan')
+                except ObjectDoesNotExist:
+                    pass  
 
                 if all(int(qty) > 0 for qty in quantity):
                     dc = Delivery_challan(
@@ -13725,7 +13734,13 @@ def add_delivery_challan(request):
                 if '0' in quantity:
                     messages.info(request, 'Quantity of one item is 0')
                     return redirect('delivery_challan')
-
+                try:
+    
+                    existing_challan = Delivery_challan.objects.get(challan_number=dc_number)
+                    messages.info(request, 'A delivery challan with this number already exists')
+                    return redirect('delivery_challan')
+                except ObjectDoesNotExist:
+                    pass  
                 if all(int(qty) > 0 for qty in quantity):
                     dc = Delivery_challan(
                         login_details=log_details,
@@ -13935,6 +13950,13 @@ def edit_challan(request,id):
                 if all(qty <= 0 for qty in quantity):
                         messages.info(request, 'Quantity of one item is 0')
                         return redirect('challan_edit',id=id)
+                try:
+    
+                    existing_challan = Delivery_challan.objects.get(challan_number=dc_number)
+                    messages.info(request, 'A delivery challan with this number already exists')
+                    return redirect('delivery_challan')
+                except ObjectDoesNotExist:
+                    pass  
 
                 if all(int(qty) > 0 for qty in quantity):
                         dc = Delivery_challan.objects.get(id=id)
@@ -14058,11 +14080,8 @@ def challan_add_comment(request,id):
             )
             comment.save()
 
-            return JsonResponse({'message': 'Comment added successfully'})
-        else:
-            return JsonResponse({'error': 'Comment text is required'}, status=400)  
-
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+            return redirect('challan_overview',id=id)
+        
 def delete_challan_comment(request,id):
     comment = Delivery_challan_comment.objects.get(id=id)    
     comment.delete()  
@@ -14072,7 +14091,108 @@ def challan_delete(request,id):
     challan = Delivery_challan.objects.get(id=id)  
     challan.delete()   
     return redirect('challan_list')
+
+def challan_attach_pdf(request,id):
+    if request.method == 'POST':
+        if 'login_id' not in request.session:
+            return JsonResponse({'error': 'User not logged in'}, status=401)
+
+        log_id = request.session['login_id']
+        log_details = LoginDetails.objects.get(id=log_id)
+
+        if log_details.user_type == 'Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            company = staff.company
+        elif log_details.user_type == 'Company':
+            company = CompanyDetails.objects.get(login_details=log_details)
+
+        challan = Delivery_challan.objects.get(id=id)
+       
+        if len(request.FILES) != 0:
+            challan.document = request.FILES.get('file')
+            challan.save()
+
+        return redirect(challan_overview, id)
+    else:
+        return redirect('/')
+
                 
 
                 
                 
+def challan_pdf(request,id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        
+        inv = Delivery_challan.objects.get(id = id)
+        itms = Delivery_challan_item.objects.filter(delivery_challan = inv)
+    
+        context = {'challan':inv, 'items':itms,'cmp':com}
+        
+        template_path = 'zohomodules/Delivery-challan/challan_pdf.html'
+        fname = 'DeliveryChallan_'+inv.challan_number
+        # Create a Django response object, and specify content_type as pdftemp_
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] =f'attachment; filename = {fname}.pdf'
+        # find the template and render it.
+        template = get_template(template_path)
+        html = template.render(context)
+
+       
+        pisa_status = pisa.CreatePDF(
+        html, dest=response)
+        print(pisa_status)
+        # if error then show some funny view
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+        return response
+    else:
+        return redirect('/')
+    
+def challan_email(request,id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        
+        inv = Delivery_challan.objects.get(id = id)
+        itms = Delivery_challan_item.objects.filter(delivery_challan = inv)
+        try:
+            if request.method == 'POST':
+                emails_string = request.POST['email_ids']
+
+                # Split the string by commas and remove any leading or trailing whitespace
+                emails_list = [email.strip() for email in emails_string.split(',')]
+                email_message = request.POST['email_message']
+                # print(emails_list)
+            
+                context = {'challan':inv, 'items':itms,'cmp':com}
+                template_path = 'zohomodules/Delivery-challan/challan_pdf.html'
+                template = get_template(template_path)
+
+                html  = template.render(context)
+                result = BytesIO()
+                pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+                pdf = result.getvalue()
+                filename = f'Delivery Challan_{inv.challan_number}'
+                subject = f"Delivery Challan_{inv.challan_number}"
+                from django.core.mail import EmailMessage as EmailMsg
+                email = EmailMsg(subject, f"Hi,\nPlease find the attached Delivery Challan for - Challan No-{inv.challan_number}. \n{email_message}\n\n--\nRegards,\n{com.company_name}\n{com.address}\n{com.state} - {com.country}\n{com.contact}", from_email=settings.EMAIL_HOST_USER, to=emails_list)
+                email.attach(filename, pdf, "application/pdf")
+                email.send(fail_silently=False)
+
+                messages.success(request, 'Delivery Challan details has been shared via email successfully..!')
+                return redirect(challan_overview,id)
+        except Exception as e:
+            print(e)
+            messages.error(request, f'{e}')
+            return redirect(challan_overview, id)
+

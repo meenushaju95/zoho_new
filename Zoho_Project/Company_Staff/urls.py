@@ -336,7 +336,12 @@ urlpatterns = [
     path('edit_challan/<int:id>',views.edit_challan,name='edit_challan'),
     path('challan_add_comment/<int:id>',views.challan_add_comment,name='challan_add_comment'),
     path('delete_challan_comment/<int:id>/',views.delete_challan_comment,name='delete_challan_comment'),
-     path('challan_delete/<int:id>/',views.challan_delete,name='challan_delete'),
+    path('challan_delete/<int:id>/',views.challan_delete,name='challan_delete'),
+    path('challan_attach_pdf/<int:id>/',views.challan_attach_pdf,name='challan_attach_pdf'),
+    path('challan_pdf/<int:id>/',views.challan_pdf,name='challan_pdf'),
+    path('challan_email/<int:id>/',views.challan_email,name='challan_email'),
+     
+     
     #End
     
     path('Company/employeeloan_trans/<int:id>/',views.employeeloan_trans, name='employeeloan_trans'),

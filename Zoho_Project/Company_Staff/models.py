@@ -985,7 +985,7 @@ class Delivery_challan(models.Model):
     challan_type = models.CharField(max_length=200,null=True)
     description = models.TextField(max_length=200,null=True)
     terms_condition = models.CharField(max_length=200,null=True)
-    document=models.FileField(upload_to="images/",null=True)
+    document=models.FileField(upload_to="documents/",null=True)
     sub_total = models.FloatField(default=0.0, null=True, blank=True)
     igst = models.FloatField(default=0.0, null=True, blank=True)
     cgst = models.FloatField(default=0.0, null=True, blank=True)
