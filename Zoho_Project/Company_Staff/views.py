@@ -14195,4 +14195,173 @@ def challan_email(request,id):
             print(e)
             messages.error(request, f'{e}')
             return redirect(challan_overview, id)
+        
 
+def downloadDeliveryChallanSampleImportFile(request):
+    recInv_table_data = [['SLNO','CUSTOMER','CUSTOMER EMAIL','PLACE OF SUPPLY','DC NO','DATE','TYPE','DESCRIPTION','SUB TOTAL','IGST','CGST','SGST','TAX AMOUNT','ADJUSTMENT','SHIPPING CHARGE','GRAND TOTAL','ADVANCE','BALANCE'],['1', 'Kevin Debryne', '[KL]-Kerala' ,'DC100','2024-03-20','SUPPLY OF LIQUID GASES','','1000','0','25','25','50','0','0','1050','1000','50']]
+
+    items_table_data = [['DC NO', 'PRODUCT','HSN','QUANTITY','PRICE','TAX PERCENTAGE','DISCOUNT','TOTAL'], ['1', 'Test Item 1','789987','1','1000','5','0','1000']]
+
+    wb = Workbook()
+
+    sheet1 = wb.active
+    sheet1.title = 'delivery_challan'
+    sheet2 = wb.create_sheet(title='items')
+
+    
+    for row in recInv_table_data:
+        sheet1.append(row)
+
+    for row in items_table_data:
+        sheet2.append(row)
+    column_widths_sheet1 = {'A': 10, 'B': 20, 'C': 20, 'D': 15, 'E': 15, 'F': 25, 'G': 30, 'H': 15, 'I': 15, 'J': 15, 'K': 15, 'L': 15, 'M': 15, 'N': 15, 'O': 15, 'P': 15, 'Q': 15}
+    for column, width in column_widths_sheet1.items():
+        sheet1.column_dimensions[column].width = width
+
+    # Increase column width for specific columns in sheet2
+    column_widths_sheet2 = {'A': 15, 'B': 30, 'C': 15, 'D': 15, 'E': 15, 'F': 15, 'G': 15, 'H': 15}
+    for column, width in column_widths_sheet2.items():
+        sheet2.column_dimensions[column].width = width
+
+
+    # Create a response with the Excel file
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=delivery_challan_sample_file.xlsx'
+
+    # Save the workbook to the response
+    wb.save(response)
+
+    return response
+
+
+
+
+def importDeliveryChallanFromExcel(request):
+    if request.method == 'POST' and 'file' in request.FILES:
+        if 'login_id' in request.session:
+            log_id = request.session['login_id']
+            if 'login_id' not in request.session:
+                return redirect('/')
+            log_details = LoginDetails.objects.get(id=log_id)
+
+            if log_details.user_type == 'Staff':
+                staff = StaffDetails.objects.get(login_details=log_details)
+                company = staff.company
+                    
+            elif log_details.user_type == 'Company':
+                company = CompanyDetails.objects.get(login_details=log_details)
+
+            excel_file = request.FILES['excel_file']
+            workbook = load_workbook(excel_file)
+            
+            sheet1 = workbook['Sheet1']
+            sheet2 = workbook['Sheet2']
+            
+            invoices = []  # List to store created invoices
+
+            for row in sheet1.iter_rows(min_row=2, values_only=True):
+                try:
+                    customer = Customer.objects.get(first_name=row[1],customer_email=row[2],company=company)
+                    
+                    
+                except ObjectDoesNotExist:
+                    print(f"Customer with name or email  does not exist in the database.")
+                    continue
+                
+                # Create and save the invoice object
+                latest_inv = invoice.objects.filter(company_id = company).order_by('-id').first()
+
+                new_number = int(latest_inv.reference_number) + 1 if latest_inv else 1
+
+                if invoiceReference.objects.filter(company_id = company).exists():
+                    deleted = invoiceReference.objects.get(company_id = company)
+                    
+                    if deleted:
+                        while int(deleted.reference_number) >= new_number:
+                            new_number+=1
+                created_invoice = invoice(
+                    company=company,
+                    login_details=log_details,
+                    customer=customer,
+                    
+                    customer_email=row[2],
+                    customer_billingaddress=row[3],
+                    customer_GSTtype=row[4],
+                    customer_GSTnumber=row[5],
+                    customer_place_of_supply=row[6],
+                    invoice_number=row[0],
+                    date=row[8],
+                    expiration_date=row[10],
+                    payment_method=row[12],
+                    cheque_number=row[13],
+                    UPI_number=row[14],
+                    bank_account_number=row[15],
+                    sub_total=row[19],
+                    CGST=row[20],
+                    SGST=row[21],
+                    IGST=row[29],
+
+                    
+                    tax_amount=row[22],
+                    shipping_charge=row[23],
+                    grand_total=row[25],
+                    advanced_paid=row[26],
+                    balance=row[27],
+                    description=row[16],
+                    status=row[28],
+                    reference_number=new_number
+
+                )
+               
+                created_invoice.save()
+                invoices.append(created_invoice)
+                
+                # Save invoice history
+                invoiceHistory.objects.create(
+                    company=company,
+                    login_details=log_details,
+                    invoice=created_invoice,
+                    date=datetime.now(),
+                    action='Created'
+                )
+        
+            for row in sheet2.iter_rows(min_row=2, values_only=True):
+                try:
+                    item = Items.objects.get(item_name=row[1],company=company)
+                except ObjectDoesNotExist:
+                    print(f"Item with name '{row[1]}' does not exist in the database.")
+                    continue
+                
+                matching_invoices = [inv for inv in invoices if inv.invoice_number == row[0]]
+                if not matching_invoices:
+                    print(f"No invoice found for row with invoice number '{row[0]}'")
+                    continue
+
+                
+                invoice1 = matching_invoices[0]
+
+                
+                invoice_item = invoiceitems(
+                    invoice=invoice1,
+                    company=company,
+                    Items=item,
+                    logindetails=log_details,
+                    hsn=row[2],
+                    quantity=row[3],
+                    price=row[4],
+                    tax_rate=row[5],
+                    discount=row[6],
+                    total=row[7],
+                )
+                invoice_item.save()
+                
+                # Update current stock for the item
+                item.current_stock -= int(row[3])
+                item.save()
+
+            return redirect('invoice_list_out')
+
+    return HttpResponse("No file uploaded or invalid request method")
+
+
+    

@@ -340,8 +340,8 @@ urlpatterns = [
     path('challan_attach_pdf/<int:id>/',views.challan_attach_pdf,name='challan_attach_pdf'),
     path('challan_pdf/<int:id>/',views.challan_pdf,name='challan_pdf'),
     path('challan_email/<int:id>/',views.challan_email,name='challan_email'),
-     
-     
+    path('downloadDeliveryChallanSampleImportFile/',views.downloadDeliveryChallanSampleImportFile,name='downloadDeliveryChallanSampleImportFile'),
+    path('importDeliveryChallanFromExcel',views.importDeliveryChallanFromExcel,name='importDeliveryChallanFromExcel'),
     #End
     
     path('Company/employeeloan_trans/<int:id>/',views.employeeloan_trans, name='employeeloan_trans'),
