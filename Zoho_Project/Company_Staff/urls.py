@@ -312,6 +312,23 @@ urlpatterns = [
     path('zohomodules/loan_account/statementoverview/<int:account_id>',views.statementoverview,name='statementoverview'),
     #End
 
+# recuuring invoice
+ path('Company/get_cust_details',views.getCustomerDetailsAjax, name='getCustomerDetailsAjax'),
+    path('Company/get_bank_acc_num',views.getBankAccountNumberAjax, name='getBankAccountNumberAjax'),
+    path('Company/get_itm_details',views.getItemDetailsAjax, name='getItemDetailsAjax'),
+   
+    path('Company/new_pymnt_trm',views.newPaymentTermAjax, name='newPaymentTermAjax'),
+    path('Company/new_repeat_every_ajax',views.newRepeatEveryTypeAjax, name='newRepeatEveryTypeAjax'),
+    path('Company/new_sales_customer_ajax',views.newSalesCustomerAjax, name='newSalesCustomerAjax'),
+    path('Company/get_all_cust',views.getCustomersAjax, name='getCustomersAjax'),
+    path('Company/get_units_ajax',views.getUnitsAjax, name='getUnitsAjax'),
+    
+    
+    path('Company/create_new_acc',views.createNewAccountAjax, name= 'createNewAccountAjax'),
+    path('Company/get_all_accnts',views.getAllAccountsAjax, name='getAllAccountsAjax'),
+
+
+
 
 
     #------------meenu shaju-delivery challan-------
@@ -342,6 +359,8 @@ urlpatterns = [
     path('challan_email/<int:id>/',views.challan_email,name='challan_email'),
     path('downloadDeliveryChallanSampleImportFile/',views.downloadDeliveryChallanSampleImportFile,name='downloadDeliveryChallanSampleImportFile'),
     path('importDeliveryChallanFromExcel',views.importDeliveryChallanFromExcel,name='importDeliveryChallanFromExcel'),
+    path('convert_rec_invoice/<int:id>/',views.convert_rec_invoice,name='convert_rec_invoice'),
+    path('ChallancheckRecurringInvoiceNumber',views.ChallancheckRecurringInvoiceNumber,name='ChallancheckRecurringInvoiceNumber'),
     #End
     
     path('Company/employeeloan_trans/<int:id>/',views.employeeloan_trans, name='employeeloan_trans'),

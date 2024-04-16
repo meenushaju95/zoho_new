@@ -134,8 +134,8 @@
   input[type="email"],
   input[type="date"],
   input[type="number"],
-  select,
-  button {
+  select
+   {
     width: 100%;
     padding: 10px;
     margin-bottom: 10px;
@@ -429,7 +429,7 @@ input {
                         <option  {% if items.tax_rate == 28 %} selected {% endif %} value="28">28% GST</option>
                     </select>
                 </td>
-                <td><input type="text" id="amount" value="{{items.total}}"  class="item-amount" name="amount[]" style="width: 100%;" readonly  oninput="updateSubtotal()"></td>
+                <td><input type="text" id="amount" value="{{items.total}}"  class="item-amount" name="amount[]" style="width: 100%;"  oninput="updateSubtotal()"></td>
                
                 <td>
                    <button type="button" style="  width: 50px; height: 40px;border: none;" onclick="removeRow(this)"><span style="color: orange;"><i class="fa fa-trash" aria-hidden="true"></i></span></button>
@@ -476,8 +476,13 @@ input {
 
     <div class="m-3" style="display: flex; align-items: center;">
       <label for="note" style="width: 30%;">Add Note:</label><br>
-      <textarea id="note" name="note" style="width: 60%;" required>{{challan.description}}</textarea><br></div>
-      &nbsp;&nbsp;<input type="file" name="file" ><br><br><br><br><br>
+      <textarea id="note" name="note" style="width: 60%;height: 200px;" required>{{challan.description}}</textarea><br></div>
+      &nbsp;&nbsp;<input class="form-control" type="file" name="file" ><br><br><br><br><br>
+
+
+      <div class="m-3" style="display: flex; align-items: center;">
+        <label for="note" style="width: 30%;">Terms and Condition:</label><br>
+        <textarea id="note" name="note" style="width: 60%;height: 200px;" >{{challan.term_condition}}</textarea><br></div>
 
       <div class="m-3" style="display: flex; align-items: center;">
       <input type="checkbox" id="termsAndConditions" name="termsAndConditions" required style="width: 10%;" checked>

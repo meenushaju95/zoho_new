@@ -13061,6 +13061,449 @@ def delete_godown(request,pk):
     return redirect('list_godown')
 
 
+
+#----------------------------------------------------recuring invoice ---------------------
+def getCustomerDetailsAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+        
+        custId = request.POST['id']
+        cust = Customer.objects.get(id = custId)
+
+        if cust:
+            context = {
+                'status':True, 'id':cust.id, 'email':cust.customer_email, 'gstType':cust.GST_treatement,'shipState':cust.place_of_supply,'gstin':False if cust.GST_number == "" or cust.GST_number == None else True, 'gstNo':cust.GST_number,
+                'street':cust.billing_address, 'city':cust.billing_city, 'state':cust.billing_state, 'country':cust.billing_country, 'pincode':cust.billing_pincode
+            }
+            return JsonResponse(context)
+        else:
+            return JsonResponse({'status':False, 'message':'Something went wrong..!'})
+    else:
+       return redirect('/')
+
+def getBankAccountNumberAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+        
+        bankId = request.GET['id']
+        bnk = Banking.objects.get(id = bankId)
+
+        if bnk:
+            return JsonResponse({'status':True, 'account':bnk.bnk_acno})
+        else:
+            return JsonResponse({'status':False, 'message':'Something went wrong..!'})
+    else:
+       return redirect('/')
+
+def getItemDetailsAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+        
+        itemName = request.GET['item']
+        priceListId = request.GET['listId']
+        item = Items.objects.filter(company = cmp, item_name = itemName).first()
+
+        if priceListId != "":
+            priceList = PriceList.objects.get(id = int(priceListId))
+
+            if priceList.item_rate_type == 'Each Item':
+                try:
+                    priceListPrice = float(PriceListItem.objects.get(company = cmp, price_list = priceList, item = item).custom_rate)
+                except:
+                    priceListPrice = item.selling_price
+            else:
+                mark = priceList.percentage_type
+                percentage = float(priceList.percentage_value)
+                roundOff = priceList.round_off
+
+                if mark == 'Markup':
+                    price = float(item.selling_price) + float((item.selling_price) * (percentage/100))
+                else:
+                    price = float(item.selling_price) - float((item.selling_price) * (percentage/100))
+
+                if priceList.round_off != 'Never Mind':
+                    if roundOff == 'Nearest Whole Number':
+                        finalPrice = round(price)
+                    else:
+                        finalPrice = int(price) + float(roundOff)
+                else:
+                    finalPrice = price
+
+                priceListPrice = finalPrice
+        else:
+            priceListPrice = None
+
+        context = {
+            'status':True,
+            'id': item.id,
+            'hsn':item.hsn_code,
+            'sales_rate':item.selling_price,
+            'purchase_rate':item.purchase_price,
+            'avl':item.current_stock,
+            'tax': True if item.tax_reference == 'taxable' else False,
+            'gst':item.intrastate_tax,
+            'igst':item.interstate_tax,
+            'PLPrice':priceListPrice,
+
+        }
+        return JsonResponse(context)
+    else:
+       return redirect('/')
+
+def newPaymentTermAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        term = request.POST['term']
+        days = request.POST['days']
+
+        if not Company_Payment_Term.objects.filter(company = com, term_name__iexact = term).exists():
+            Company_Payment_Term.objects.create(company = com, term_name = term, days =days)
+            
+            list= []
+            terms = Company_Payment_Term.objects.filter(company = com)
+
+            for term in terms:
+                termDict = {
+                    'name': term.term_name,
+                    'id': term.id,
+                    'days':term.days
+                }
+                list.append(termDict)
+
+            return JsonResponse({'status':True,'terms':list},safe=False)
+        else:
+            return JsonResponse({'status':False, 'message':f'{term} already exists, try another.!'})
+
+    else:
+        return redirect('/')
+
+def newRepeatEveryTypeAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        dur = int(request.POST['duration'])
+        type = request.POST['type']
+
+        d = 30 if type == 'Month' else 360
+        dys = dur * d
+        print(dur,d,dys)
+        rep_every = str(dur)+" "+type
+
+        if not CompanyRepeatEvery.objects.filter(company = com, repeat_every__iexact = rep_every).exists():
+            CompanyRepeatEvery.objects.create(company = com, repeat_every = rep_every, repeat_type = type, duration = dur, days = dys)
+            
+            list= []
+            rep = CompanyRepeatEvery.objects.filter(company = com)
+
+            for r in rep:
+                repDict = {
+                    'repeat_every': r.repeat_every,
+                    'id': r.id
+                }
+                list.append(repDict)
+
+            return JsonResponse({'status':True,'terms':list},safe=False)
+        else:
+            return JsonResponse({'status':False, 'message':f'{rep_every} already exists, try another.!'})
+
+    else:
+        return redirect('/')
+def newSalesCustomerAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        if request.method=="POST":
+            customer_data=Customer()
+            customer_data.login_details=com.login_details
+            customer_data.company=com
+            customer_data.customer_type = request.POST.get('type')
+
+            customer_data.title = request.POST.get('salutation')
+            customer_data.first_name=request.POST['first_name']
+            customer_data.last_name=request.POST['last_name']
+            customer_data.company_name=request.POST['company_name']
+            customer_data.customer_display_name=request.POST['v_display_name']
+            customer_data.customer_email=request.POST['vendor_email']
+            customer_data.customer_phone=request.POST['w_phone']
+            customer_data.customer_mobile=request.POST['m_phone']
+            customer_data.skype=request.POST['skype_number']
+            customer_data.designation=request.POST['designation']
+            customer_data.department=request.POST['department']
+            customer_data.website=request.POST['website']
+            customer_data.GST_treatement=request.POST['gst']
+            customer_data.customer_status="Active"
+            customer_data.remarks=request.POST['remark']
+            customer_data.current_balance=request.POST['opening_bal']
+
+            x=request.POST['gst']
+            if x=="Unregistered Business-not Registered under GST":
+                customer_data.PAN_number=request.POST['pan_number']
+                customer_data.GST_number="null"
+            else:
+                customer_data.GST_number=request.POST['gst_number']
+                customer_data.PAN_number=request.POST['pan_number']
+
+            customer_data.place_of_supply=request.POST['source_supply']
+            customer_data.currency=request.POST['currency']
+            op_type = request.POST.get('op_type')
+            if op_type is not None:
+                customer_data.opening_balance_type = op_type
+            else:
+                customer_data.opening_balance_type ='Opening Balance not selected'
+
+            customer_data.opening_balance=request.POST['opening_bal']
+            customer_data.company_payment_terms= None if request.POST['payment_terms'] == "" else Company_Payment_Term.objects.get(id=request.POST['payment_terms'])
+            # customer_data.price_list=request.POST['plst']
+            plst=request.POST.get('plst')
+            if plst!=0:
+                    customer_data.price_list=plst
+            else:
+                customer_data.price_list='Price list not selected'
+
+
+
+
+            # customer_data.portal_language=request.POST['plang']
+            plang=request.POST.get('plang')
+            if plang!=0:
+                    customer_data.portal_language=plang
+            else:
+                customer_data.portal_language='Portal language not selected'
+
+            customer_data.facebook=request.POST['fbk']
+            customer_data.twitter=request.POST['twtr']
+            customer_data.tax_preference=request.POST['tax1']
+
+            type=request.POST.get('type')
+            if type is not None:
+                customer_data.customer_type=type
+            else:
+                customer_data.customer_type='Customer type not selected'
+
+
+
+
+            
+            customer_data.billing_attention=request.POST['battention']
+            customer_data.billing_country=request.POST['bcountry']
+            customer_data.billing_address=request.POST['baddress']
+            customer_data.billing_city=request.POST['bcity']
+            customer_data.billing_state=request.POST['bstate']
+            customer_data.billing_pincode=request.POST['bzip']
+            customer_data.billing_mobile=request.POST['bphone']
+            customer_data.billing_fax=request.POST['bfax']
+            customer_data.shipping_attention=request.POST['sattention']
+            customer_data.shipping_country=request.POST['s_country']
+            customer_data.shipping_address=request.POST['saddress']
+            customer_data.shipping_city=request.POST['scity']
+            customer_data.shipping_state=request.POST['sstate']
+            customer_data.shipping_pincode=request.POST['szip']
+            customer_data.shipping_mobile=request.POST['sphone']
+            customer_data.shipping_fax=request.POST['sfax']
+            customer_data.save()
+            
+            vendor_history_obj=CustomerHistory()
+            vendor_history_obj.company=com
+            vendor_history_obj.login_details=com.login_details
+            vendor_history_obj.customer=customer_data
+            vendor_history_obj.date=date.today()
+            vendor_history_obj.action='Completed'
+            vendor_history_obj.save()
+
+            vdata=Customer.objects.get(id=customer_data.id)
+            rdata=Customer_remarks_table()
+            rdata.remarks=request.POST['remark']
+            rdata.company=com
+            rdata.customer=vdata
+            rdata.save()
+
+        
+            title =request.POST.getlist('tsalutation[]')
+            first_name =request.POST.getlist('tfirstName[]')
+            last_name =request.POST.getlist('tlastName[]')
+            email =request.POST.getlist('tEmail[]')
+            work_phone =request.POST.getlist('tWorkPhone[]')
+            mobile =request.POST.getlist('tMobilePhone[]')
+            skype_name_number =request.POST.getlist('tSkype[]')
+            designation =request.POST.getlist('tDesignation[]')
+            department =request.POST.getlist('tDepartment[]') 
+            vdata=Customer.objects.get(id=customer_data.id)
+
+            if len(title)==len(first_name)==len(last_name)==len(email)==len(work_phone)==len(mobile)==len(skype_name_number)==len(designation)==len(department):
+                mapped2=zip(title,first_name,last_name,email,work_phone,mobile,skype_name_number,designation,department)
+                mapped2=list(mapped2)
+                print(mapped2)
+                for ele in mapped2:
+                    CustomerContactPersons.objects.create(title=ele[0],first_name=ele[1],last_name=ele[2],email=ele[3],work_phone=ele[4],mobile=ele[5],skype=ele[6],designation=ele[7],department=ele[8],company=com,customer=vdata)
+        
+            return JsonResponse({'status':True})
+        else:
+            return JsonResponse({'status':False})
+
+def getCustomersAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        options = {}
+        option_objects = Customer.objects.filter(company = com, customer_status = 'Active')
+        for option in option_objects:
+            options[option.id] = [option.id , option.title, option.first_name, option.last_name]
+
+        return JsonResponse(options)
+    else:
+        return redirect('/')
+
+def getUnitsAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+            options = {}
+            option_objects = Unit.objects.filter(company=com)
+            for option in option_objects:
+                options[option.id] = [option.id,option.unit_name]
+            return JsonResponse(options)
+
+def createNewAccountAjax(request):                                                                #new by tinto mt
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        if request.method=='POST':
+            a=Chart_of_Accounts()
+            b=Chart_of_Accounts_History()
+            b.company=com
+            b.logindetails=com.login_details
+            b.action="Created"
+            b.Date=date.today()
+            a.login_details=com.login_details
+            a.company=com
+          
+        
+            a.account_type = request.POST.get("account_type",None)
+            a.account_name = request.POST.get("account_name",None)
+            a.account_code = request.POST.get("account_code",None)
+            a.account_number = request.POST.get("account_number",None)
+            a.account_description = request.POST['description']
+            a.sub_account = request.POST.get("sub_acc",None)
+            a.parent_account = request.POST.get("parent_acc",None)
+               
+            account_type=request.POST.get("account_type",None)
+            if account_type == 'Other Assets':
+                a.description = 'Track special assets like goodwill and other intangible assets'
+            if account_type == 'Other Current Assets':
+                a.description = 'Any short term asset that can be converted into cash or cash equivalents easily Prepaid expenses Stocks and Mutual Funds'
+            if account_type == 'Cash':
+                a.description = 'To keep track of cash and other cash equivalents like petty cash, undeposited funds, etc., use an organized accounting system  financial software'
+            if account_type == 'Bank':
+                a.description = 'To keep track of bank accounts like Savings, Checking, and Money Market accounts.'
+            if account_type == 'Fixed Asset':
+                a.description = 'Any long-term investment or asset that cannot be easily converted into cash includes: Land and Buildings, Plant, Machinery, and Equipment, Computers, Furniture.'
+            if account_type == 'Stock':
+                a.description = 'To keep track of your inventory assets.'
+            if account_type == 'Payment Clearing':
+                a.description = 'To keep track of funds moving in and out via payment processors like Stripe, PayPal, etc.'
+            if account_type == 'Other Liability':
+                a.description = 'Obligation of an entity arising from past transactions or events which would require repayment.Tax to be paid Loan to be Repaid Accounts Payableetc.'
+            if account_type == 'Other Current Liability':
+                a.description = 'Any short term liability like: Customer Deposits Tax Payable'
+            if account_type == 'Credit Card':
+                a.description = 'Create a trail of all your credit card transactions by creating a credit card account.'
+            if account_type == 'Long Term Liability':
+                a.description = 'Liabilities that mature after a minimum period of one year like: Notes Payable Debentures Long Term Loans '
+            if account_type == 'Overseas Tax Payable':
+                a.description = 'Track your taxes in this account if your business sells digital services to foreign customers.'
+            if account_type == 'Equity':
+                a.description = 'Owners or stakeholders interest on the assets of the business after deducting all the liabilities.'
+            if account_type == 'Income':
+                a.description = 'Income or Revenue earned from normal business activities like sale of goods and services to customers.'
+            if account_type == 'Other Income':
+                a.description = 'Income or revenue earned from activities not directly related to your business like : Interest Earned Dividend Earned'
+            if account_type == 'Expense':
+                a.description = 'Reflects expenses incurred for running normal business operations, such as : Advertisements and Marketing Business Travel Expenses License Fees Utility Expenses'
+            if account_type == 'Cost Of Goods Sold':
+                a.description = 'This indicates the direct costs attributable to the production of the goods sold by a company such as: Material and Labor costs Cost of obtaining raw materials'
+            if account_type == 'Other Expense':
+                a.description = 'Track miscellaneous expenses incurred for activities other than primary business operations or create additional accounts to track default expenses like insurance or contribution towards charity.'
+    
+            a.Create_status="added"
+            a.status = 'Active'
+            ac_name=request.POST.get("account_name",None)
+            if Chart_of_Accounts.objects.filter(account_name=ac_name,company=com).exists():
+                return JsonResponse({'status': False, 'message':'Account Name already exists.!'})
+            else:
+                a.save()
+                b.chart_of_accounts=a
+                b.save()
+                return JsonResponse({'status': True})
+
+    else:
+        return redirect('/')
+
+def getAllAccountsAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        acc = {}
+        acc_objects = Chart_of_Accounts.objects.filter(company = com, status = 'Active')
+        for option in acc_objects:
+            acc[option.id] = [option.account_name,option.account_type]
+
+        return JsonResponse(acc)
+    else:
+        return redirect('/')
+
+
+
+
 #--------------------------Meenu Shaju -Delivery Challan--------------
 
 def challan_list(request):
@@ -13570,6 +14013,7 @@ def add_delivery_challan(request):
                 dc_type = request.POST['challanType']
                 description = request.POST['note']
                 file = request.FILES.get('file')
+                termcondition = request.POST['termcondition']
                 item_lists = request.POST.getlist('item[]')
                 
                 hsn_list = request.POST.getlist('hsn[]')
@@ -13623,6 +14067,7 @@ def add_delivery_challan(request):
                         challan_type=dc_type,
                         description=description,
                         document=file,
+                        terms_condition=termcondition,
                         sub_total=subtotal,
                         igst=igst,
                         cgst=cgst,
@@ -13671,6 +14116,8 @@ def add_delivery_challan(request):
                                 company=comp_details
                             )
                             itemsTable.save()
+                            item_instance.current_stock -= int(itemsNew[2])
+                            item_instance.save()
                     dc_reference = Delivery_challan_reference(
                         login_details=log_details,
                         company=comp_details,
@@ -13702,6 +14149,7 @@ def add_delivery_challan(request):
                 dc_type = request.POST['challanType']
                 description = request.POST['note']
                 file = request.FILES.get('file')
+                termcondition = request.POST['termcondition']
                 item_lists = request.POST.getlist('item[]')
                 
                 hsn_list = request.POST.getlist('hsn[]')
@@ -13752,6 +14200,7 @@ def add_delivery_challan(request):
                         challan_number=dc_number,
                         challan_type=dc_type,
                         description=description,
+                        terms_condition = termcondition,
                         document=file,
                         sub_total=subtotal,
                         igst=igst,
@@ -13801,6 +14250,8 @@ def add_delivery_challan(request):
                                 company=comp_details
                             )
                             itemsTable.save()
+                            item_instance.current_stock -= int(itemsNew[2])
+                            item_instance.save()
                     dc_reference = Delivery_challan_reference(
                         login_details=log_details,
                         company=comp_details,
@@ -13922,6 +14373,7 @@ def edit_challan(request,id):
                 dc_type = request.POST['challanType']
                 description = request.POST['note']
                 file = request.FILES.get('file')
+                termcondition=request.POST['termcondition']
                 item_lists = request.POST.getlist('item[]')
                     
                     
@@ -13970,6 +14422,7 @@ def edit_challan(request,id):
                         dc.challan_type=dc_type
                         dc.description=description
                         dc.document=file
+                        dc.terms_condition=termcondition
                         dc.sub_total=subtotal
                         dc.igst=igst
                         dc.cgst=cgst
@@ -14028,6 +14481,8 @@ def edit_challan(request,id):
                                             company=comp_details
                                         )
                                         itemsTable.save()
+                                        item_instance.current_stock -= int(itemsNew[2])
+                                        item_instance.save()
                         dc_reference = Delivery_challan_reference(
                             login_details=log_details,
                             company=comp_details,
@@ -14198,9 +14653,9 @@ def challan_email(request,id):
         
 
 def downloadDeliveryChallanSampleImportFile(request):
-    recInv_table_data = [['SLNO','CUSTOMER','CUSTOMER EMAIL','PLACE OF SUPPLY','DC NO','DATE','TYPE','DESCRIPTION','SUB TOTAL','IGST','CGST','SGST','TAX AMOUNT','ADJUSTMENT','SHIPPING CHARGE','GRAND TOTAL','ADVANCE','BALANCE'],['1', 'Kevin Debryne', '[KL]-Kerala' ,'DC100','2024-03-20','SUPPLY OF LIQUID GASES','','1000','0','25','25','50','0','0','1050','1000','50']]
+    recInv_table_data = [['SLNO','CUSTOMER','CUSTOMER EMAIL','PLACE OF SUPPLY','DC NO','DATE','TYPE','DESCRIPTION','SUB TOTAL','IGST','CGST','SGST','TAX AMOUNT','ADJUSTMENT','SHIPPING CHARGE','GRAND TOTAL','ADVANCE','BALANCE','STATUS'],['1', 'Kevin Debryne','','[KL]-Kerala' ,'DC100','2024-03-20','SUPPLY OF LIQUID GASES','','1000','0','25','25','50','0','0','1050','1000','50','Save/Draft']]
 
-    items_table_data = [['DC NO', 'PRODUCT','HSN','QUANTITY','PRICE','TAX PERCENTAGE','DISCOUNT','TOTAL'], ['1', 'Test Item 1','789987','1','1000','5','0','1000']]
+    items_table_data = [['Sl NO', 'PRODUCT','HSN','QUANTITY','PRICE','TAX PERCENTAGE','DISCOUNT','TOTAL'], ['1', 'Test Item 1','789987','1','1000','5','0','1000']]
 
     wb = Workbook()
 
@@ -14214,7 +14669,7 @@ def downloadDeliveryChallanSampleImportFile(request):
 
     for row in items_table_data:
         sheet2.append(row)
-    column_widths_sheet1 = {'A': 10, 'B': 20, 'C': 20, 'D': 15, 'E': 15, 'F': 25, 'G': 30, 'H': 15, 'I': 15, 'J': 15, 'K': 15, 'L': 15, 'M': 15, 'N': 15, 'O': 15, 'P': 15, 'Q': 15}
+    column_widths_sheet1 = {'A': 10, 'B': 20, 'C': 20, 'D': 15, 'E': 15, 'F': 25, 'G': 30, 'H': 15, 'I': 15, 'J': 15, 'K': 15, 'L': 15, 'M': 15, 'N': 15, 'O': 15, 'P': 15, 'Q': 15,'R':20}
     for column, width in column_widths_sheet1.items():
         sheet1.column_dimensions[column].width = width
 
@@ -14234,134 +14689,319 @@ def downloadDeliveryChallanSampleImportFile(request):
     return response
 
 
+def checkChallanPattern(pattern):
+    models = [Delivery_challan]
+
+    for model in models:
+        field_name = model.getNumFieldName(model)
+        if model.objects.filter(**{f"{field_name}__icontains": pattern}).exists():
+            return True
+    return False
 
 
 def importDeliveryChallanFromExcel(request):
-    if request.method == 'POST' and 'file' in request.FILES:
-        if 'login_id' in request.session:
-            log_id = request.session['login_id']
-            if 'login_id' not in request.session:
-                return redirect('/')
-            log_details = LoginDetails.objects.get(id=log_id)
-
-            if log_details.user_type == 'Staff':
-                staff = StaffDetails.objects.get(login_details=log_details)
-                company = staff.company
-                    
-            elif log_details.user_type == 'Company':
-                company = CompanyDetails.objects.get(login_details=log_details)
-
-            excel_file = request.FILES['excel_file']
-            workbook = load_workbook(excel_file)
-            
-            sheet1 = workbook['Sheet1']
-            sheet2 = workbook['Sheet2']
-            
-            invoices = []  # List to store created invoices
-
-            for row in sheet1.iter_rows(min_row=2, values_only=True):
-                try:
-                    customer = Customer.objects.get(first_name=row[1],customer_email=row[2],company=company)
-                    
-                    
-                except ObjectDoesNotExist:
-                    print(f"Customer with name or email  does not exist in the database.")
-                    continue
-                
-                # Create and save the invoice object
-                latest_inv = invoice.objects.filter(company_id = company).order_by('-id').first()
-
-                new_number = int(latest_inv.reference_number) + 1 if latest_inv else 1
-
-                if invoiceReference.objects.filter(company_id = company).exists():
-                    deleted = invoiceReference.objects.get(company_id = company)
-                    
-                    if deleted:
-                        while int(deleted.reference_number) >= new_number:
-                            new_number+=1
-                created_invoice = invoice(
-                    company=company,
-                    login_details=log_details,
-                    customer=customer,
-                    
-                    customer_email=row[2],
-                    customer_billingaddress=row[3],
-                    customer_GSTtype=row[4],
-                    customer_GSTnumber=row[5],
-                    customer_place_of_supply=row[6],
-                    invoice_number=row[0],
-                    date=row[8],
-                    expiration_date=row[10],
-                    payment_method=row[12],
-                    cheque_number=row[13],
-                    UPI_number=row[14],
-                    bank_account_number=row[15],
-                    sub_total=row[19],
-                    CGST=row[20],
-                    SGST=row[21],
-                    IGST=row[29],
-
-                    
-                    tax_amount=row[22],
-                    shipping_charge=row[23],
-                    grand_total=row[25],
-                    advanced_paid=row[26],
-                    balance=row[27],
-                    description=row[16],
-                    status=row[28],
-                    reference_number=new_number
-
-                )
-               
-                created_invoice.save()
-                invoices.append(created_invoice)
-                
-                # Save invoice history
-                invoiceHistory.objects.create(
-                    company=company,
-                    login_details=log_details,
-                    invoice=created_invoice,
-                    date=datetime.now(),
-                    action='Created'
-                )
-        
-            for row in sheet2.iter_rows(min_row=2, values_only=True):
-                try:
-                    item = Items.objects.get(item_name=row[1],company=company)
-                except ObjectDoesNotExist:
-                    print(f"Item with name '{row[1]}' does not exist in the database.")
-                    continue
-                
-                matching_invoices = [inv for inv in invoices if inv.invoice_number == row[0]]
-                if not matching_invoices:
-                    print(f"No invoice found for row with invoice number '{row[0]}'")
-                    continue
-
-                
-                invoice1 = matching_invoices[0]
-
-                
-                invoice_item = invoiceitems(
-                    invoice=invoice1,
-                    company=company,
-                    Items=item,
-                    logindetails=log_details,
-                    hsn=row[2],
-                    quantity=row[3],
-                    price=row[4],
-                    tax_rate=row[5],
-                    discount=row[6],
-                    total=row[7],
-                )
-                invoice_item.save()
-                
-                # Update current stock for the item
-                item.current_stock -= int(row[3])
-                item.save()
-
-            return redirect('invoice_list_out')
-
-    return HttpResponse("No file uploaded or invalid request method")
-
-
+    log_id = request.session['login_id']
+    log_details= LoginDetails.objects.get(id=log_id)
+    if log_details.user_type == 'Company':
+        com = CompanyDetails.objects.get(login_details = log_details)
+    else:
+        com = StaffDetails.objects.get(login_details = log_details).company
     
+    ref_num = Delivery_challan_reference.objects.filter(company = com).last()
+    if ref_num is None:
+        latestNum =  1
+    else:
+        latestNum = int(ref_num.reference_number) + 1
+
+    if request.method == 'POST' and request.FILES['excel_file']:
+        excel_file = request.FILES['excel_file']
+
+        # Check if the uploaded file is an Excel file
+        if not excel_file.name.endswith('.xlsx'):
+            return HttpResponse("Please upload a valid Excel file.")
+
+        # Load the Excel file
+        wb = load_workbook(excel_file, data_only=True)
+
+        # Process first sheet
+        first_sheet = wb.sheetnames[0]
+        sheet1 = wb[first_sheet]
+        data1 = pd.DataFrame(sheet1.values)
+
+        # Process second sheet
+        second_sheet = wb.sheetnames[1]
+        sheet2 = wb[second_sheet]
+        data2 = pd.DataFrame(sheet2.values)
+        
+        rowNo = 0
+        for index, row in data1.iloc[1:].iterrows():
+            rowNo += 1
+            name = row[1]
+            fullname = name.split()
+            first_name = fullname[0]
+            last_name = ' '.join(fullname[1:]) if len(fullname) > 1 else ''
+
+            cus = Customer.objects.filter(company=com,customer_email=row[2])
+            
+            if cus.exists():
+                cuss = Customer.objects.get(company=com,customer_email=row[2])
+                pass
+            else:
+                messages.success(request, f'Customer in Row No.{rowNo} doesnt exists.')
+                return redirect('challan_list')  
+
+            
+            
+            CnNum = row[4]
+            cdn_no0 = str(CnNum)
+            prefix = ''.join(filter(str.isalpha, cdn_no0)) 
+
+            print("CnNum:", CnNum)
+            print("Prefix:", prefix)
+
+            
+
+            if Delivery_challan.objects.filter(company = com, challan_number = CnNum).exists():
+                messages.success(request, f'Challan No. in row no.{rowNo} already Exists ')
+                return redirect('challan_list')
+            
+            challan = Delivery_challan(
+                    company = com,
+                    login_details = log_details,
+                    customer = cuss,
+                    
+                    
+                    place_of_supply = row[3] , 
+                    challan_type = row[6] , 
+                    
+                   
+                    
+                    reference_number = latestNum ,
+                    challan_date = row[5] ,
+                    challan_number = row[4] ,
+                    description = row[7],
+                    sub_total = row[8],
+                    igst = row[9],
+                    cgst = row[10],
+                    sgst = row[11],
+                    
+                    tax_amount = row[12] ,
+                    
+                    
+                    
+                    
+                   
+                    adjustment = row[13] ,
+                    shipping_charge = row[14] ,
+                    grand_total = row[15] ,
+                    advance = row[16] ,
+                    balance = row[17] ,
+                     
+                    status = row[18]               
+                )
+            
+            challan.save()
+
+            
+                        
+            Delivery_challan_history.objects.create(
+                company = com,
+                login_details = log_details,
+                delivery_challan = challan,
+                action = 'Created',
+                date = date.today(),
+                
+            )
+
+            # reference numebr
+            Delivery_challan_reference.objects.create(
+                company = com,
+                login_details = log_details,
+                reference_number = latestNum
+            )
+
+# -------------------second sheet--------------------------------------
+            
+            for index, row2 in data2.iloc[1:].iterrows():
+                if row[0] == row2[0]:
+                    newItemm = Items.objects.filter(company=com,hsn_code = row2[2])           
+                    if newItemm.exists():
+                        newItem = Items.objects.get(company=com,hsn_code = row2[2])
+                        pass
+                    else:
+                        cre = Delivery_challan.objects.get(id=challan.id)
+                        cre.delete()
+                        messages.success(request, f'Item doesnt exists.')
+                        return redirect('challan_list')  
+                    
+                    
+                    hsn  = row2[2]
+                    quantity = row2[3]
+                    price = row2[4]
+                    tax_rate = row2[5]
+                    discount = row2[6]
+                    total = row2[7]
+                    print(row2)
+                    print("Price:", price, "Type:", type(price))
+                    ittm = Delivery_challan_item(company = com, login_details = log_details, delivery_challan = challan, item = newItem, hsn = hsn, quantity = int(quantity), price = price, tax_rate = tax_rate, discount = float(discount), total = float(total))
+                    ittm.save()
+                    newItem.current_stock -= int(quantity)
+                    newItem.save()
+                else:
+                    pass
+            
+            
+            return redirect('challan_list')  
+    return redirect('challan_list')  
+
+
+
+
+def ChallancheckRecurringInvoiceNumber(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        
+        RecInvNo = request.GET['RecInvNum']
+
+        # Finding next rec_invoice number w r t last rec_invoice number if exists.
+        nxtInv = ""
+        lastInv = RecurringInvoice.objects.filter(company = com).last()
+        if lastInv:
+            inv_no = str(lastInv.rec_invoice_no)
+            numbers = []
+            stri = []
+            for word in inv_no:
+                if word.isdigit():
+                    numbers.append(word)
+                else:
+                    stri.append(word)
+            
+            num=''
+            for i in numbers:
+                num +=i
+            
+            st = ''
+            for j in stri:
+                st = st+j
+
+            inv_num = int(num)+1
+
+            if num[0] == '0':
+                if inv_num <10:
+                    nxtInv = st+'0'+ str(inv_num)
+                else:
+                    nxtInv = st+ str(inv_num)
+            else:
+                nxtInv = st+ str(inv_num)
+        # else:
+        #     nxtInv = 'RI01'
+
+        PatternStr = []
+        for word in RecInvNo:
+            if word.isdigit():
+                pass
+            else:
+                PatternStr.append(word)
+        
+        pattern = ''
+        for j in PatternStr:
+            pattern += j
+
+        pattern_exists = checkChallanPattern(pattern)
+
+        if pattern !="" and pattern_exists:
+            return JsonResponse({'status':False, 'message':'Rec. Invoice No. Pattern already Exists.!'})
+        elif RecurringInvoice.objects.filter(company = com, rec_invoice_no__iexact = RecInvNo).exists():
+            return JsonResponse({'status':False, 'message':'Rec. Invoice No. already Exists.!'})
+        elif nxtInv != "" and RecInvNo != nxtInv:
+            return JsonResponse({'status':False, 'message':'Rec. Invoice No. is not continuous.!'})
+        else:
+            return JsonResponse({'status':True, 'message':'Number is okay.!'})
+    else:
+       return redirect('/')
+
+
+
+def convert_rec_invoice(request,id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+
+        allmodules= ZohoModules.objects.get(company = cmp)
+        cust = Customer.objects.filter(company = cmp, customer_status = 'Active')
+        trm = Company_Payment_Term.objects.filter(company = cmp)
+        repeat = CompanyRepeatEvery.objects.filter(company = cmp)
+        bnk = Banking.objects.filter(company = cmp)
+        priceList = PriceList.objects.filter(company = cmp, type = 'Sales', status = 'Active')
+        itms = Items.objects.filter(company = cmp, activation_tag = 'active')
+        units = Unit.objects.filter(company=cmp)
+        accounts=Chart_of_Accounts.objects.filter(company=cmp)
+
+        # Fetching last rec_invoice and assigning upcoming ref no as current + 1
+        # Also check for if any bill is deleted and ref no is continuos w r t the deleted rec_invoice
+        latest_inv = RecurringInvoice.objects.filter(company = cmp).order_by('-id').first()
+
+        new_number = int(latest_inv.reference_no) + 1 if latest_inv else 1
+
+        if Reccurring_Invoice_Reference.objects.filter(company = cmp).exists():
+            deleted = Reccurring_Invoice_Reference.objects.get(company = cmp)
+            
+            if deleted:
+                while int(deleted.reference_number) >= new_number:
+                    new_number+=1
+
+        # Finding next rec_invoice number w r t last rec_invoice number if exists.
+        nxtInv = ""
+        lastInv = RecurringInvoice.objects.filter(company = cmp).last()
+        if lastInv:
+            inv_no = str(lastInv.rec_invoice_no)
+            numbers = []
+            stri = []
+            for word in inv_no:
+                if word.isdigit():
+                    numbers.append(word)
+                else:
+                    stri.append(word)
+            
+            num=''
+            for i in numbers:
+                num +=i
+            
+            st = ''
+            for j in stri:
+                st = st+j
+
+            inv_num = int(num)+1
+
+            if num[0] == '0':
+                if inv_num <10:
+                    nxtInv = st+'0'+ str(inv_num)
+                else:
+                    nxtInv = st+ str(inv_num)
+            else:
+                nxtInv = st+ str(inv_num)
+        else:
+            nxtInv = 'RI01'
+        challan = Delivery_challan.objects.get(id=id)
+        item = Delivery_challan_item.objects.filter(delivery_challan=challan,company=cmp)
+        context = {
+            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'pTerms':trm, 'repeat':repeat, 'banks':bnk, 'priceListItems':priceList, 'items':itms,
+            'invNo':nxtInv, 'ref_no':new_number,'units': units,'accounts':accounts,'challan':challan,'item':item
+        }
+        return render(request,'zohomodules/Delivery-challan/convert_rec_invoice.html',context)
+    else:
+        return redirect('/')
+
+         
+

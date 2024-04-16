@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-...your-integrity-code-here..." crossorigin="anonymous" />
 
 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/openpyxl/3.0.9/openpyxl.min.js"></script>
 
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
@@ -77,6 +77,19 @@
             </nav>
             <div class="container-fluid bg-black p-3">
                 <h4  style="color: white;margin-top: 20px;">All Delivery Challan</h4>
+
+               
+                {% for message in messages %}
+                <h5>
+                  <div class="alert alert-danger message text-center" style="color: black;" id="alert_danger">
+                    {{ message }}
+                    <a type="button" id="alert_close" class="close" data-dismiss="alert" aria-label="Close" style="float: right;">
+                      <span aria-hidden="true" style="font-size: large; color: #68020F;">&times;</span>
+                    </a>
+                  </div>
+                </h5>
+                {% endfor %}
+
                 <div class="row">
                     <div class="col-md-3">
                         
@@ -142,10 +155,10 @@
                     <div class="alert alert-danger" role="alert">
                         <span class="fw-bolder">IMPORTANT:</span>
                         <p>File should have 2 sheets named 'delivery_challan' & 'items' and column name & order should be in the given formate(Uppercase).</p>
-                        <p class="fw-bolder">Delivery Challan sheet - SLNO*, CUSTOMER*, DATE*, PLACE OF SUPPLY*,  DC NO*, DESCRIPTION, SUB TOTAL*, IGST*, CGST*, SGST*, TAX AMOUNT*, ADJUSTMENT, SHIPPING CHARGE, GRAND TOTAL*, ADVANCE </p>
+                        <p class="fw-bolder">Delivery Challan sheet - SLNO*, CUSTOMER*,CUSTOMER EMAIL*, DATE*, PLACE OF SUPPLY*,  DC NO*, DESCRIPTION, SUB TOTAL*, IGST*, CGST*, SGST*, TAX AMOUNT*, ADJUSTMENT, SHIPPING CHARGE, GRAND TOTAL*, ADVANCE </p>
                         <p class="fw-bolder">Items sheet - DC NO**, PRODUCT*, HSN*, QUANTITY*, PRICE*, TAX PERCENTAGE*, DISCOUNT, TOTAL* </p>
                         <p>* All required columns should be filled.</p>
-                        <p>** <b>DC NO</b> is <b>SLNO</b> of delivery_challan</p>
+                       
                         <p>Place of supply should be in the give format with state code('Ex: [KL]-Kerala') or '[OT]-Other Territory'.</p>
                         <p>Date format should be 'YYYY-MM-DD' or 'DD-MM-YYYY'.</p>
                     </div>
@@ -153,7 +166,7 @@
                 <div class="sample_file mb-2">
                     <a href="{% url 'downloadDeliveryChallanSampleImportFile' %}" class="fw-bolder btn btn-outline-warning btn-sm">Download Sample File</a>
                 </div>
-                <form id="importEstimateForm" action="" method="POST" class="form" enctype="multipart/form-data">
+                <form id="importEstimateForm" action="{% url 'importDeliveryChallanFromExcel' %}" method="POST" class="form" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="excel_file" class="form-label text-white">File</label>
@@ -206,8 +219,8 @@
                                         Convert
                                     </a>
                                     <div class="dropdown-menu m-1" style="background-color: black; color: white;">
-                                        <a class="dropdown-item dropdown-item-filter" href="#" style="background-color: black; color: white;">Invoice</a>
-                                        <a class="dropdown-item dropdown-item-filter" href="#" style="background-color: black; color: white;">Recurring Invoice</a>
+                                        <a class="dropdown-item dropdown-item-filter" href="" style="background-color: black; color: white;">Invoice</a>
+                                        <a class="dropdown-item dropdown-item-filter" href="{% url 'convert_rec_invoice' dc.id %}" style="background-color: black; color: white;">Recurring Invoice</a>
                                     </div>
                                 </div>
                             </td>

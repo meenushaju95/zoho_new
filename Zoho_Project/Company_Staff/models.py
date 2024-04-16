@@ -997,6 +997,9 @@ class Delivery_challan(models.Model):
     advance = models.FloatField(default=0.0, null=True, blank=True)
     balance = models.FloatField(default=0.0, null=True, blank=True)
     status = models.CharField(max_length=50,null=True)
+    invoice_convert = models.ForeignKey(invoice, on_delete=models.CASCADE,null=True,blank=True)
+    rec_invoice_convert = models.ForeignKey(RecurringInvoice, on_delete=models.CASCADE,null=True,blank=True)
+
 
     def getNumFieldName(self):
         return 'challan_number'
