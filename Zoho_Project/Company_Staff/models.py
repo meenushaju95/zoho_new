@@ -847,6 +847,9 @@ class invoice(models.Model):
     CGST=models.FloatField(default=0.0, null=True, blank=True)
     SGST=models.FloatField(default=0.0, null=True, blank=True)
     IGST = models.FloatField(default=0.0, null=True, blank=True)
+    price_list_applied = models.BooleanField(null=True, default=False)
+    price_list = models.ForeignKey(PriceList, on_delete = models.SET_NULL,null=True)
+
 
     tax_amount=models.FloatField(default=0.0, null=True, blank=True)
     shipping_charge=models.FloatField(default=0.0, null=True, blank=True)
@@ -854,8 +857,10 @@ class invoice(models.Model):
     grand_total=models.FloatField(default=0.0, null=True, blank=True)
     advanced_paid=models.FloatField(default=0.0, null=True, blank=True)
     balance=models.FloatField(default=0.0, null=True, blank=True)
-    status=models.CharField(max_length=220,null=True,blank=True) 
+    status=models.CharField(max_length=220,null=True,blank=True)
 
+    def getNumFieldName(self):
+        return 'invoice_number'  
 
 class invoiceHistory(models.Model):
     login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
@@ -863,15 +868,14 @@ class invoiceHistory(models.Model):
     invoice = models.ForeignKey(invoice,on_delete=models.CASCADE,null=True,blank=True)
 
     action = models.CharField(max_length=220,null=True,blank=True)
-    date = models.DateField(auto_now_add=True, null=True, blank=True)  
-    
+    date = models.DateField(auto_now_add=True, null=True, blank=True) 
     
 class invoiceReference(models.Model):
     reference_number = models.CharField(max_length=220,null=True,blank=True)
     company = models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
     staff = models.ForeignKey(StaffDetails,on_delete=models.CASCADE,null=True,blank=True)
 
-    
+
 class invoiceitems(models.Model):
     company = models.ForeignKey(CompanyDetails,on_delete=models.CASCADE)
     logindetails = models.ForeignKey(LoginDetails,on_delete=models.CASCADE)
@@ -890,7 +894,17 @@ class invoicecomments(models.Model):
     invoice = models.ForeignKey(invoice,on_delete=models.CASCADE,null=True,blank=True)
     comments = models.CharField(max_length=500,null=True,blank=True)
 
-
+#End
+class EmployeeLoanRepaymentHistory(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    repayment=models.ForeignKey(EmployeeLoanRepayment,on_delete=models.CASCADE,null=True,blank=True)
+    date=models.DateField(default=date.today)
+    action=models.CharField(max_length=255)
+    
+    
+# < ------------- Shemeem -------- > Recurring Invoice < ------------------------------- >
+    
 class RecurringInvoice(models.Model):
     company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE,null=True)
     login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True)
@@ -937,6 +951,7 @@ class RecurringInvoice(models.Model):
     def getNumFieldName(self):
         return 'rec_invoice_no'
 
+
 class RecurringInvoiceHistory(models.Model):
     company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE)
     login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE)
@@ -960,14 +975,40 @@ class Reccurring_Invoice_item(models.Model):
     total =  models.FloatField(default=0.0, null=True, blank=True)
 
 
-
 class Reccurring_Invoice_Reference(models.Model):
     login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
     company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
-    
-    reference_number = models.CharField(max_length=200,null=True)
+    reference_number = models.BigIntegerField(null=True, blank=True)
 
+class Recurring_Invoice_Comments(models.Model):
+    company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE, null=True)
+    recurring_invoice = models.ForeignKey(RecurringInvoice,on_delete=models.CASCADE,null=True,blank=True)
+    comments = models.CharField(max_length=500,null=True,blank=True)
 
+# < -------------------- > Recurring Invoice - End < ------------------------------- >
+
+#------------Retainer_invoice---------------
+class RetainerInvoice(models.Model):
+    company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE,null=True,blank=True)
+    logindetails = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    customer_name=models.ForeignKey(Customer,on_delete=models.CASCADE)
+    customer_name1=models.CharField(max_length=100,null=True,blank=True)
+    customer_mailid = models.CharField(max_length=100,null=True,blank=True)
+    customer_placesupply=models.CharField(max_length=100,null=True,blank=True)
+    retainer_invoice_number=models.CharField(max_length=255)
+    refrences=models.CharField(max_length=255)
+    retainer_invoice_date=models.DateField()
+    advance=models.IntegerField(null=True)
+    total_amount=models.CharField(max_length=100)
+    customer_notes=models.TextField()
+    terms_and_conditions=models.TextField()
+    is_draft=models.BooleanField(default=True)
+    is_sent=models.BooleanField(default=False)
+    balance=models.CharField(max_length=100,null=True,blank=True)
+
+    def getNumFieldName(self):
+        return 'retainer_invoice_number'
+        
 
 
 

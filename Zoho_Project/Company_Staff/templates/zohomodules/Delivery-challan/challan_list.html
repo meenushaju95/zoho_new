@@ -214,15 +214,21 @@
                             <td>{{dc.status}}</td> 
                             <td>{{dc.balance}}</td> 
                             <td>
-                                <div class="dropdown" >
-                                    <a class="btn orange-link" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button">
-                                        Convert
-                                    </a>
-                                    <div class="dropdown-menu m-1" style="background-color: black; color: white;">
-                                        <a class="dropdown-item dropdown-item-filter" href="" style="background-color: black; color: white;">Invoice</a>
-                                        <a class="dropdown-item dropdown-item-filter" href="{% url 'convert_rec_invoice' dc.id %}" style="background-color: black; color: white;">Recurring Invoice</a>
+                                {% if dc.rec_invoice_convert %}
+                                    <span style="color: orange;">Converted to Recurring Invoice = {{ dc.rec_invoice_convert.rec_invoice_no }}</span>
+                                {% elif dc.invoice_convert %}
+                                    <span style="color: orange;">Converted to Invoice = {{ dc.invoice_convert.invoice_number }}</span>
+                                {% else %}
+                                    <div class="dropdown">
+                                        <a class="btn orange-link" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button">
+                                            Convert
+                                        </a>
+                                        <div class="dropdown-menu m-1" style="background-color: black; color: white;">
+                                            <a class="dropdown-item dropdown-item-filter" href="{% url 'convert_invoice' dc.id %}" style="background-color: black; color: white;">Invoice</a>
+                                            <a class="dropdown-item dropdown-item-filter" href="{% url 'convert_rec_invoice' dc.id %}" style="background-color: black; color: white;">Recurring Invoice</a>
+                                        </div>
                                     </div>
-                                </div>
+                                {% endif %}
                             </td>
                         </tr>
                             {% endfor %}
@@ -244,26 +250,26 @@
     </div>
 
     <script>
-        
         function stopDropdownItemClickPropagation() {
             document.querySelectorAll('.dropdown-item').forEach(item => {
                 item.addEventListener('click', function (e) {
+                    console.log('Dropdown item clicked');
                     e.stopPropagation();
                 });
             });
         }
     
-        
         function excludeLastTDFromClick() {
             document.querySelectorAll('.clickable-row td:last-child').forEach(td => {
                 td.addEventListener('click', function (e) {
+                    console.log('Last TD clicked');
                     e.stopPropagation();
                 });
             });
         }
     
-        
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Document loaded');
             stopDropdownItemClickPropagation();
             excludeLastTDFromClick();
         });

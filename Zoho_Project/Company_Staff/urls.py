@@ -313,8 +313,7 @@ urlpatterns = [
     #End
 
 # recuuring invoice
- path('Company/get_cust_details',views.getCustomerDetailsAjax, name='getCustomerDetailsAjax'),
-    path('Company/get_bank_acc_num',views.getBankAccountNumberAjax, name='getBankAccountNumberAjax'),
+ 
     path('Company/get_itm_details',views.getItemDetailsAjax, name='getItemDetailsAjax'),
    
     path('Company/new_pymnt_trm',views.newPaymentTermAjax, name='newPaymentTermAjax'),
@@ -326,6 +325,57 @@ urlpatterns = [
     
     path('Company/create_new_acc',views.createNewAccountAjax, name= 'createNewAccountAjax'),
     path('Company/get_all_accnts',views.getAllAccountsAjax, name='getAllAccountsAjax'),
+
+
+
+    #invoice ----------------------------------
+    
+    path('Staff/invoice/itemdata',views.itemdata,name='itemdata'),
+   
+    path('Staff/invoice/customerdata',views.customerdata,name='customerdata'),
+    path('Staff/invoice/getInvoiceCustomerData',views.getInvoiceCustomerData,name='getInvoiceCustomerData'),
+    path('getinvItemDetails',views.getinvItemDetails,name='getinvItemDetails'),
+    path('Staff/invoice/getBankAccount',views.getBankAccount,name='getBankAccount'),
+   
+    path('checkInvoiceNumber',views.checkInvoiceNumber,name='checkInvoiceNumber'),
+   
+    
+    path('getinvCustomerDetails',views.getinvCustomerDetails,name='getinvCustomerDetails'),
+    path('getinvBankAccountNumber',views.getinvBankAccountNumber,name='getinvBankAccountNumber'),
+    path('newinvPaymentTerm',views.newinvPaymentTerm,name='newinvPaymentTerm'),
+    path('Staff/invoice/addinv_unit',views.addinv_unit,name='addinv_unit'),
+    path('Staff/invoice/showinvunit_dropdown',views.showinvunit_dropdown,name='showinvunit_dropdown'),
+    path('Staff/invoice/createNewIteminv',views.createNewIteminv,name='createNewIteminv'),
+    path('Staff/invoice/getAllItemsinv',views.getAllItemsinv,name='getAllItemsinv'),
+
+    path('Staff/invoice/filter_invoice_draft/<int:pk>',views.filter_invoice_draft,name='filter_invoice_draft'),
+    path('Staff/invoice/filter_invoice_sent/<int:pk>',views.filter_invoice_sent,name='filter_invoice_sent'),
+    path('Staff/invoice/filter_invoice_name/<int:pk>',views.filter_invoice_name,name='filter_invoice_name'),
+    path('Staff/invoice/filter_invoice_number/<int:pk>',views.filter_invoice_number,name='filter_invoice_number'),
+   
+    path('Staff/invoice/newCustomerPaymentTerm',views.newCustomerPaymentTerm, name='newCustomerPaymentTerm'),
+    path('Staff/invoice/checkCustomerName',views.checkCustomerName, name='checkCustomerName'),
+    path('Staff/invoice/checkCustomerGSTIN',views.checkCustomerGSTIN, name='checkCustomerGSTIN'),
+    path('Staff/invoice/checkCustomerPAN',views.checkCustomerPAN, name='checkCustomerPAN'),
+    path('Staff/invoice/checkCustomerPhone',views.checkCustomerPhone, name='checkCustomerPhone'),
+    path('Staff/invoice/checkCustomerEmail',views.checkCustomerEmail, name='checkCustomerEmail'),
+    path('Staff/invoice/createInvoiceCustomer',views.createInvoiceCustomer, name='createInvoiceCustomer'),
+    path('Staff/invoice/invoice_item',views.invoice_item, name='invoice_item'),
+
+    path('Staff/invoice/getCustomers',views.getCustomers, name='getCustomers'),
+    path('Staff/invoice/createInvoiceItem',views.createInvoiceItem, name='createInvoiceItem'),
+    path('Staff/invoice/getItems',views.getItems, name='getItems'),
+    path('Staff/invoice/saveItemUnit',views.saveItemUnit, name='saveItemUnit'),
+    path('Staff/invoice/show_unit_dropdown',views.show_unit_dropdown, name='show_unit_dropdown'),
+    path('Staff/invoice/createNewAccountFromItems',views.createNewAccountFromItems, name='createNewAccountFromItems'),
+    path('Staff/invoice/checkAccounts',views.checkAccounts, name='checkAccounts'),
+
+    path('Company/get_loanrepayment_data',views.get_loanrepayment_data,name='get_loanrepayment_data'),
+    path('Company/get_loanaddition_data',views.get_loanaddition_data,name='get_loanaddition_data'),
+    
+    path('Staff/invoice/add_customer_invoice',views.add_customer_invoice, name='add_customer_invoice'),
+    path('Staff/invoice/create_item_invoice',views.create_item_invoice, name='create_item_invoice'),
+    path('Staff/invoice/getAllAccounts',views.getAllAccounts, name='getAllAccounts'),
 
 
 
@@ -361,6 +411,10 @@ urlpatterns = [
     path('importDeliveryChallanFromExcel',views.importDeliveryChallanFromExcel,name='importDeliveryChallanFromExcel'),
     path('convert_rec_invoice/<int:id>/',views.convert_rec_invoice,name='convert_rec_invoice'),
     path('ChallancheckRecurringInvoiceNumber',views.ChallancheckRecurringInvoiceNumber,name='ChallancheckRecurringInvoiceNumber'),
+    path('save_challanRecurringInvoice',views.save_challanRecurringInvoice,name='save_challanRecurringInvoice'),
+    path('convert_invoice/<int:id>',views.convert_invoice,name='convert_invoice'),
+    path('save_challanInvoice',views.save_challanInvoice,name='save_challanInvoice'),
+    
     #End
     
     path('Company/employeeloan_trans/<int:id>/',views.employeeloan_trans, name='employeeloan_trans'),
