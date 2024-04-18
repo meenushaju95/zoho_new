@@ -414,6 +414,11 @@ urlpatterns = [
     path('save_challanRecurringInvoice',views.save_challanRecurringInvoice,name='save_challanRecurringInvoice'),
     path('convert_invoice/<int:id>',views.convert_invoice,name='convert_invoice'),
     path('save_challanInvoice',views.save_challanInvoice,name='save_challanInvoice'),
+    path('challangetUnitsAjax',views.challangetUnitsAjax,name='challangetUnitsAjax'),
+    path('challancreateNewItemAjax',views.challancreateNewItemAjax,name='challancreateNewItemAjax'),
+    path('challangetAllItemsAjax',views.challangetAllItemsAjax,name='challangetAllItemsAjax'),
+    path('challancreateNewAccountAjax',views.challancreateNewAccountAjax,name='challancreateNewAccountAjax'),
+    path('challangetAllAccountsAjax',views.challangetAllAccountsAjax,name='challangetAllAccountsAjax'),
     
     #End
     

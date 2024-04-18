@@ -350,6 +350,8 @@
       color: black;
       padding-left: 15px;
     }
+
+    
 </style>
 
 <div class="body-wrapper" id="body_wrapper">
@@ -359,7 +361,7 @@
         <li class="breadcrumb-item"><a href="{% url 'company_dashboard' %}" class="text-warning-emphasis">Dashboard</a></li>
           
           <li class="breadcrumb-item"><a href="{% url 'challan_list' %}" class="text-warning-emphasis">All Delivery Challan</a></li>
-          <li class="breadcrumb-item"><a href="{% url 'challan_overview' challan.id %}" class="text-warning-emphasis">Challan Overview</a></li>
+          <li class="breadcrumb-item">Challan Overview</li>
          
           
       </ol>
@@ -1845,6 +1847,13 @@ function slipPrint(){
       $("#templatePrintButton").attr("onclick","printSection('"+templateId+"')");
       document.getElementById('body_wrapper').scrollIntoView();
     }
+    function printSection(templateId) {
+    var printContents = $('#' + templateId).html();
+    var originalContents = document.body.innerHTML;
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+}
 </script>
 
 {%endblock%}

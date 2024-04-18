@@ -16074,7 +16074,7 @@ def challan_list(request):
         dc = Delivery_challan.objects.all()
     
     
-        return render(request,'zohomodules/Delivery-challan/challan_list.html',{'d_challan':dc})
+        return render(request,'zohomodules/Delivery-challan/challan_list.html',{'d_challan':dc,'allmodules':allmodules,'details':dash_details})
 
 def delivery_challan(request):
      
@@ -16104,6 +16104,9 @@ def delivery_challan(request):
         comp_payment_terms=Company_Payment_Term.objects.filter(company=comp_details)
         price_lists=PriceList.objects.filter(company=comp_details,type='Sales',status='Active')
         last_reference = Delivery_challan.objects.filter(company=comp_details).last()
+        units = Unit.objects.filter(company=comp_details)
+        accounts=Chart_of_Accounts.objects.filter(company=comp_details)
+
         if last_reference:
             next_reference_number = last_reference.reference_number + 1
         else:
@@ -16125,7 +16128,7 @@ def delivery_challan(request):
             next_challan_number = f'{prefix}{next_numeric_part}'
         else:
             next_challan_number = ''
-        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':next_reference_number,'challan_number':next_challan_number}) 
+        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':next_reference_number,'challan_number':next_challan_number,'units': units,'accounts':accounts,}) 
      
 
        
@@ -16577,7 +16580,7 @@ def add_delivery_challan(request):
                 adjustment = request.POST['adjustment']
                 grand_total = request.POST['total']
                 advance = request.POST['advance']
-                balance = request.POST['total'] if request.POST['balance'] == "" else float(request.POST['balance']),
+                balance = float(request.POST['total']) if request.POST['balance'] == "0.00" else float(request.POST['balance'])
 
                 
                 product = request.POST.getlist("item[]")
@@ -16713,7 +16716,8 @@ def add_delivery_challan(request):
                 adjustment = request.POST['adjustment']
                 grand_total = request.POST['total']
                 advance = request.POST['advance']
-                balance = request.POST['total'] if request.POST['balance'] == "" else float(request.POST['balance']),
+                balance = float(request.POST['total']) if request.POST['balance'] == "0.00" else float(request.POST['balance'])
+
 
                 
                 product = request.POST.getlist("item[]")
@@ -16837,14 +16841,16 @@ def challan_overview(request,id):
             else:    
                 dash_details = CompanyDetails.objects.get(login_details=log_details)
                 comp_details=CompanyDetails.objects.get(login_details=log_details)
-
+            allmodules= ZohoModules.objects.get(company=comp_details,status='New')
             challan = Delivery_challan.objects.get(id=id)
             all_challan = Delivery_challan.objects.all()
             items = Delivery_challan_item.objects.filter(company=comp_details,delivery_challan=challan)
             comments = Delivery_challan_comment.objects.filter(company=comp_details,delivery_challan=challan)
             history = Delivery_challan_history.objects.filter(company=comp_details,delivery_challan=challan)
+            last_history = Delivery_challan_history.objects.filter(delivery_challan = challan).last()
+            created = Delivery_challan_history.objects.get(delivery_challan = challan, action = 'Created')
         
-            return render(request,'zohomodules/Delivery-challan/challan_overview.html',{'challan':challan,'d_challan':all_challan,'items':items,'comments':comments,'history':history}) 
+            return render(request,'zohomodules/Delivery-challan/challan_overview.html',{'challan':challan,'d_challan':all_challan,'items':items,'comments':comments,'history':history,'details':dash_details,'allmodules':allmodules,'last_history':last_history, 'created':created}) 
                 
 def convert_save(request,id):
     dc = Delivery_challan.objects.get(id=id)
@@ -16880,6 +16886,8 @@ def challan_edit(request,id):
         
         comp_payment_terms=Company_Payment_Term.objects.filter(company=comp_details)
         price_lists=PriceList.objects.filter(company=comp_details,type='Sales',status='Active')
+        units = Unit.objects.filter(company=comp_details)
+        accounts=Chart_of_Accounts.objects.filter(company=comp_details)
         
         
 
@@ -16889,7 +16897,7 @@ def challan_edit(request,id):
         for item1 in dct:
             item1.available_stock = item1.item.current_stock - item1.quantity
         
-        return render(request,'zohomodules/Delivery-challan/challan_edit.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'challan':dc,'citem':dct}) 
+        return render(request,'zohomodules/Delivery-challan/challan_edit.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'challan':dc,'citem':dct,'units':units,'accounts':accounts}) 
      
 def edit_challan(request,id):
     if request.method == 'POST':
@@ -16919,7 +16927,7 @@ def edit_challan(request,id):
                 dc_type = request.POST['challanType']
                 description = request.POST['note']
                 file = request.FILES.get('file')
-                termcondition=request.POST['termcondition']
+                termconditions=request.POST['termcondition']
                 item_lists = request.POST.getlist('item[]')
                     
                     
@@ -16933,7 +16941,7 @@ def edit_challan(request,id):
                 adjustment = request.POST['adjustment']
                 grand_total = request.POST['total']
                 advance = request.POST['advance']
-                balance = request.POST['total'] if request.POST['balance'] == "" else float(request.POST['balance']),
+                balance = float(request.POST['total']) if request.POST['balance'] == "0.00" else float(request.POST['balance'])
 
                     
                 product = request.POST.getlist("item[]")
@@ -16948,13 +16956,7 @@ def edit_challan(request,id):
                 if all(qty <= 0 for qty in quantity):
                         messages.info(request, 'Quantity of one item is 0')
                         return redirect('challan_edit',id=id)
-                try:
-    
-                    existing_challan = Delivery_challan.objects.get(challan_number=dc_number)
-                    messages.info(request, 'A delivery challan with this number already exists')
-                    return redirect('delivery_challan')
-                except ObjectDoesNotExist:
-                    pass  
+                
 
                 if all(int(qty) > 0 for qty in quantity):
                         dc = Delivery_challan.objects.get(id=id)
@@ -16968,7 +16970,7 @@ def edit_challan(request,id):
                         dc.challan_type=dc_type
                         dc.description=description
                         dc.document=file
-                        dc.terms_condition=termcondition
+                        dc.terms_condition=termconditions
                         dc.sub_total=subtotal
                         dc.igst=igst
                         dc.cgst=cgst
@@ -16979,7 +16981,7 @@ def edit_challan(request,id):
                         dc.grand_total=grand_total
                         dc.advance=advance
                         dc.balance=balance
-                        dc.status='Save'
+                        dc.status=dc.status
                         
                         
                         dc.save()
@@ -17863,3 +17865,225 @@ def save_challanInvoice(request):
             return redirect(challan_list)
     else:
        return redirect('/')
+    
+
+
+def challangetUnitsAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+            options = {}
+            option_objects = Unit.objects.filter(company=com)
+            for option in option_objects:
+                options[option.id] = [option.id,option.unit_name]
+            return JsonResponse(options)
+
+def challancreateNewItemAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        name = request.POST['name']
+        type = request.POST['type']
+        unit = request.POST.get('unit')
+        hsn = request.POST['hsn']
+        tax = request.POST['taxref']
+        gstTax = 0 if tax == 'None-Taxable' else request.POST['intra_st']
+        igstTax = 0 if tax == 'None-Taxable' else request.POST['inter_st']
+        purPrice = 0 if request.POST['pcost'] == "" else request.POST['pcost']
+        purAccount = None if not 'pur_account' in request.POST or request.POST['pur_account'] == "" else request.POST['pur_account']
+        purDesc = request.POST['pur_desc']
+        salePrice = 0 if request.POST['salesprice'] == "" else request.POST['salesprice']
+        saleAccount = None if not 'sale_account' in request.POST or request.POST['sale_account'] == "" else request.POST['sale_account']
+        saleDesc = request.POST['sale_desc']
+        inventory = request.POST.get('invacc')
+        stock = 0 if request.POST.get('stock') == "" else request.POST.get('stock')
+        stockUnitRate = 0 if request.POST.get('stock_rate') == "" else request.POST.get('stock_rate')
+        minStock = 0 if request.POST['min_stock'] == "" else request.POST['min_stock']
+        createdDate = date.today()
+        
+        #save item and transaction if item or hsn doesn't exists already
+        if Items.objects.filter(company=com, item_name__iexact=name).exists():
+            res = f"{name} already exists, try another!"
+            return JsonResponse({'status': False, 'message':res})
+        elif Items.objects.filter(company = com, hsn_code__iexact = hsn).exists():
+            res = f"HSN - {hsn} already exists, try another.!"
+            return JsonResponse({'status': False, 'message':res})
+        else:
+            item = Items(
+                company = com,
+                login_details = com.login_details,
+                item_name = name,
+                item_type = type,
+                unit = None if unit == "" else Unit.objects.get(id = int(unit)),
+                hsn_code = hsn,
+                tax_reference = tax,
+                intrastate_tax = gstTax,
+                interstate_tax = igstTax,
+                sales_account = saleAccount,
+                selling_price = salePrice,
+                sales_description = saleDesc,
+                purchase_account = purAccount,
+                purchase_price = purPrice,
+                purchase_description = purDesc,
+                date = createdDate,
+                minimum_stock_to_maintain = minStock,
+                inventory_account = inventory,
+                opening_stock = stock,
+                current_stock = stock,
+                opening_stock_per_unit = stockUnitRate,
+                track_inventory = int(request.POST['trackInv']),
+                activation_tag = 'active',
+                type = 'Opening Stock'
+            )
+            item.save()
+
+            #save transaction
+
+            Item_Transaction_History.objects.create(
+                company = com,
+                logindetails = com.login_details,
+                items = item,
+                Date = createdDate,
+                action = 'Created'
+
+            )
+            
+            return JsonResponse({'status': True})
+    else:
+       return redirect('/')
+
+def challangetAllItemsAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        if 'login_id' not in request.session:
+            return redirect('/')
+        log_details = LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            company=CompanyDetails.objects.get(login_details=log_details)
+            options = {}
+            option_objects =Items.objects.filter(company=company,activation_tag='Active')
+            for option in option_objects:
+                full_name = f"{option.item_name} "
+                options[option.id] = full_name
+
+            return JsonResponse(options)
+            
+        if log_details.user_type=='Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            options = {}
+            option_objects = Items.objects.filter(company=staff.company,activation_tag='Active')
+            for option in option_objects:
+                full_name = f"{option.item_name} "
+                options[option.id] = full_name
+
+            return JsonResponse(options)
+           
+
+
+def challancreateNewAccountAjax(request):                                                                #new by tinto mt
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        if request.method=='POST':
+            a=Chart_of_Accounts()
+            b=Chart_of_Accounts_History()
+            b.company=com
+            b.logindetails=com.login_details
+            b.action="Created"
+            b.Date=date.today()
+            a.login_details=com.login_details
+            a.company=com
+          
+        
+            a.account_type = request.POST.get("account_type",None)
+            a.account_name = request.POST.get("account_name",None)
+            a.account_code = request.POST.get("account_code",None)
+            a.account_number = request.POST.get("account_number",None)
+            a.account_description = request.POST['description']
+            a.sub_account = request.POST.get("sub_acc",None)
+            a.parent_account = request.POST.get("parent_acc",None)
+               
+            account_type=request.POST.get("account_type",None)
+            if account_type == 'Other Assets':
+                a.description = 'Track special assets like goodwill and other intangible assets'
+            if account_type == 'Other Current Assets':
+                a.description = 'Any short term asset that can be converted into cash or cash equivalents easily Prepaid expenses Stocks and Mutual Funds'
+            if account_type == 'Cash':
+                a.description = 'To keep track of cash and other cash equivalents like petty cash, undeposited funds, etc., use an organized accounting system  financial software'
+            if account_type == 'Bank':
+                a.description = 'To keep track of bank accounts like Savings, Checking, and Money Market accounts.'
+            if account_type == 'Fixed Asset':
+                a.description = 'Any long-term investment or asset that cannot be easily converted into cash includes: Land and Buildings, Plant, Machinery, and Equipment, Computers, Furniture.'
+            if account_type == 'Stock':
+                a.description = 'To keep track of your inventory assets.'
+            if account_type == 'Payment Clearing':
+                a.description = 'To keep track of funds moving in and out via payment processors like Stripe, PayPal, etc.'
+            if account_type == 'Other Liability':
+                a.description = 'Obligation of an entity arising from past transactions or events which would require repayment.Tax to be paid Loan to be Repaid Accounts Payableetc.'
+            if account_type == 'Other Current Liability':
+                a.description = 'Any short term liability like: Customer Deposits Tax Payable'
+            if account_type == 'Credit Card':
+                a.description = 'Create a trail of all your credit card transactions by creating a credit card account.'
+            if account_type == 'Long Term Liability':
+                a.description = 'Liabilities that mature after a minimum period of one year like: Notes Payable Debentures Long Term Loans '
+            if account_type == 'Overseas Tax Payable':
+                a.description = 'Track your taxes in this account if your business sells digital services to foreign customers.'
+            if account_type == 'Equity':
+                a.description = 'Owners or stakeholders interest on the assets of the business after deducting all the liabilities.'
+            if account_type == 'Income':
+                a.description = 'Income or Revenue earned from normal business activities like sale of goods and services to customers.'
+            if account_type == 'Other Income':
+                a.description = 'Income or revenue earned from activities not directly related to your business like : Interest Earned Dividend Earned'
+            if account_type == 'Expense':
+                a.description = 'Reflects expenses incurred for running normal business operations, such as : Advertisements and Marketing Business Travel Expenses License Fees Utility Expenses'
+            if account_type == 'Cost Of Goods Sold':
+                a.description = 'This indicates the direct costs attributable to the production of the goods sold by a company such as: Material and Labor costs Cost of obtaining raw materials'
+            if account_type == 'Other Expense':
+                a.description = 'Track miscellaneous expenses incurred for activities other than primary business operations or create additional accounts to track default expenses like insurance or contribution towards charity.'
+    
+            a.Create_status="added"
+            a.status = 'Active'
+            ac_name=request.POST.get("account_name",None)
+            if Chart_of_Accounts.objects.filter(account_name=ac_name,company=com).exists():
+                return JsonResponse({'status': False, 'message':'Account Name already exists.!'})
+            else:
+                a.save()
+                b.chart_of_accounts=a
+                b.save()
+                return JsonResponse({'status': True})
+
+    else:
+        return redirect('/')
+
+
+def challangetAllAccountsAjax(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        acc = {}
+        acc_objects = Chart_of_Accounts.objects.filter(company = com, status = 'Active')
+        for option in acc_objects:
+            acc[option.id] = [option.account_name,option.account_type]
+
+        return JsonResponse(acc)
+    else:
+        return redirect('/')
