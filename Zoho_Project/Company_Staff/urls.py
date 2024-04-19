@@ -419,6 +419,7 @@ urlpatterns = [
     path('challangetAllItemsAjax',views.challangetAllItemsAjax,name='challangetAllItemsAjax'),
     path('challancreateNewAccountAjax',views.challancreateNewAccountAjax,name='challancreateNewAccountAjax'),
     path('challangetAllAccountsAjax',views.challangetAllAccountsAjax,name='challangetAllAccountsAjax'),
+    path('challan_customer_check_pan',views.challan_customer_check_pan,name='challan_customer_check_pan'),
     
     #End
     

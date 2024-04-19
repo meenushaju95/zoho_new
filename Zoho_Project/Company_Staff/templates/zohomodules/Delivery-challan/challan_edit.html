@@ -3483,7 +3483,7 @@ $('#mphone').on('input', function() {
                     $(row).find('.item-rate').val(data.rate);
                     $(row).find('.item-tax').val(calculateTax(data));
 
-                    updateAvailableStock(row, data.stock);
+                    updateAvailableStock(row, data.stock,data.track);
                     calculateTaxes(data);
                 },
                 error: function(error) {
@@ -3503,24 +3503,29 @@ $('#mphone').on('input', function() {
     }
 
     // Function to update available stock for the row
-    function updateAvailableStock(row, stock) {
-        var quantityInput = $(row).find('.item-quantity');
-        var quantity = parseFloat(quantityInput.val());
-        var availableStockLabel = $(row).find('.availableStock');
+    function updateAvailableStock(row, stock, track) {
+    var quantityInput = $(row).find('.item-quantity');
+    var quantity = parseFloat(quantityInput.val());
+    var availableStockLabel = $(row).find('.availableStock');
 
+    if (track === 1) {
         if (!isNaN(quantity) && quantity >= 0) {
             var availableStock = Math.max(stock - quantity, 0);
             availableStockLabel.text('Available Stock: ' + availableStock);
             availableStockLabel.css('color', 'orange');
             if (quantity > stock) {
-            alert("Quantity entered is greater than available stock.");
-        }
+                availableStockLabel.css('color', 'red'); // Insufficient stock
+                alert("Quantity entered is greater than available stock.");
+            } 
         } else {
             availableStockLabel.text('Available Stock: ' + stock);
             availableStockLabel.css('color', 'orange');
         }
+    } else {
+        availableStockLabel.text('Availble stock :Not Available');
+        availableStockLabel.css('color', 'orange');
     }
-
+}
     // Function to clear item info fields for the row
     function clearItemInfo(row) {
         $(row).find('.item-hsn').val('');

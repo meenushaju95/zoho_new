@@ -16071,7 +16071,7 @@ def challan_list(request):
 
             
         allmodules= ZohoModules.objects.get(company=comp_details,status='New')
-        dc = Delivery_challan.objects.all()
+        dc = Delivery_challan.objects.filter(company=comp_details)
     
     
         return render(request,'zohomodules/Delivery-challan/challan_list.html',{'d_challan':dc,'allmodules':allmodules,'details':dash_details})
@@ -16112,6 +16112,8 @@ def delivery_challan(request):
         else:
             next_reference_number = 1
         last_challan = Delivery_challan.objects.filter(company=comp_details).last()
+        trm = Company_Payment_Term.objects.filter(company = comp_details)
+
 
         
 
@@ -16128,7 +16130,7 @@ def delivery_challan(request):
             next_challan_number = f'{prefix}{next_numeric_part}'
         else:
             next_challan_number = ''
-        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':next_reference_number,'challan_number':next_challan_number,'units': units,'accounts':accounts,}) 
+        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':next_reference_number,'challan_number':next_challan_number,'units': units,'accounts':accounts,'pTerms':trm}) 
      
 
        
@@ -16147,6 +16149,7 @@ def get_customer_data(request, customer_id):
             'place':customer.place_of_supply
            
         }
+        
         return JsonResponse(data)
     except Customer.DoesNotExist:
         return JsonResponse({'error': 'Customer not found'}, status=404)
@@ -16163,10 +16166,12 @@ def get_item_data(request, item_id):
             'intratax':item.intrastate_tax,
             'intertax':item.interstate_tax,
             'company_state':item.company.state,
-            'stock': item.current_stock 
+            'stock': item.current_stock ,
+            'track' :item.track_inventory,
             
            
         }
+        
         return JsonResponse(data)
     except item.DoesNotExist:
         return JsonResponse({'error': 'Customer not found'}, status=404)
@@ -16370,8 +16375,6 @@ def challan_customer_dropdown(request):
                
        
     
-
-            
 def challan_customer_payment_terms_add(request):
     if 'login_id' in request.session:
         if request.session.has_key('login_id'):
@@ -16460,36 +16463,33 @@ def challan_check_customer_term_exist(request):
     if 'login_id' in request.session:
         if request.session.has_key('login_id'):
             log_id = request.session['login_id']
-           
         else:
             return redirect('/')
     
-        log_details= LoginDetails.objects.get(id=log_id)
-        if log_details.user_type=='Staff':
+        log_details = LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Staff':
             dash_details = StaffDetails.objects.get(login_details=log_details)
-            comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
-
+            comp_details = CompanyDetails.objects.get(id=dash_details.company.id)
         else:    
             dash_details = CompanyDetails.objects.get(login_details=log_details)
-            comp_details=CompanyDetails.objects.get(login_details=log_details)
-
+            comp_details = CompanyDetails.objects.get(login_details=log_details)
             
-        allmodules= ZohoModules.objects.get(company=comp_details,status='New')
-   
+        allmodules = ZohoModules.objects.get(company=comp_details, status='New')
 
     if request.method == 'GET':
-       term_name = request.GET.get('term_name', None)
-       if term_name:
+        term_name = request.GET.get('term_name', None)
+        if term_name:
             normalized_data = term_name.replace(" ", "")
             term_name_processed = add_space_before_first_digit(normalized_data)
             exists = Company_Payment_Term.objects.filter(
-                    term_name=term_name_processed,
-                    company=comp_details
-                ).exists()
+                term_name=term_name_processed,
+                company=comp_details
+            ).exists()
             return JsonResponse({'exists': exists})          
+        else:
+            return JsonResponse({'exists': False})  # Return False if term_name is None
     else:
-        return JsonResponse({'exists': False})    
-
+        return JsonResponse({'exists': False})
 
 def challan_check_customer_email_exist(request):
     if request.method == 'GET':
@@ -16531,6 +16531,7 @@ def challan_check_customer_phonenumber_exist(request):
             return JsonResponse({'exists': exists})          
     else:
         return JsonResponse({'exists': False}) 
+    
     
 
 
@@ -16843,7 +16844,7 @@ def challan_overview(request,id):
                 comp_details=CompanyDetails.objects.get(login_details=log_details)
             allmodules= ZohoModules.objects.get(company=comp_details,status='New')
             challan = Delivery_challan.objects.get(id=id)
-            all_challan = Delivery_challan.objects.all()
+            all_challan = Delivery_challan.objects.filter(company=comp_details)
             items = Delivery_challan_item.objects.filter(company=comp_details,delivery_challan=challan)
             comments = Delivery_challan_comment.objects.filter(company=comp_details,delivery_challan=challan)
             history = Delivery_challan_history.objects.filter(company=comp_details,delivery_challan=challan)
@@ -18087,3 +18088,15 @@ def challangetAllAccountsAjax(request):
         return JsonResponse(acc)
     else:
         return redirect('/')
+    
+def challan_customer_check_pan(request):
+    if request.method == 'POST':
+        panNumber = request.POST.get('panNumber')
+        pan_exists = Customer.objects.filter(PAN_number=panNumber).exists()
+
+        if pan_exists:
+            return JsonResponse({'status': 'exists'})
+        else:
+            return JsonResponse({'status': 'not_exists'})
+    else:
+        return JsonResponse({'error': 'Invalid request'})  
