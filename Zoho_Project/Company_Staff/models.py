@@ -1045,7 +1045,7 @@ class Delivery_challan(models.Model):
     def getNumFieldName(self):
         return 'challan_number'
 
-     #---invoice reccurring invoice
+     
     
 
 
@@ -1084,6 +1084,9 @@ class Delivery_challan_comment(models.Model):
     date=  models.DateField(auto_now_add=True, null=True)
     comment = models.TextField(null=True)  
     action = models.CharField(max_length=200,null=True)
+
+
+#------------------------------Delivery challan end----------------------
 
 
 

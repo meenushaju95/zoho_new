@@ -326,11 +326,11 @@ input {
                   <div class="m-3" style="display: flex; align-items: center;">
                   <label for="gstTreatment" style="width: 30%;">GST Treatment:</label>
                   <input type="text" id="gstTreatment" value="{{challan.customer.GST_treatement}}" name="gstTreatment" readonly style="width:60%" ></div>
-                 
+                 {% if GST_number == 'Unregistered Business-not Registered under GST' %}
                   <div id="gstDiv" class="m-3" style="display: flex; align-items: center;">
                   <label id="gstNumberLabel"  for="gstNumber" style="width: 30%;" >GST Number:</label>
                   <input type="text" id="gstNumber" name="gstNumber" value="{{challan.customer.GST_number}}" readonly style="width: 60%;"></div>
-               
+               {% endif %}
               </div>
             
               <!-- Right Column -->
@@ -895,6 +895,857 @@ input {
         </div>
     </div>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!------customer section          ----------------------------------------->
+
+
+
+
+
+
+
+<!-- New Customer Modal -->
+<div class="modal fade" id="newCustomer">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content" style="background-color: #0f1419;">
+            <div class="modal-header">
+                
+            </div>
+            <div class="modal-body">
+                <div class=" p-3">
+                  <h3  class="mb-4 mt-2  " style="font-size: 1.40rem;color: rgb(230, 171, 45);">New Customer</h3>
+              
+             
+              <form  method="post" action="" id="myForm" enctype="multipart/form-data" class="mb-3" onsubmit=" submitForm();event.preventDefault();">
+                  {% csrf_token %}
+          
+                  <div class="form-group row mt-4">
+                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label" style="color: white;">Customer Type</label>
+                      
+                      <div class=" col-sm-12 col-md-3 col-lg-3">
+                          <input  type="radio"  value="Business" name="type" >
+                                  <label for="Business"> Business</label>
+                                 &nbsp;&nbsp;&nbsp;
+                                 <input  type="radio"  value="Individual" name="type" >
+                                 <label for="Business">Individual</label>
+                      </div><br></div>
+  
+  
+  
+                  <div class=" form-group row">
+                      <div class="col-sm-12 col-md-3 col-lg-3 col-form-label">
+                          <label>Primary Contact</label>
+                      </div>
+                      <div class="col-sm-12 col-md-1 col-lg-1" >
+                          <select id="select1"  name="salutation" class="form-control bg-light text-dark mt-2 " >
+                          
+                              <option value="Mr">Mr</option>
+                              <option value="Mrs">Mrs</option>
+                              <option value="Ms">Ms</option>
+                              <option value="Dr">Dr</option>
+  
+                          </select> 
+                      </div>
+                      <div class="col-sm-12 col-md-2 col-lg-3" >
+                          <input  type="text" class="form-control bg-light text-dark mt-2 change-disply " id="fname" name="first_name" placeholder="first name" required >
+  
+                      </div>
+                      <div class="col-sm-12 col-md-2 col-lg-3" >
+                          <input type="text" class="form-control bg-light text-dark mt-2 " id="lname" name="last_name" placeholder="last name" required >
+  
+                      </div>
+                  </div>
+  
+                  <div class="form-group row mt-4">
+                      <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>Customer Display Name</label></div>
+                      <div class="col-sm-12 col-md-6 col-lg-7">
+                         
+                          <select class="form-control bg-light text-dark "  name="v_display_name" id="v_display_name">
+                              
+                          </select>
+                          
+                             
+                              
+                      </div>
+                  </div>
+  
+  
+                  <div class="form-group row mt-4">
+                      <div class="col-sm-12 col-md-3 col-lg-3 col-form-label">
+                          <label>Company Name</label>
+                      </div>
+                      <div class="col-sm-12 col-md-6 col-lg-7">
+                          <input  type="text" class="form-control bg-light text-dark " name="company_name" required>     
+                          <div class="invalid-feedback">Please fill out this field.</div>   
+  
+                      </div>
+                  </div>
+  
+                 
+  
+                 
+  
+                  <div class="form-group row mt-4">
+                      <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>Customer Email</label></div>
+                      <div class="col-sm-12 col-md-6 col-lg-7">
+                          <input  type="email" class="form-control bg-light text-dark" name="vendor_email"  id="vendor-email"  required> 
+                          <span class=" text-danger mt-1" id="email-message-id" style="font-size: 10px;"></span>   
+      
+                      </div>
+  
+  
+                  </div>
+  
+                  <div class="form-group row mt-4">
+                      <div class="col-sm-12 col-md-3 col-lg-3 ">
+                          <label class="col-form-label text-white">Customer phone</label>
+                      </div>
+                      <div class="col-sm-12 col-md-3 col-lg-3">
+                          <input id="workphone"  type="text" class="form-control bg-light text-dark mt-2" pattern="[0-9]{7}"  name="w_phone" placeholder="work phone" required>
+                          <span id="work-phone-message" class="mt-2 " style="font-size: 10px;"></span >
+                          <span id="workphone_label" class="mt-2 text-danger" style="font-size: 10px;"></span >
+                          <div class="invalid-feedback"></div>   
+      
+                      </div>
+                      <div class=" col-sm-12 col-md-3 col-lg-4">
+                          <input id="mphone"  type="text" pattern="[0-9]{10}" class="form-control bg-light text-dark mt-2"  name="m_phone" placeholder="mobile number" required>
+                          <span id="phone-message" class="mt-2 " style="font-size: 10px;"></span >
+                          <span id="mphone_label" class="mt-2 text-danger" style="font-size: 10px;"></span >
+                          <div class="invalid-feedback"></div>   
+      
+                      </div>
+  
+                      <hr style="border: none; height: 2px; background-color: #ffcc00; margin: 20px 0;">
+  
+                      <div class="toggle1 section-toggle">
+                          <a href="">Add More Details</a>
+  
+                      </div>
+  
+  
+                  </div>
+                  
+  
+                  <fieldset1 id="more_detail" class="more details" style="display: none;">
+  
+                      <div class="form-group row mt-4">
+                          <div class="col-sm-12 col-md-3 col-lg-3 col-form-label">
+                              <label>Skype name/Number</label>
+                          </div>
+                          <div class="col-sm-12 col-md-6 col-lg-6">
+                              <input  type="text" class="form-control bg-light text-dark" name="skype_number">      
+                          </div>
+  
+                      </div>
+  
+                      <div class="form-group row mt-4">
+                          <div class="col-sm-12 col-md-3 col-lg-3 col-form-label">
+                              <label>Designation</label>
+                          </div>
+                          <div class="col-sm-12 col-md-6 col-lg-6">
+                              <input  type="text" class="form-control bg-light text-dark" name="designation">      
+                          </div>
+  
+                      </div>
+  
+                      <div class="form-group row mt-4">
+                          <div class="col-sm-12 col-md-3 col-lg-3 col-form-label">
+                              <label>Department</label>
+                          </div>
+                          <div class="col-sm-12 col-md-6 col-lg-6">
+                              <input  type="text" class="form-control bg-light text-dark" name="department">      
+                          </div>
+  
+                      </div>
+  
+  
+             
+                  <div class="form-group row mt-4">
+                      <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>Website</label></div>
+                      <div class="col-sm-12 col-md-6 col-lg-6">
+                          <input id="web" type="text" class="form-control bg-light text-dark" onclick="mobile_phone()"    name="website">      
+                      </div>
+                  </div>
+              </fieldset1>
+  
+  
+                  <hr style="border: none; height: 2px; background-color: #ffcc00; margin: 20px 0;">
+  
+                  <div class="section-3">
+  
+                      <div class="toggle2 section-toggle"> <a href="" >Other Details </a> </div>
+                      <div class="toggle3 section-toggle" > <a href="">Address </a> </div>
+                      <div class="toggle4 section-toggle"><a href="" >Contact Persons </a></div>
+                      <div class="toggle7 section-toggle"><a href="">Remarks</a></div>
+  
+                  </div>
+  
+                 
+                  <fieldset2 class="other details">
+  
+                      <div class="form-group row mt-2">
+                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > GST Treatment*</label>
+                          
+                          <div class=" col-sm-12 col-md-3 col-lg-3">
+                              <select name="gst" id="GSTT" class="form-control bg-light text-dark" onclick="gstPan_function()">
+                                  <option value="Select a Gst Treatment" selected>Select a Gst Treatment</option>
+                                  <option value="Registered Business-Regular Business that is registered under GST">Registered Business-Regular Business that is registered under GST</option>
+                                  <option value="Registered Business-Composition Business that is registered under the Composition scheme in GST">
+                                      Registered Business-Composition Business that is registered under the Composition schemen in GST
+                                  </option>
+                                  <option value="Unregistered Business-not Registered under GST">Unregistered Business-not Registered under GST</option>
+                                  <option value="Overseas- Persons with who you do import or exports of supplies outside india">Overseas- Persons with who you do import or exports of supplies outside india</option>
+                                  <option value="Special Economic Zone">Special Economic Zone</option>
+                              </select><br>
+                          </div>
+  
+  
+                      </div>
+  
+                      <fieldset3 id="gst" style="display: none;">
+                          <div class="row mt-4">
+                              <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white"  > GSTIN/UIN*</label>
+                              
+                              <div class=" col-sm-12 col-md-3 col-lg-3">
+                                  <input type="text" class="form-control bg-light text-dark" name="gst_number" id="gstInput" > 
+                                  <span id="gstMessage"></span>       
+          
+                              </div>
+          
+          
+                          </div>
+  
+                      </fieldset3>
+  
+                      <fieldset4 id="pan" style="display: none;">
+                          <div class=" row mt-4">
+                              <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > PAN</label>
+                              
+                              <div class=" col-sm-12 col-md-3 col-lg-3">
+                                  <input type="text" class="form-control bg-light text-dark"  id="panInput"  name="pan_number">  
+                                  <span id="panMessage"></span>    
+  
+          
+                              </div>
+          
+          
+                          </div>
+  
+                      </fieldset4>
+  
+  
+                      <div class="form-group row mt-4">
+                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Source of Supply*</label>
+                          
+                          <div class=" col-sm-12 col-md-3 col-lg-3">
+                              <select name="source_supply" id="PLACE" class="form-control bg-light text-dark">
+                                  <option value="value" selected></option>
+                                  <option value="[AN]-Andaman And Nicobar Islands">[AN]-Andaman And Nicobar Islands</option>
+                                  <option value="[AD]-Andhra Pradesh">[AD]-Andhra Pradesh</option>
+                                  <option value="[AR]-Arunachal Pradesh">[AR]-Arunachal Pradesh	</option> 
+                                  <option value="volvo">[AS]-Assam</option>
+                                  <option value="[BR]-Bihar">[BR]-Bihar</option> 
+                                  <option value="volvo">[CH]-	Chandhigarh</option>
+                                  <option value="[CG]-Chattisgarh">[CG]-Chattisgarh</option>
+                                  <option value="[DD]-Daman Diu">[DD]-Daman Diu</option>
+                                  <option value="volvo">[DL]-	Delhi</option>
+                                  <option value="[GA]-Goa">[GA]-Goa</option> 
+                                  <option value="[GJ]-Gujarat">[GJ]-Gujarat</option>
+                                  <option value="[HR]-Haryana">[HR]-Haryana</option> 
+                                  <option value="[HP]-Himachal Pradesh">[HP]-Himachal Pradesh</option>
+                                  <option value="[JK]-Jammu And Kashmir">[JK]-Jammu And Kashmir</option>
+                                  <option value="[JH]-Jharkand">[JH]-Jharkand</option>
+                                  <option value="[KA]-Karnataka">[KA]-Karnataka</option>
+                                  <option value="[KL]-Kerala">[KL]-Kerala</option>
+                                  <option value="[LA]-Ladakh">[LA]-Ladakh</option>
+                                  <option value="[LD]-Lakshadweep">[LD]-Lakshadweep</option>
+                                  <option value="[MP]-Madhyapradesh">[MP]-Madhyapradesh</option>
+                                  <option value="[MH]-Maharashtra">[MH]-Maharashtra</option>
+                                  <option value="[MN]-Manipur">[MN]-Manipur</option>  
+                                  <option value="[ML]-Meghalaya">[ML]-Meghalaya</option>
+                                  <option value="[MZ]-Mizoram">[MZ]-Mizoram</option>
+                                  <option value="[NL]-Nagaland">[NL]-Nagaland</option> 
+                                  <option value="[NL]-Nagaland">[NL]-Nagaland</option>
+                                  <option value="[OD]-Odisha">[OD]-Odisha</option>
+                                  <option value="[PY]-Puducherry">[PY]-Puducherry</option>
+                                  <option value="[PB]-Punjab">[PB]-Punjab.</option>
+                                  <option value="[RL]-Rajasthan">[RL]-Rajasthan</option>
+                                  <option value="[SK]-Sikkim">[SK]-Sikkim</option>
+                                  <option value="[TN]-Tamilnadu">[TN]-Tamilnadu</option>
+                                  <option value="[TS]-Telenghana">[TS]-Telenghana</option>
+                                  <option value="[TR]-Tripura">[TR]-Tripura</option>
+                                  <option value="[UP]-Uttar Pradesh">[UP]-Uttar Pradesh</option>
+                                  <option value="[UK]-Utharakhand">[UK]-Utharakhand</option>
+                                  <option value="[WB]-West Bengal">[WB]-West Bengal</option>
+                                  <option value="[OT]-Other Territory">[OT]-Other Territory</option>
+                              </select>
+                          </div>
+      
+      
+                      </div>
+  
+  
+  
+                      <!-- <div class="form-group row mt-4">
+                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label" style="color:rgb(214, 75, 75) ;">Tax Preference*</label>
+                          
+                          <div class=" col-sm-12 col-md-3 col-lg-3">
+                              <input type="checkbox" id="Taxable" name="tax1" value="Taxable">&nbsp;
+                              <label for="vehicle1" class="pt-1">Taxable</label>
+                              &nbsp;&nbsp;&nbsp;
+                              <input type="checkbox" id="Tax_Exempt" name="tax1" value="Tax Exempt">&nbsp;
+                              <label for="vehicle2" class="pt-1">Tax Exempt</label>
+                        
+                          </div>
+                      </div> -->
+  
+  
+  
+  
+                      <div class="form-group row mt-4">
+                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label" style="color:rgb(214, 75, 75) ;">Tax Preference*</label>
+                          
+                      <div class="col-sm-12 col-md-3 col-lg-4 d-flex align-items-center">
+                          <div class="form-check form-check-inline">
+                              <input class="form-check-input" type="radio" name="tax1" id="Taxable" value="Taxable" required>
+                              <label class="form-check-label text-white" for="vehicle1">Taxable</label>
+                          </div>
+                          <div class="form-check form-check-inline">
+                              <input class="form-check-input" type="radio" name="tax1" id="Tax_Exempt" value="Tax Exempt" required>
+                              <label class="form-check-label text-white" for="vehicle2">Tax Exempt</label>
+                          </div>
+                      </div>
+                  </div>
+  
+       
+                      <!-- </div> -->
+                      
+                      <div class="form-group row mt-4">
+                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Currency*</label>
+                          
+                          <div class=" col-sm-12 col-md-3 col-lg-3">
+                              <select name="currency" id="PLACE" class="form-control bg-light text-dark">
+                                  <option value="Indian Rupee" selected>Indian Rupee</option>
+                                  <!-- <option value="Indian Rupee">Indian Rupee</option> -->
+                      
+                              </select>
+                          </div>
+      
+      
+                      </div>
+  
+                      <div class="form-group row mt-2">
+                          <div class="col-sm-12 col-md-3 col-lg-3 ">
+                             <label class="col-form-label text-white mb-3"> Opening Balance Type</label>
+                          </div>
+                          <div class="col-sm-12 col-md-3 col-lg-4 d-flex align-items-center">
+                              <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="radio" name="op_type" id="debit" value="debit">
+                                  <label class="form-check-label text-white" for="debit">Debit</label>
+                              </div>
+                              <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="radio" name="op_type" id="credit" value="credit">
+                                  <label class="form-check-label text-white" for="credit">Credit</label>
+                              </div>
+                          </div>
+                      </div>
+  
+                      <div class="form-group row mt-4">
+                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Opening Balance Amount</label>                    
+                          <div class=" col-sm-12 col-md-3 col-lg-3">
+                              <input  type="number" class="form-control bg-light text-dark" name="opening_bal" id="opa" value="0.00">      
+                          </div>
+                      </div>
+  
+                      <div class="form-group row mt-4">
+                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" >Credit Limit</label>                    
+                          <div class=" col-sm-12 col-md-3 col-lg-3">
+                              <input  type="number" class="form-control bg-light text-dark" name="credit_lm" id="cl" value="0.00">      
+                          </div>
+                      </div>
+                  
+                    <!-- Alert -->
+                      <div id="custom-alert" class="alert">
+                          <span class="close-btn">&times;</span>
+                          <div class="alert-content">
+                            Credit limit should not exceed opening balance amount.
+                          </div>
+                        </div>
+                        <style>
+                          .alert {
+                                  display: none;
+                                  position: fixed;
+                                  top: 30%;
+                                  left: 50%;
+                                  transform: translate(-50%, -50%);
+                                  background-color: #f44336;
+                                  color: white;
+                                  padding: 15px;
+                                  border-radius: 5px;
+                                  }
+  
+                                  .close-btn {
+                                  float: right;
+                                  cursor: pointer;
+                                  }
+  
+                                  .alert-content {
+                                  margin-bottom: 10px;
+                                  }
+                        </style>
+  
+  
+  
+  
+                      
+                      <div class="form-group row mt-4">
+                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Payment Terms</label>
+                          
+                          <div class=" col-sm-12 col-md-3 col-lg-3">
+                              <select name="payment_terms" id="paytearm-select" class="form-control bg-light text-dark">
+                                 
+  
+                                  {% for pay_terms in comp_payment_terms %}
+                                  <option value="{{pay_terms.id}}" >{{pay_terms.term_name}}</option>
+                              {% endfor %}
+                                  
+                              </select>
+  
+                          </div>
+      
+                          <div class="col-md-4 ">
+                              <a href="#" class="btn btn-outline-secondary py-2 my-1" data-target="#newpayment" data-toggle="modal" style="color: white; background-color: rgb(210, 132, 30);" >+</a>
+                          </div>
+                      
+  
+  
+  
+      
+                      </div>
+  
+          
+  
+  
+  
+                      <div class="form-group row mt-4">
+                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white">Price List </label>
+                           
+                          <div class=" col-sm-12 col-md-3 col-lg-3">
+                              <select name="plst" id="PLACE" id="PLACE" class="form-control bg-light text-dark">
+                                  <option value="0">Not selected</option>
+  
+                                  
+                                  {% for price_list in price_lists %}
+  
+                                  <option value="{{price_list.id}}">{{price_list.name}}</option>
+      
+                                      
+                                  {% endfor %}
+  
+                                   
+                                   
+                                    
+                                   </select>
+                             
+                          </div>
+              
+              
+                      </div>
+                   
+                           
+      
+                            
+      
+      
+      
+      
+      
+      
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label" style="color:white ;">
+                                          Portal Language</label>
+                                          <div class=" col-sm-12 col-md-3 col-lg-3">
+                                              <select name="plang" id="PLACE" style="width: 100%;" class="form-control bg-light text-dark">
+                                                  <option selected value="0" >Choose..</option>
+                                                  <option value="ENGLISH">ENGLISH</option>
+                                                </select>
+                                      </div></div>   
+                                      <div class="form-group row mt-4">
+                                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label" style="color:white ;">Facebook </label>
+                                              <div class=" col-sm-12 col-md-3 col-lg-3"> 
+                                                  <input type="text" id="cn" name="fbk" class="form-control bg-light text-dark" >
+                                                  
+                                          </div></div>
+                                      <div class="form-group row mt-4">
+                                          <label class="col-sm-12 col-md-3 col-lg-3 col-form-label" style="color:white ;">Twitter</label>
+                                              <div class=" col-sm-12 col-md-3 col-lg-3">
+                                                  <input type="text" id="cn" name="twtr" class="form-control bg-light text-dark" >
+                                                
+                                          </div></div>
+                                          
+  
+  
+  
+  
+                  </fieldset2>
+  
+  
+                  <!------------------ Address Section Start------------- -->
+  
+                  <fieldset5 id="address" style="display: none;">
+                      <div>
+                          <div class="row">
+                              <div class="col-sm-12 col-md-6 col-lg-6">
+                                  <div class="row">
+                                      <div class="col-sm-12 col-md-6 col-lg-6">
+                                          <label for="">BILLING ADDRESS</label>
+                                      </div>
+                                      <div class="col"></div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Attention</label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input  type="text" class="form-control bg-light text-dark" name="battention" id="batten">      
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Country</label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <select name="bcountry" id="btry" class="form-control bg-light text-dark">
+                                              <option value="India" selected>India</option>
+                                          </select>      
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Address</label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <textarea class="form-control bg-light " style="border: none;color: rgb(7, 7, 7);" cols="26" rows="4" name="baddress" id="badd1"></textarea>
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > City</label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input  type="text" class="form-control bg-light text-dark" name="bcity" id="bcty">      
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > State</label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input type="text" class="form-control bg-light text-dark" name="bstate" id="bste">      
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Zip Code </label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input  type="number" class="form-control bg-light text-dark" name="bzip" id="bzp">      
+                                      </div>
+                                  </div>
+                              
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Phone </label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input id="bphone_num"  type="tel" pattern="[0-9]{10}" class="form-control bg-light text-dark" name="bphone" >
+                                          <label for="" id="bphone_label"></label>      
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Fax </label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input  type="tel" class="form-control bg-light text-dark" pattern="[0-9]{7}" onmouseout="fax_number()"  onclick="bphone_number()"                                       name="bfax" id="bfx">  
+                                      
+                                          <label for="" id="fax_label"></label> 
+                                      </div>
+                                  </div>
+  
+                              </div>
+                              <div class="col-sm-12 col-md-6 col-lg-6">
+                                  <div class="row">
+                                      <div class="col-sm-12 col-md-6 col-lg-6">
+                                          <label for="">SHIPPING ADDRESS</label>
+                                      </div>
+                                      <div class="col-sm-12 col-md-6 col-lg-6">
+                                          <input  type="checkbox" id="myCheckT" onclick="myCopyAddressFunction()">&nbsp;
+                                          <label for="myCheck">Same as Billing Address:</label>
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Attention</label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input  type="text" class="form-control bg-light text-dark " style="color: white;" name="sattention" id="satten">      
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Country</label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <select name="s_country" id="sctry" class="form-control bg-light text-dark">
+                                              <option value="India" selected>India</option>
+                                          </select>      
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Address</label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <textarea class="form-control bg-light" style="border: none;color: rgb(10, 10, 10);" id="sadd1" cols="26" rows="4" name="saddress"></textarea>
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > City</label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input  type="text" class="form-control bg-light text-dark" name="scity" id="scty">      
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > State</label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input type="text" class="form-control bg-light text-dark" name="sstate" id="sste">      
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Zip Code </label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input  type="number" class="form-control bg-light text-dark" name="szip" id="szp">      
+                                      </div>
+                                  </div>
+                              
+  
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Phone </label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input  type="tel" class="form-control bg-light text-dark" pattern="[0-9]{10}" style="color: white;" name="sphone" id="sphone_num">  
+                                          <label for="" id="sphone_label"></label>    
+                                      </div>
+                                  </div>
+                                  <div class="form-group row mt-4">
+                                      <label class="col-sm-12 col-md-3 col-lg-3 col-form-label text-white" > Fax </label>                    
+                                      <div class=" col-sm-12 col-md-6 col-lg-6">
+                                          <input  type="tel" class="form-control bg-light text-dark" pattern="[0-9]{7}" style="color: white;" name="sfax" onclick="sphone_number()" onmouseout="sfax_number()" id="sfx"> 
+                                          <label for="" id="sfax_label"></label>     
+                                      </div>
+                                  </div>
+  
+                              </div>
+                          </div>
+                      </div>
+                  </fieldset5>
+  
+                  <!---------------------Address  Section End -------------->
+  
+  
+                  <!------------------ Contact Person Section Start------------- -->
+  
+                  <fieldset6 id="contact_person" style="display: none;" >
+                      <div class="row">
+                          <div class="col-sm-12 ">
+                              
+                              <div class="table-responsive">
+                              
+                                  <table id="tbl" class="table text-white" style="background-color: rgba(250, 227, 198, 0.5);">
+                                      <thead>
+                                          <tr>
+                                              
+                                          <th>Salutation</th>
+                                          <th>First Name</th>
+                                          <th>Last Name</th>
+                                          <th>Email Address</th>
+                                          <th >Work Phone <br><span id="twph_label"></span></th>
+                                          <th >Mobile <br><span id="tlabel"></span>    </th>
+                                          <th >Skype Name/No</th>
+                                          <th >Designation</th>
+                                          <th >Department</th>
+                                          <th>Action</th>
+  
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <tr>
+                                      <td><select name="salutation[]" class="form-control bg-transparent border-1 text-white"  id="PLACE" >
+                                          <option class="text-dark"  >Select</option>
+                                          <option class="text-dark" value="Mr" >Mr.</option>
+                                          <option class="text-dark" value="Mrs">Mrs.</option>
+                                          <option class="text-dark" value="Ms">Ms.</option>
+                                          <option class="text-dark" value="Miss">Miss.</option>
+                                          <option class="text-dark" value="Dr">Dr.</option>
+                                          </select></td>
+                                      <td><input type="text" class=" form-control border-1 bg-transparent text-white"    name="first_name[]"  ></td>
+                                      <td><input type="text"class="form-control border-1 bg-transparent text-white"  name="last_name[]" /></td>
+                                      <td>
+                                          <input type="text" class="form-control border-1 bg-transparent text-white" name="email[]" />
+                                          
+                                          
+                                      </td>
+                                      
+                                      <td>
+                                          <input type="tel" pattern="[0-9]{7}" class="form-control border-1 bg-transparent text-white"  id="twphone" name="wphone[]"/>
+                                         
+                                      </td>
+                                      <td>
+                                          <input type="tel" pattern="[0-9]{10}"  class="form-control border-1 bg-transparent text-white"  id="tmobile" onclick="sample1()"   name="mobile[]" />
+                                          
+                                      </td>
+                                      <td><input type="number" class="form-control border-1 bg-transparent text-white"  onclick="sample()" name="skype[]" /></td>
+                                      <td><input type="text" class="form-control border-1 bg-transparent text-white"  name="designation[]" /></td>
+                                      <td><input type="text" class="form-control border-1 bg-transparent text-white"  name="department[]" /></td>
+                                      <td><button type="button" class="btn btn-danger" onclick="deleteContact(this)">Delete</button></td>
+                                      </tr>
+                                  </tbody>
+                                  </table>
+                                  
+                              </div>
+                              
+                              <div class="button add_another mt-3 ">
+                                  <i class="fa fa-user-plus" aria-hidden="true"></i> 
+                                  <span class="text-small" style="margin-left: 0.30rem;">
+                                      Add Contact Person
+                                  </span>
+                              </div>
+                                 
+                              
+                          </div>
+                          
+                      </div>
+  
+                  </fieldset6>
+  
+                  <!---------------------Contact Person Section End -------------->
+  
+  
+                  <!------------------ Remark Section Start------------- -->
+  
+                  <fieldset7 class="remarks" style="display: none;">
+                      <div class="row">
+                          <div class="col-sm-12 col-md-8 col-lg-8">
+                              <div class="form-group row mt-4">
+                                  <div class=" col-sm-12 col-md-6 col-lg-6">
+                                      <textarea class="bg-light w-100" style="border: none;color: rgb(5, 5, 5);"   rows="5" name="remark"></textarea>
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="col-sm-12 col-md-2 col-lg-2"></div>
+                      </div>
+  
+                  </fieldset7>
+  
+                  <!---------------------Remark Section End -------------->
+                  
+                  <div class="row mt-5">
+                      <div class="col-sm-12 col-md-2 col-lg-2 mt-3">
+                        <!---<button class="btn save_btn rounded-pill text-grey w-25 my-1 mx-1 btn-outline-warning" type="button" id="saveNewItem">Save</button>---->
+                          <button type="button" id="newCustomerSave" class="btn btn-outline-warning form-control bg-warning text-dark" style="font-weight: bold;" >Save</button>
+                         
+                      </div>
+                   
+                      
+                      <div class=" col-sm-12 col-md-2 col-lg-2 mt-3">
+                          <button type="button" class="form-control bg-warning text-dark" style="font-weight: bold;" data-dismiss="modal">Cancel</button>
+                         
+                      </div> 
+                  </form>
+  
+  
+                  </div>
+  
+         
+  
+             
+        
+                 
+              <!--------------- Payments Seciton Start ----------------->
+  
+              <div class="modal fade" id="newpayment">
+                  <div class="modal-dialog modal-md">
+                  <div class="modal-content" style="background: rgb(32, 35, 37);border-radius: 20px;">
+                      <div class="modal-header " style="background: rgb(32, 35, 37);">
+                          <h3 class="m-3 text-uppercase" style="color: white;">Add Payment Term</h3>
+                         
+                      </div>
+                      <div class="modal-body" style="background: rgb(32, 35, 37);">
+                      <div class="card p-3 m-3" style="background-color: #141414a2;">
+                          <form action="" method="post" class="needs-validation" novalidate autocomplete="off" id="paymentterms" >
+                          
+              
+              
+                          <div class="row mt-2">
+              
+                              <div class="col-lg-12 col-md-12 col-sm-12 mt-2">
+                                  <label for="termname" style="color: white">Term Name *</label>
+  
+                              <input type="text " class="form-control text-dark bg-light mt-2" id="tname" name="term_name" autocapitalize="characters" required> 
+                              <span id="message-id" class="mt-1 text-danger" style="font-size: 10px;"></span> 
+                              <span id="success-message-id" class=" mt-1 text-success" style="font-size: 10px;"></span>    
+                              </div>
+              
+                              <div class="col-lg-12 col-md-12 col-sm-12 mt-2">
+                                  <label for="termdays" style="color: white">Number of Days *</label>
+  
+                              <input type="number" class="form-control text-dark bg-light mt-2" id="tdays" name="term_days" autocapitalize="characters" required>
+                              </div>
+                              <div class="col-md-2 mt-2"></div>
+              
+                          </div>
+                          
+                          <div class="row mt-5">
+                              <div class="col-lg-12 col-md-12 col-sm-12">
+                              <div class="d-flex">
+                                  <button class="btn save_btn rounded-pill text-grey w-50 my-1 mx-1 btn-outline-warning "
+                                  type="submit" onclick="termadd()"  data-dismiss="modal" id="term_Save">Save
+                                  </button> 
+                                  
+              
+                                  <button type="button" class="close btn save_btn rounded-pill text-grey w-50 my-1 mx-1 btn-outline-warning" 
+                                  data-dismiss="modal" aria-label="Close">
+                                      <span aria-hidden="true">Cancel</span>
+                                  </button>
+                              </div>
+                              </div>
+                          </div>
+                          </form>
+  
+    
+  
+                      </div></div></div>
+                     
+                 
+                  
+                      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 <!-- New Account Modal -->
@@ -2427,12 +3278,12 @@ input {
 
 
                     <script>
-                        function submitForm() {
+                        $(document).on("click", "#newCustomerSave", function(){
                             var formData = new FormData(document.getElementById('myForm'));
                         
                             $.ajax({
-                                url: "{% url 'challan_add_customer' %}",
                                 type: "POST",
+                                url: "{% url 'challannewSalesCustomerAjax' %}",
                                 data: formData,
                                 processData: false,
                                 contentType: false,
@@ -2440,14 +3291,21 @@ input {
                                     "X-CSRFToken": "{{ csrf_token }}"
                                 },
                                 success: function(response) {
-                                    if (response.message === 'success') {
+                                    if (response.status === 'success') {
                                         alert('Customer added successfully!');
                                         document.getElementById("myForm").reset();
                                         $("#img").attr("src", "");
-                                        $('#newCustomer').modal('hide');
+                                        $('#addEmployeeModal').modal('hide');
                         
-                                        // Reload dropdown options
                                         reloadItem();
+                                    } else if (response.status === 'error') {
+                                        if (response.message === 'empnum_exists') {
+                                            alert('Customer with this number already exists!');
+                                        } else {
+                                            alert('Error adding customer: ' + response.message);
+                                        }
+                                    } else {
+                                        alert('Unknown response status. Please try again.');
                                     }
                                 },
                                 error: function(xhr, status, error) {
@@ -2455,11 +3313,11 @@ input {
                                     alert('Error adding customer. Please try again.');
                                 }
                             });
-                        }
+                        });
                         
                         function reloadItem() {
                             $.ajax({
-                                url: "{% url 'challan_customer_dropdown' %}",
+                                url: "{% url 'challangetCustomersAjax' %}",
                                 type: "GET",
                                 dataType: "json",
                                 success: function(data) {
@@ -2481,7 +3339,7 @@ input {
                                 }
                             });
                         }
-                        </script>
+                        </script> 
                    
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" ></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" ></script>
@@ -3280,7 +4138,7 @@ $('#mphone').on('input', function() {
 });
   function fetchCustomerData(customerId) {
       $.ajax({
-          url: '/get_customer_data/' + customerId + '/',
+          url: '/challan_get_customer_data/' + customerId + '/',
           type: 'GET',
           success: function(data) {
               document.getElementById('customerEmail').value = data.email;
@@ -3362,7 +4220,7 @@ $('#mphone').on('input', function() {
     
     function fetchitemData(itemId) {
       $.ajax({
-          url: '/get_item_data/' + itemId + '/',
+          url: '/challan_get_item_data/' + itemId + '/',
           type: 'GET',
           success: function(data) {
               console.log('Received item data:', data);
@@ -3410,6 +4268,11 @@ $('#mphone').on('input', function() {
         var quantity = parseFloat(row.querySelector('.item-quantity').value);
         var rate = parseFloat(data.rate);
         var discount = parseFloat(row.querySelector('.item-discount').value);
+        if (discount === '' || isNaN(parseFloat(discount))) {
+        discount = 0; // Set discount to 0 if it's empty or not a valid number
+    } else {
+        discount = parseFloat(discount); // Parse discount as float if it's a valid number
+    }
 
         var availableStock = stock - quantity;
         row.querySelector('.availableStock').innerText = 'Available Stock: ' + availableStock;
@@ -3522,7 +4385,8 @@ $('#mphone').on('input', function() {
             availableStockLabel.css('color', 'orange');
         }
     } else {
-        availableStockLabel.text('Availble stock :Not Available');
+        availableStockLabel.hide();
+        availableStockLabel.text('Stock quantity is not available');
         availableStockLabel.css('color', 'orange');
     }
 }
@@ -3636,6 +4500,11 @@ $('#mphone').on('input', function() {
       var quantity = parseFloat(row.querySelector('.item-quantity').value);
       var rate = parseFloat(row.querySelector('.item-rate').value);
       var discount = parseFloat(row.querySelector('.item-discount').value);
+      if (discount === '' || isNaN(parseFloat(discount))) {
+        discount = 0; // Set discount to 0 if it's empty or not a valid number
+    } else {
+        discount = parseFloat(discount); // Parse discount as float if it's a valid number
+    }
   
       // Calculate the amount
       var amount = (quantity * rate) - discount;
@@ -3713,7 +4582,7 @@ function updateGSTFields(totalTaxAmount) {
   
               if (itemId) {
                   $.ajax({
-                      url: '/get_item_data/' + itemId + '/',
+                      url: '/challan_get_item_data/' + itemId + '/',
                       type: 'GET',
                       success: function(data) {
                           console.log('Received item data:', data);
@@ -3851,6 +4720,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var quantities = document.querySelectorAll('.item-quantity');
         var rates = document.querySelectorAll('.item-rate');
         var discounts = document.querySelectorAll('.item-discount');
+        
         var amountInputs = document.querySelectorAll('.item-amount');
 
         // Iterate over each input element
@@ -3858,6 +4728,14 @@ document.addEventListener('DOMContentLoaded', function() {
             var quantity = parseFloat(quantities[i].value);
             var rate = parseFloat(rates[i].value);
             var discount = parseFloat(discounts[i].value);
+            var discount = discounts[i].value.trim(); // Trim to remove leading/trailing spaces
+
+        // Check if the discount field is empty or contains non-numeric characters
+        if (discount === '' || isNaN(parseFloat(discount))) {
+            discount = 0; // Set discount to 0 if it's empty or not a valid number
+        } else {
+            discount = parseFloat(discount); // Parse discount as float if it's a valid number
+        }
 
             var amount = (quantity * rate) - discount;
             amountInputs[i].value = amount.toFixed(2);
