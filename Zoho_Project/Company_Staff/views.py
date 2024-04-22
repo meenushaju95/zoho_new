@@ -16325,25 +16325,23 @@ def challannewSalesCustomerAjax(request):
 def challangetCustomersAjax(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
-        log_details= LoginDetails.objects.get(id=log_id)
+        log_details = LoginDetails.objects.get(id=log_id)
         if log_details.user_type == 'Company':
-            com = CompanyDetails.objects.get(login_details = log_details)
+            com = CompanyDetails.objects.get(login_details=log_details)
         else:
-            com = StaffDetails.objects.get(login_details = log_details).company
+            com = StaffDetails.objects.get(login_details=log_details).company
 
-        options = {}
-        option_objects = Customer.objects.filter(company = com, customer_status = 'Active')
+        options = []
+        option_objects = Customer.objects.filter(company=com, customer_status='Active')
         for option in option_objects:
-            options[option.id] = [  option.first_name  +' '+ option.last_name]
+            options.append({
+                'id': option.id,
+                'name': option.first_name + ' ' + option.last_name,
+            })
 
-        return JsonResponse(options)
+        return JsonResponse(options, safe=False)
     else:
         return redirect('/')
-
-           
-
-
-            
                
        
     
@@ -17943,23 +17941,28 @@ def challangetAllItemsAjax(request):
         log_details = LoginDetails.objects.get(id=log_id)
         if log_details.user_type == 'Company':
             company=CompanyDetails.objects.get(login_details=log_details)
-            options = {}
-            option_objects =Items.objects.filter(company=company,activation_tag='Active')
+            options = []
+            option_objects = Items.objects.filter(company=company, activation_tag='Active')
             for option in option_objects:
-                full_name = f"{option.item_name} "
-                options[option.id] = full_name
+                # Append a dictionary for each item to the options list
+                options.append({
+                    'id': option.id,
+                    'name': option.item_name,
+                })
 
-            return JsonResponse(options)
+            return JsonResponse(options,safe=False)
             
         if log_details.user_type=='Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
-            options = {}
-            option_objects = Items.objects.filter(company=staff.company,activation_tag='Active')
+            options = []
+            option_objects = Items.objects.filter(company=company, activation_tag='Active')
             for option in option_objects:
-                full_name = f"{option.item_name} "
-                options[option.id] = full_name
-
-            return JsonResponse(options)
+                # Append a dictionary for each item to the options list
+                options.append({
+                    'id': option.id,
+                    'name': option.item_name,
+                })
+            return JsonResponse(options,safe=False)
            
 
 

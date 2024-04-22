@@ -429,7 +429,7 @@ input {
                     
                 </td>
                 <td><input type="text" id="hsn" name="hsn[]" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" readonly></td>
-                <td><input type="number" id="quantity" class="quantity" name="quantity[]" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" ><label id="availableStock" class="availableStock" style="color: orange;"></label></td>
+                <td><input type="number" id="quantity" class="quantity" name="quantity[]" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" ><label id="availableStock" class="availablestock" style="color: orange;"></label></td>
                 <td><input type="number" id="rate" name="rate[]" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;" readonly></td>
                 <td><input type="number" id="discount" name="discount[]" value="0" style="width: 100%;background-color: black;border: 1px solid white;border-radius: 8px;"></td>
                 <td>
@@ -2499,8 +2499,13 @@ input {
                                     console.error(xhr.responseText);
                                     alert('Error adding customer. Please try again.');
                                 }
+                                
                             });
+                            
                         });
+                        if($('#newCustomer').hasClass('show')){
+                        $('#newCustomer .close_item_modal').click()
+                        }
                         
                         function reloadItem() {
                             $.ajax({
@@ -2511,14 +2516,24 @@ input {
                                     var dropdown = $('#customerName');
                                     dropdown.empty();
                         
-                                    $.each(data, function(key, value) {
-                                        dropdown.append($('<option></option>').attr('value', key).text(value));
-                                    });
-                                    dropdown.css({
-                                        'font-size': '16px',
-                                        'color': 'white',
-                                        // You can set the background color here
-                                    });
+                                    data.forEach(function(customer) {
+                dropdown.append($('<option></option>').attr('value', customer.id).text(customer.name));
+            });
+            
+            dropdown.css({
+                'font-size': '16px',
+                'color': 'white',
+              
+            });
+
+            dropdown.val(null);
+
+           
+            var lastOption = dropdown.find('option:last');
+            lastOption.prop('selected', true);
+            
+            // Trigger change event after updating dropdown
+            fetchCustomerData(lastOption.val());
                                 },
                                 error: function(xhr, status, error) {
                                     console.error(xhr.responseText);
@@ -2526,7 +2541,7 @@ input {
                                 }
                             });
                         }
-                        </script>
+                            </script>
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" ></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" ></script>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
@@ -3375,7 +3390,7 @@ $('#mphone').on('input', function() {
     
         if (quantity >= 0 && itemId) {
             fetchitemData(itemId);
-            updateavailableStock(data.stock,data.track)
+            updateavailableStock(stock,track)
             calculateTaxes(data)
         } else {
             clearStock();
@@ -3409,10 +3424,10 @@ $('#mphone').on('input', function() {
   
               updateTaxCalculation(data);
               calculateTaxes(data)
-              if (data.track === 1) {
-                updateavailableStock(data.stock, data.track); 
-            }
-              calculateTaxes(data)
+               
+              updateavailableStock(data.stock, data.track); 
+            
+              
               
   
               $('.item-select').select2('close');
@@ -3451,13 +3466,13 @@ $('#mphone').on('input', function() {
       console.log(track)
       var availbalestock = stock-quantity
       
-      if (track == 1) {
+      if (track === 1) {
         document.getElementById('availableStock').innerText = 'Available Stock: ' + availbalestock;
-    document.getElementById('availableStock').style.display = 'inline';
+        document.getElementById('availableStock').style.display = 'inline';
    
-} else {
-    document.getElementById('availableStock').innerText = '';
-    document.getElementById('availableStock').style.display = 'none';
+}     else {
+        document.getElementById('availableStock').innerText = '';
+        document.getElementById('availableStock').style.display = 'none';
 }
       if (quantity > stock) {
         alert("Quantity entered is greater than available stock.");
@@ -3472,21 +3487,22 @@ $('#mphone').on('input', function() {
     }
      
       var amount = (quantity * rate) - discount;
-      // Set amount to calculated value or '0.00' if NaN or not finite
+      
       var amountDisplay = isNaN(amount) || !isFinite(amount) ? '' : amount.toFixed(2);
       
-      // Get NodeList of elements with class 'item-amount'
+     
       var itemAmountElements = document.querySelectorAll('.item-amount');
       
       // Loop through each element and set its value
       itemAmountElements.forEach(function(element) {
           element.value = amountDisplay;
       });
+     
+      
       
      
   }
   
-      
   
       
     
@@ -3676,8 +3692,9 @@ function updateGSTField(totalTaxAmount) {
                     $(row).find('.item-hsn').val(data.hsn);
                     $(row).find('.item-rate').val(data.rate);
                     $(row).find('.item-tax').val(calculateTax(data));
-
+                    
                     updateAvailableStock(row, data.stock,data.track);
+                    
                     calculateTaxes(data);
                 },
                 error: function(error) {
@@ -3701,27 +3718,20 @@ function updateGSTField(totalTaxAmount) {
     var quantityInput = $(row).find('.item-quantity');
     var quantity = parseFloat(quantityInput.val());
     var availableStockLabel = $(row).find('.availableStock');
+    var availableStock = Math.max(stock - quantity, 0);
 
     if (track === 1) {
-        if (!isNaN(quantity) && quantity >= 0) {
-            var availableStock = Math.max(stock - quantity, 0);
-            availableStockLabel.text('Available Stock: ' + availableStock);
-            availableStockLabel.css('color', 'orange');
-            if (quantity > stock) {
-                availableStockLabel.css('color', 'red'); // Insufficient stock
-                alert("Quantity entered is greater than available stock.");
-            } 
-        } else {
-            availableStockLabel.text('Available Stock: ' + stock);
-            availableStockLabel.css('color', 'orange');
-        }
+        availableStockLabel.text('Available Stock: ' + availableStock);
+        availableStockLabel.css('display', 'inline');
     } else {
-        availableStockLabel.hide();
-        availableStockLabel.text('stock quanity is not available');
-        availableStockLabel.css('color', 'orange');
+        availableStockLabel.text('');
+        availableStockLabel.css('display', 'none');
+    }
+
+    if (quantity > stock) {
+        alert("Quantity entered is greater than available stock.");
     }
 }
-
     // Function to clear item info fields for the row
     function clearItemInfo(row) {
         $(row).find('.item-hsn').val('');
@@ -3737,10 +3747,12 @@ function updateGSTField(totalTaxAmount) {
     // Add event listener for item select change using event delegation
     $(document).on("change", ".item-select", function() {
         fetchItemData(this);
+       
+
     });
 
     
-    $(document).on("input", ".item-quantity, .item-discount", function() {
+    $(document).on("input", ".item-quantity, #discount", function() {
         var row = $(this).closest('tr');
         fetchItemData(row.find('.item-select'));
     });
@@ -3961,7 +3973,7 @@ function updateGSTField(totalTaxAmount) {
               var quantity = parseFloat(quantityInput.val());
               var availableStockLabel = $(row).find('.availableStock');
   
-              if (!isNaN(quantity) && quantity >= 0) {
+              if (!isNaN(quantity) && quantity > 0) {
                   var availableStock = Math.max(stock - quantity, 0);
                   availableStockLabel.text('Available Stock: ' + availableStock);
                   availableStockLabel.css('color', 'orange');
@@ -4450,14 +4462,29 @@ function reloadItems() {
             var dropdown = $('.item-select');
             dropdown.empty();
             
-            $.each(data, function(key, value) {
-                dropdown.append($('<option></option>').attr('value', key).text(value));
+            data.forEach(function(item) {
+                dropdown.append($('<option></option>').attr('value', item.id).text(item.name));
+                
+                
             });
+            
             dropdown.css({
                 'font-size': '16px',
-                'color': 'white'
-                // You can set the background color here
+                'color': 'white',
+              
             });
+
+            dropdown.val(null);
+
+           
+            var lastOption = dropdown.find('option:last');
+            lastOption.prop('selected', true);
+            
+           
+            fetchitemData(lastOption.val());
+
+
+
         },
         error: function(xhr, status, error) {
             console.error(xhr.responseText);

@@ -3324,14 +3324,24 @@ input {
                                     var dropdown = $('#customerName');
                                     dropdown.empty();
                         
-                                    $.each(data, function(key, value) {
-                                        dropdown.append($('<option></option>').attr('value', key).text(value));
-                                    });
-                                    dropdown.css({
-                                        'font-size': '16px',
-                                        'color': 'white',
-                                        // You can set the background color here
-                                    });
+                                    data.forEach(function(customer) {
+                dropdown.append($('<option></option>').attr('value', customer.id).text(customer.name));
+            });
+            
+            dropdown.css({
+                'font-size': '16px',
+                'color': 'white',
+              
+            });
+
+            dropdown.val(null);
+
+           
+            var lastOption = dropdown.find('option:last');
+            lastOption.prop('selected', true);
+            
+            // Trigger change event after updating dropdown
+            fetchCustomerData(lastOption.val());
                                 },
                                 error: function(xhr, status, error) {
                                     console.error(xhr.responseText);
@@ -4451,7 +4461,7 @@ $('#mphone').on('input', function() {
                   {% endfor %}
               </select>
             
-              <button type="button" id="newwItem" data-toggle="modal" data-target="#newwItem" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" >+</button>
+              <button type="button" id="newwItem" data-target="#newItem" data-toggle="modal" style="border: 1px solid orange; border-radius: 5px; width: 50px; height: 40px;" >+</button>
           </div>
       `;
       
@@ -4590,7 +4600,7 @@ function updateGSTFields(totalTaxAmount) {
                           $(row).find('.item-rate').val(data.rate);
                           $(row).find('.item-tax').val(calculateTax(data));
   
-                          updateAvailableStock(row, data.stock);
+                          updateAvailableStock(row, data.stock,data.track);
                           calculateTaxes(data);
                           $('#item'+ index).select2('close');
                       },
@@ -4612,20 +4622,24 @@ function updateGSTFields(totalTaxAmount) {
           }
   
           // Function to update available stock for the row
-          function updateAvailableStock(row, stock) {
-              var quantityInput = $(row).find('.item-quantity');
-              var quantity = parseFloat(quantityInput.val());
-              var availableStockLabel = $(row).find('.availableStock');
-  
-              if (!isNaN(quantity) && quantity >= 0) {
-                  var availableStock = Math.max(stock - quantity, 0);
-                  availableStockLabel.text('Available Stock: ' + availableStock);
-                  availableStockLabel.css('color', 'orange');
-              } else {
-                  availableStockLabel.text('Available Stock: ' + stock);
-                  availableStockLabel.css('color', 'orange');
-              }
-          }
+          function updateAvailableStock(row, stock,track) {
+            var quantityInput = $(row).find('.item-quantity');
+    var quantity = parseFloat(quantityInput.val());
+    var availableStockLabel = $(row).find('.availableStock');
+    var availableStock = Math.max(stock - quantity, 0);
+
+    if (track === 1) {
+        availableStockLabel.text('Available Stock: ' + availableStock);
+        availableStockLabel.css('display', 'inline');
+    } else {
+        availableStockLabel.text('');
+        availableStockLabel.css('display', 'none');
+    }
+
+    if (quantity > stock) {
+        alert("Quantity entered is greater than available stock.");
+    }
+}
   
           // Function to clear item info fields for the row
           function clearItemInfo(row) {
@@ -5126,14 +5140,25 @@ function reloadItems() {
             var dropdown = $('.item-select');
             dropdown.empty();
             
-            $.each(data, function(key, value) {
-                dropdown.append($('<option></option>').attr('value', key).text(value));
+            data.forEach(function(item) {
+                dropdown.append($('<option></option>').attr('value', item.id).text(item.name));
+                
+                
             });
+            
             dropdown.css({
                 'font-size': '16px',
-                'color': 'white'
-                // You can set the background color here
+                'color': 'white',
+              
             });
+
+            
+            
+           
+           
+
+
+
         },
         error: function(xhr, status, error) {
             console.error(xhr.responseText);
