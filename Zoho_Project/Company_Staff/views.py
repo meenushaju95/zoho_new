@@ -16103,14 +16103,21 @@ def delivery_challan(request):
         
         comp_payment_terms=Company_Payment_Term.objects.filter(company=comp_details)
         price_lists=PriceList.objects.filter(company=comp_details,type='Sales',status='Active')
-        last_reference = Delivery_challan.objects.filter(company=comp_details).last()
+        
         units = Unit.objects.filter(company=comp_details)
         accounts=Chart_of_Accounts.objects.filter(company=comp_details)
+        last_reference = Delivery_challan_reference.objects.filter(company = comp_details).order_by('-id').first()
 
-        if last_reference:
-            next_reference_number = last_reference.reference_number + 1
-        else:
-            next_reference_number = 1
+        new_number = int(last_reference.reference_number) + 1 if last_reference else 1
+        if Delivery_challan_reference.objects.filter(company = comp_details).exists():
+            deleted = Delivery_challan_reference.objects.get(company = comp_details)
+            
+            if deleted:
+                while int(deleted.reference_number) >= new_number:
+                    new_number+=1
+
+
+        
         last_challan = Delivery_challan.objects.filter(company=comp_details).last()
         trm = Company_Payment_Term.objects.filter(company = comp_details)
 
@@ -16130,7 +16137,7 @@ def delivery_challan(request):
             next_challan_number = f'{prefix}{next_numeric_part}'
         else:
             next_challan_number = ''
-        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':next_reference_number,'challan_number':next_challan_number,'units': units,'accounts':accounts,'pTerms':trm}) 
+        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':new_number,'challan_number':next_challan_number,'units': units,'accounts':accounts,'pTerms':trm}) 
      
 
        
@@ -16404,6 +16411,7 @@ def challan_term_dropdown(request):
             
         if log_details.user_type=='Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
+            company=staff.company
             options = {}
             option_objects = Company_Payment_Term.objects.filter(company=staff.company,status='Active')
             for option in option_objects:
@@ -16638,13 +16646,7 @@ def add_delivery_challan(request):
                             itemsTable.save()
                             item_instance.current_stock -= int(itemsNew[2])
                             item_instance.save()
-                    dc_reference = Delivery_challan_reference(
-                        login_details=log_details,
-                        company=comp_details,
-                        reference_number=ref_number
-                    )
-                    print('afer afer loop')
-                    dc_reference.save()
+                    
 
                     current_date = date.today()
                     dc_history = Delivery_challan_history(
@@ -16773,13 +16775,7 @@ def add_delivery_challan(request):
                             itemsTable.save()
                             item_instance.current_stock -= int(itemsNew[2])
                             item_instance.save()
-                    dc_reference = Delivery_challan_reference(
-                        login_details=log_details,
-                        company=comp_details,
-                        reference_number=ref_number
-                    )
-                    print('afer afer loop')
-                    dc_reference.save()
+                    
 
                     current_date = date.today()
                     dc_history = Delivery_challan_history(
@@ -17002,13 +16998,7 @@ def edit_challan(request,id):
                                         itemsTable.save()
                                         item_instance.current_stock -= int(itemsNew[2])
                                         item_instance.save()
-                        dc_reference = Delivery_challan_reference(
-                            login_details=log_details,
-                            company=comp_details,
-                            reference_number=ref_number
-                        )
                         
-                        dc_reference.save()
 
                         current_date = date.today()
                         dc_history = Delivery_challan_history(
@@ -17062,9 +17052,29 @@ def delete_challan_comment(request,id):
     return redirect('challan_overview',id=comment.delivery_challan.id )  
 
 def challan_delete(request,id):
-    challan = Delivery_challan.objects.get(id=id)  
-    challan.delete()   
-    return redirect('challan_list')
+     if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        challan = Delivery_challan.objects.get(id=id)  
+        for i in Delivery_challan_item.objects.filter(delivery_challan = challan):
+                item = Items.objects.get(id = i.item.id)
+                item.current_stock += i.quantity
+                item.save()
+            
+        Delivery_challan_item.objects.filter(delivery_challan = challan).delete()
+        if Delivery_challan_reference.objects.filter(company = com).exists():
+                deleted = Delivery_challan_reference.objects.get(company = com)
+                if int(challan.reference_no) > int(deleted.reference_number):
+                    deleted.reference_number = challan.reference_no
+                    deleted.save()
+        else:
+                Delivery_challan_reference.objects.create(company = com, login_details = com.login_details, reference_number = challan.reference_no)
+        challan.delete()   
+        return redirect('challan_list')   
 
 def challan_attach_pdf(request,id):
     if request.method == 'POST':
@@ -17848,11 +17858,11 @@ def challangetUnitsAjax(request):
         else:
             com = StaffDetails.objects.get(login_details = log_details).company
 
-            options = {}
-            option_objects = Unit.objects.filter(company=com)
-            for option in option_objects:
+        options = {}
+        option_objects = Unit.objects.filter(company=com)
+        for option in option_objects:
                 options[option.id] = [option.id,option.unit_name]
-            return JsonResponse(options)
+        return JsonResponse(options)
 
 def challancreateNewItemAjax(request):
     if 'login_id' in request.session:
@@ -17954,6 +17964,7 @@ def challangetAllItemsAjax(request):
             
         if log_details.user_type=='Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
+            company = staff.company
             options = []
             option_objects = Items.objects.filter(company=company, activation_tag='Active')
             for option in option_objects:

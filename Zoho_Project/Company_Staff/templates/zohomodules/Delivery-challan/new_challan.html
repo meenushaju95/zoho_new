@@ -935,7 +935,7 @@ input {
                   <h3  class="mb-4 mt-2  " style="font-size: 1.40rem;color: rgb(230, 171, 45);">New Customer</h3>
               
              
-              <form  method="post" action="" id="myForm" enctype="multipart/form-data" class="mb-3" onsubmit=" submitForm();event.preventDefault();">
+              <form  method="post" action="" id="myForm" enctype="multipart/form-data" class="mb-3" onsubmit=" submitForm()">
                   {% csrf_token %}
           
                   <div class="form-group row mt-4">
@@ -1718,6 +1718,7 @@ input {
                               </div>
                           </div>
                           </form>
+                      </div></div></div></div></div></div></div></div></div></div></div>
   
       
       
@@ -1732,7 +1733,7 @@ input {
   
   
   
-                      </div></div></div>
+                     
                      
                  
                   
@@ -2481,8 +2482,8 @@ input {
                                     if (response.status === 'success') {
                                         alert('Customer added successfully!');
                                         document.getElementById("myForm").reset();
-                                        $("#img").attr("src", "");
-                                        $('#addEmployeeModal').modal('hide');
+                                       
+                                        
                         
                                         reloadItem();
                                     } else if (response.status === 'error') {
@@ -2503,9 +2504,7 @@ input {
                             });
                             
                         });
-                        if($('#newCustomer').hasClass('show')){
-                        $('#newCustomer .close_item_modal').click()
-                        }
+                       
                         
                         function reloadItem() {
                             $.ajax({
@@ -3063,7 +3062,7 @@ function updateOutputFields() {
         
     }
 </script>
-<!---------------------------------------------------
+<!--------------------------------------------------
 <script>
     var shouldClosePaymentModal = false; 
     
@@ -3116,7 +3115,9 @@ function updateOutputFields() {
                     name: $("#tname").val(),
                     days: $("#tdays").val(),
                     csrfmiddlewaretoken: '{{ csrf_token }}'
+                    
                 }
+                
             });
 
             // Handle success response
@@ -3128,6 +3129,7 @@ function updateOutputFields() {
             $.each(response.payment_list, function(index, pay_terms) {
                 paytearmSelect.append('<option value="' + pay_terms.id + '">' + pay_terms.name + '</option>');
             });
+            paytearmSelect.val(response.payment_list[response.payment_list.length - 1].id);
             
             // Close the inner modal manually
             $('#newpayment').modal('hide');
@@ -3462,21 +3464,27 @@ $('#mphone').on('input', function() {
   function updateavailableStock(stock, track) { // Accept data as a parameter
    
       var quantity = parseFloat(document.getElementById('quantity').value);
-      
+    
       console.log(track)
       var availbalestock = stock-quantity
+    
       
-      if (track === 1) {
-        document.getElementById('availableStock').innerText = 'Available Stock: ' + availbalestock;
-        document.getElementById('availableStock').style.display = 'inline';
-   
-}     else {
-        document.getElementById('availableStock').innerText = '';
-        document.getElementById('availableStock').style.display = 'none';
-}
-      if (quantity > stock) {
+if (track === 1) {
+    if (quantity > stock) {
         alert("Quantity entered is greater than available stock.");
     }
+    document.getElementById('availableStock').innerText = 'Available Stock: ' + availbalestock;
+    document.getElementById('availableStock').style.display = 'inline';
+} else {
+   
+    document.getElementById('availableStock').innerText = '';
+    document.getElementById('availableStock').style.display = 'none';
+}
+  
+
+  }
+  
+
       
       var rate = parseFloat(data.rate);
       var discount = parseFloat(document.getElementById('discount').value);
@@ -3501,7 +3509,7 @@ $('#mphone').on('input', function() {
       
       
      
-  }
+  
   
   
       
@@ -3717,20 +3725,25 @@ function updateGSTField(totalTaxAmount) {
     function updateAvailableStock(row, stock, track) {
     var quantityInput = $(row).find('.item-quantity');
     var quantity = parseFloat(quantityInput.val());
+    
     var availableStockLabel = $(row).find('.availableStock');
     var availableStock = Math.max(stock - quantity, 0);
-
+ 
     if (track === 1) {
+        if (quantity > stock) {
+        alert("Quantity entered is greater than available stock.");
+    }
         availableStockLabel.text('Available Stock: ' + availableStock);
         availableStockLabel.css('display', 'inline');
     } else {
+        
         availableStockLabel.text('');
         availableStockLabel.css('display', 'none');
     }
 
-    if (quantity > stock) {
-        alert("Quantity entered is greater than available stock.");
-    }
+
+
+
 }
     // Function to clear item info fields for the row
     function clearItemInfo(row) {
@@ -3763,7 +3776,9 @@ function updateGSTField(totalTaxAmount) {
         $('.item-select').each(function() {
             fetchItemData(this);
         });
+    
     });
+
 
 });
 
@@ -3946,7 +3961,7 @@ function updateGSTField(totalTaxAmount) {
                           $(row).find('.item-rate').val(data.rate);
                           $(row).find('.item-tax').val(calculateTax(data));
   
-                          updateAvailableStock(row, data.stock);
+                          updateAvailableStock(row, data.stock,data.track);
                           calculateTaxes(data);
                           $('#item'+ index).select2('close');
                       },
@@ -3968,21 +3983,7 @@ function updateGSTField(totalTaxAmount) {
           }
   
           // Function to update available stock for the row
-          function updateAvailableStock(row, stock) {
-              var quantityInput = $(row).find('.item-quantity');
-              var quantity = parseFloat(quantityInput.val());
-              var availableStockLabel = $(row).find('.availableStock');
-  
-              if (!isNaN(quantity) && quantity > 0) {
-                  var availableStock = Math.max(stock - quantity, 0);
-                  availableStockLabel.text('Available Stock: ' + availableStock);
-                  availableStockLabel.css('color', 'orange');
-              } else {
-                  availableStockLabel.text('Available Stock: ' + stock);
-                  availableStockLabel.css('color', 'orange');
-              }
-          }
-  
+          
           // Function to clear item info fields for the row
           function clearItemInfo(row) {
               $(row).find('.item-hsn').val('');

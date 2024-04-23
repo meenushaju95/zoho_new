@@ -8,10 +8,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-...your-integrity-code-here..." crossorigin="anonymous" />
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/openpyxl/3.0.9/openpyxl.min.js"></script>
-
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -105,9 +101,9 @@
                                 <i class="fa fa-sort" aria-hidden="true"></i>
                             </button>
                             <div class="dropdown-menu dropdown-menu-right" style="background-color: black;color: white;">
-                              <button class="dropdown-item" type="button" id="sortAll" style="color: white;">All</button>
-                              <button class="dropdown-item" type="button" id="sortName" style="color: white;">Customer Name</button>
-                              <button class="dropdown-item" type="button" id="sortNo" style="color: white;">DC NO</button>
+                              <button class="dropdown-item" type="button" id="sortAll" >All</button>
+                              <button class="dropdown-item" type="button" id="sortName" >Customer Name</button>
+                              <button class="dropdown-item" type="button" id="sortNo" >DC NO</button>
                             </div>
                           </div>
                     </div>
@@ -124,9 +120,9 @@
                                     <i class="fa fa-filter" aria-hidden="true"></i>
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-right" style="background-color: black;color: white;">
-                                  <button class="dropdown-item" type="button" id="filterAll" style="color: white;">All</button>
-                                  <button class="dropdown-item" type="button" id="filterDraft" style="color: white;">Draft</button>
-                                  <button class="dropdown-item" type="button" id="filterSave" style="color: white;">Save</button>
+                                  <button class="dropdown-item" type="button" id="filterAll" >All</button>
+                                  <button class="dropdown-item" type="button" id="filterDraft" >Draft</button>
+                                  <button class="dropdown-item" type="button" id="filterSave" >Save</button>
                                 </div>
                               </div>
                         <a href="#" class="orange-link mt-5 "  id="importExcel" data-toggle="modal" data-target="#importModal" onclick="excelmodel()"><i class="fa fa-share-square-o" aria-hidden="true"></i> Import</a>
@@ -212,7 +208,15 @@
                             <td>{{dc.customer.customer_email}}</td>
                             <td>{{dc.grand_total}}</td> 
                             <td>{{dc.status}}</td> 
-                            <td>{{dc.balance}}</td> 
+                            <td>
+                                {% if dc.rec_invoice_convert %}
+                                    {{ dc.balance }}
+                                {% elif dc.rinvoice_convert %}
+                                    {{ dc.balance }}
+                                {% else %}
+                                    0.00
+                                {% endif %}
+                            </td> 
                             <td>
                                 {% if dc.rec_invoice_convert %}
                                     <span style="color: orange;">Converted to Recurring Invoice = {{ dc.rec_invoice_convert.rec_invoice_no }}</span>

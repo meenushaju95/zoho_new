@@ -1717,10 +1717,11 @@ input {
                               </div>
                           </div>
                           </form>
+                        </div></div></div></div></div></div></div></div></div></div></div>
   
     
   
-                      </div></div></div>
+                      
                      
                  
                   
@@ -3294,8 +3295,7 @@ input {
                                     if (response.status === 'success') {
                                         alert('Customer added successfully!');
                                         document.getElementById("myForm").reset();
-                                        $("#img").attr("src", "");
-                                        $('#addEmployeeModal').modal('hide');
+                                       
                         
                                         reloadItem();
                                     } else if (response.status === 'error') {
@@ -3925,7 +3925,9 @@ function updateOutputFields() {
                     name: $("#tname").val(),
                     days: $("#tdays").val(),
                     csrfmiddlewaretoken: '{{ csrf_token }}'
+                    
                 }
+                
             });
 
             // Handle success response
@@ -3937,6 +3939,7 @@ function updateOutputFields() {
             $.each(response.payment_list, function(index, pay_terms) {
                 paytearmSelect.append('<option value="' + pay_terms.id + '">' + pay_terms.name + '</option>');
             });
+            paytearmSelect.val(response.payment_list[response.payment_list.length - 1].id);
             
             // Close the inner modal manually
             $('#newpayment').modal('hide');
@@ -3953,9 +3956,6 @@ function updateOutputFields() {
 
     
 </script>
-
-
-
 
 
 
@@ -4286,9 +4286,7 @@ $('#mphone').on('input', function() {
 
         var availableStock = stock - quantity;
         row.querySelector('.availableStock').innerText = 'Available Stock: ' + availableStock;
-        if (quantity > stock) {
-        alert("Quantity entered is greater than available stock.");
-    }
+        
 
         var amount = (quantity * rate) - discount;
         var amountDisplay = isNaN(amount) || !isFinite(amount) ? '' : amount.toFixed(2);
@@ -4348,7 +4346,7 @@ $('#mphone').on('input', function() {
 
         if (itemId) {
             $.ajax({
-                url: '/get_item_data/' + itemId + '/',
+                url: '/challan_get_item_data/' + itemId + '/',
                 type: 'GET',
                 success: function(data) {
                     console.log('Received item data:', data);
@@ -4383,13 +4381,13 @@ $('#mphone').on('input', function() {
 
     if (track === 1) {
         if (!isNaN(quantity) && quantity >= 0) {
+            if (quantity > stock) {
+        alert("Quantity entered is greater than available stock.");
+    }
             var availableStock = Math.max(stock - quantity, 0);
             availableStockLabel.text('Available Stock: ' + availableStock);
             availableStockLabel.css('color', 'orange');
-            if (quantity > stock) {
-                availableStockLabel.css('color', 'red'); // Insufficient stock
-                alert("Quantity entered is greater than available stock.");
-            } 
+          
         } else {
             availableStockLabel.text('Available Stock: ' + stock);
             availableStockLabel.css('color', 'orange');
@@ -4629,6 +4627,9 @@ function updateGSTFields(totalTaxAmount) {
     var availableStock = Math.max(stock - quantity, 0);
 
     if (track === 1) {
+        if (quantity > stock) {
+        alert("Quantity entered is greater than available stock.");
+    }
         availableStockLabel.text('Available Stock: ' + availableStock);
         availableStockLabel.css('display', 'inline');
     } else {
@@ -4636,9 +4637,7 @@ function updateGSTFields(totalTaxAmount) {
         availableStockLabel.css('display', 'none');
     }
 
-    if (quantity > stock) {
-        alert("Quantity entered is greater than available stock.");
-    }
+    
 }
   
           // Function to clear item info fields for the row
