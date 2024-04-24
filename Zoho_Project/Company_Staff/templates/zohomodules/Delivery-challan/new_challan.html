@@ -278,16 +278,20 @@ input {
 
          
           <h3 style="color: white;">New Delivery Challan</h3>
-          {% if messages %}
-          {% for message in messages %}
-              <div class="alert alert-success" role="alert" style="color: orange;background-color: black;border: none;">
-                  {{ message }}
-              </div>
-          {% endfor %}
-      {% endif %}
+          
           <form method="post" action="{% url 'add_delivery_challan' %}" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="container">
+                {% for message in messages %}
+                  <h5>
+                    <div class="alert alert-danger message text-center" style="color: black;" id="alert_danger">
+                      {{ message }}
+                      <a type="button" id="alert_close" class="close" data-dismiss="alert" aria-label="Close" style="float: right;">
+                        <span aria-hidden="true" style="font-size: large; color: #68020F;">&times;</span>
+                      </a>
+                    </div>
+                  </h5>
+                  {% endfor %}
                
               <!-- Left Column -->
               <div class="col-md-6">
@@ -303,7 +307,7 @@ input {
         <option value="{{ customer.id }}">{{ customer.first_name }} {{ customer.last_name }}</option>
     {% endfor %}
 </select>
-<button type="button" id="customer" data-toggle="modal" data-target="#newCustomer" style="border: 1px solid orange;border-radius: 5px;width: 50px;height: 50px;">+</button><br><br>
+<button type="button" id="customer" data-toggle="modal" data-target="#newCustomerModal" style="border: 1px solid orange;border-radius: 5px;width: 50px;height: 50px;">+</button><br><br>
                 </div>  
                 <script>
  $('#customerName').select2({
@@ -861,7 +865,7 @@ input {
         <div class="modal-content" style="background: rgb(32, 35, 37);border-radius: 20px;">
         <div class="modal-header" style="background: rgb(32, 35, 37);">
             <h5 class="m-3 text-uppercase" id="shareBillEmailLabel" style="color: #eeeaea;">Add Unit</h5>
-            <button type="button" class="close btn btn-danger" data-dismiss="modal" aria-label="Close">
+            <button type="button" class="close btn btn-danger" data-dismiss="modal" aria-label="Close" style="width: 30px;">
                 <span aria-hidden="true">&times;</span>
             </button>
         </div>
@@ -924,7 +928,7 @@ input {
 
 
 <!-- New Customer Modal -->
-<div class="modal fade" id="newCustomer">
+<div class="modal fade" id="newCustomerModal">
     <div class="modal-dialog modal-xl">
         <div class="modal-content" style="background-color: #0f1419;">
             <div class="modal-header">
@@ -933,7 +937,9 @@ input {
             <div class="modal-body">
                 <div class=" p-3">
                   <h3  class="mb-4 mt-2  " style="font-size: 1.40rem;color: rgb(230, 171, 45);">New Customer</h3>
-              
+                  <button type="button" class="close close_customer_modal" data-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px;width: 30px;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
              
               <form  method="post" action="" id="myForm" enctype="multipart/form-data" class="mb-3" onsubmit=" submitForm()">
                   {% csrf_token %}
@@ -2481,11 +2487,21 @@ input {
                                 success: function(response) {
                                     if (response.status === 'success') {
                                         alert('Customer added successfully!');
+                                        if($('#newCustomerModal').hasClass('show')){
+                                         $("#newCustomerModal .close_customer_modal").click()
+                                        }
+
                                         document.getElementById("myForm").reset();
-                                       
+                                        
+                                        if($('#newCustomer').hasClass('show')){
+                        $("#newCustomer .close_customer_modal").click()
+                    }
+
                                         
                         
-                                        reloadItem();
+                    
+                                            reloadItem();
+
                                     } else if (response.status === 'error') {
                                         if (response.message === 'empnum_exists') {
                                             alert('Customer with this number already exists!');

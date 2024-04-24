@@ -16109,13 +16109,7 @@ def delivery_challan(request):
         last_reference = Delivery_challan_reference.objects.filter(company = comp_details).order_by('-id').first()
 
         new_number = int(last_reference.reference_number) + 1 if last_reference else 1
-        if Delivery_challan_reference.objects.filter(company = comp_details).exists():
-            deleted = Delivery_challan_reference.objects.get(company = comp_details)
-            
-            if deleted:
-                while int(deleted.reference_number) >= new_number:
-                    new_number+=1
-
+        
 
         
         last_challan = Delivery_challan.objects.filter(company=comp_details).last()
@@ -16135,6 +16129,9 @@ def delivery_challan(request):
                 next_numeric_part = '001'  
             
             next_challan_number = f'{prefix}{next_numeric_part}'
+            while Delivery_challan.objects.filter(challan_number=next_challan_number).exists():
+                next_numeric_part = str(int(next_numeric_part) + 1).zfill(len(next_numeric_part))
+                next_challan_number = f"{prefix}{next_numeric_part}"
         else:
             next_challan_number = ''
         return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':new_number,'challan_number':next_challan_number,'units': units,'accounts':accounts,'pTerms':trm}) 
@@ -16175,6 +16172,7 @@ def challan_get_item_data(request, item_id):
             'company_state':item.company.state,
             'stock': item.current_stock ,
             'track' :item.track_inventory,
+            
             
            
         }
@@ -16646,6 +16644,14 @@ def add_delivery_challan(request):
                             itemsTable.save()
                             item_instance.current_stock -= int(itemsNew[2])
                             item_instance.save()
+
+                    dc_reference = Delivery_challan_reference(
+                        login_details=log_details,
+                        company=comp_details,
+                        reference_number=ref_number
+                    )
+                    print('afer afer loop')
+                    dc_reference.save()
                     
 
                     current_date = date.today()
@@ -16776,6 +16782,13 @@ def add_delivery_challan(request):
                             item_instance.current_stock -= int(itemsNew[2])
                             item_instance.save()
                     
+                    dc_reference = Delivery_challan_reference(
+                        login_details=log_details,
+                        company=comp_details,
+                        reference_number=ref_number
+                    )
+                    print('afer afer loop')
+                    dc_reference.save()
 
                     current_date = date.today()
                     dc_history = Delivery_challan_history(
@@ -16884,7 +16897,7 @@ def edit_challan(request,id):
                     dash_details = CompanyDetails.objects.get(login_details=log_details)
                     comp_details=CompanyDetails.objects.get(login_details=log_details)
 
-                  
+                dc = Delivery_challan.objects.get(id=id)
                 cname = request.POST['customerName'] 
                 customer = Customer.objects.get(id=cname)
                 place_of_supply = request.POST['placeOfSupply']
@@ -16919,6 +16932,23 @@ def edit_challan(request,id):
                 hsn = [int(code) for code in request.POST.getlist("hsn[]")]
                 rate = [float(r) for r in request.POST.getlist("rate[]")]
                 tax = [float(t) for t in request.POST.getlist("tax[]")]
+                c_item_ids = request.POST.getlist("id[]")
+                cItem_ids = [int(id) for id in c_item_ids if id.strip()]
+
+                inv_items = Delivery_challan_item.objects.filter(delivery_challan = dc)
+                object_ids = [obj.id for obj in inv_items]
+
+                ids_to_delete = [obj_id for obj_id in object_ids if obj_id not in cItem_ids]
+                for itmId in ids_to_delete:
+                        invItem = Delivery_challan_item.objects.get(id = itmId)
+                        item = Items.objects.get(id = invItem.item.id)
+                        item.current_stock += invItem.quantity
+                        item.save()
+
+                Delivery_challan_item.objects.filter(id__in=ids_to_delete).delete()
+            
+                count = Delivery_challan_item.objects.filter(delivery_challan = dc).count()
+
 
                 if all(qty <= 0 for qty in quantity):
                         messages.info(request, 'Quantity of one item is 0')
@@ -16926,7 +16956,7 @@ def edit_challan(request,id):
                 
 
                 if all(int(qty) > 0 for qty in quantity):
-                        dc = Delivery_challan.objects.get(id=id)
+                        
                         
                        
                         dc.customer=customer
@@ -17065,14 +17095,7 @@ def challan_delete(request,id):
                 item.current_stock += i.quantity
                 item.save()
             
-        Delivery_challan_item.objects.filter(delivery_challan = challan).delete()
-        if Delivery_challan_reference.objects.filter(company = com).exists():
-                deleted = Delivery_challan_reference.objects.get(company = com)
-                if int(challan.reference_no) > int(deleted.reference_number):
-                    deleted.reference_number = challan.reference_no
-                    deleted.save()
-        else:
-                Delivery_challan_reference.objects.create(company = com, login_details = com.login_details, reference_number = challan.reference_no)
+      
         challan.delete()   
         return redirect('challan_list')   
 
