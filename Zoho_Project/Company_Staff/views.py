@@ -16079,107 +16079,142 @@ def challan_list(request):
 def delivery_challan(request):
      
      if 'login_id' in request.session:
-        if request.session.has_key('login_id'):
-            log_id = request.session['login_id']
-           
-        else:
-            return redirect('/')
-    
+        log_id = request.session['login_id']
         log_details= LoginDetails.objects.get(id=log_id)
-        if log_details.user_type=='Staff':
-            dash_details = StaffDetails.objects.get(login_details=log_details)
-            comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
-
-        else:    
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
             dash_details = CompanyDetails.objects.get(login_details=log_details)
-            comp_details=CompanyDetails.objects.get(login_details=log_details)
-
-            
-        allmodules= ZohoModules.objects.get(company=comp_details,status='New')
-        
-        customer=Customer.objects.filter(company=comp_details,customer_status='Active')
-        item=Items.objects.filter(company=comp_details,activation_tag='Active')
-        
-        
-        comp_payment_terms=Company_Payment_Term.objects.filter(company=comp_details)
-        price_lists=PriceList.objects.filter(company=comp_details,type='Sales',status='Active')
-        
-        units = Unit.objects.filter(company=comp_details)
-        accounts=Chart_of_Accounts.objects.filter(company=comp_details)
-        last_reference = Delivery_challan_reference.objects.filter(company = comp_details).order_by('-id').first()
-
-        new_number = int(last_reference.reference_number) + 1 if last_reference else 1
-        
-
-        
-        last_challan = Delivery_challan.objects.filter(company=comp_details).last()
-        trm = Company_Payment_Term.objects.filter(company = comp_details)
-
-
-        
-
-        if last_challan:
-            challan_number = last_challan.challan_number
-            prefix = ''.join(filter(str.isalpha, challan_number))
-            numeric_part = ''.join(filter(str.isdigit, challan_number))
-            
-            if numeric_part:
-                next_numeric_part = str(int(numeric_part) + 1).zfill(len(numeric_part))
-            else:
-                next_numeric_part = '001'  
-            
-            next_challan_number = f'{prefix}{next_numeric_part}'
-            while Delivery_challan.objects.filter(challan_number=next_challan_number).exists():
-                next_numeric_part = str(int(next_numeric_part) + 1).zfill(len(next_numeric_part))
-                next_challan_number = f"{prefix}{next_numeric_part}"
         else:
-            next_challan_number = ''
-        return render(request,'zohomodules/Delivery-challan/new_challan.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'reference_number':new_number,'challan_number':next_challan_number,'units': units,'accounts':accounts,'pTerms':trm}) 
-     
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+            dash_details = StaffDetails.objects.get(login_details=log_details)
 
-       
-     
+        allmodules= ZohoModules.objects.get(company = cmp)
+        cust = Customer.objects.filter(company = cmp, customer_status = 'Active')
+        trm = Company_Payment_Term.objects.filter(company = cmp)
+        repeat = CompanyRepeatEvery.objects.filter(company = cmp)
+        bnk = Banking.objects.filter(company = cmp)
+        priceList = PriceList.objects.filter(company = cmp, type = 'Sales', status = 'Active')
+        itms = Items.objects.filter(company = cmp, activation_tag = 'active')
+        units = Unit.objects.filter(company=cmp)
+        accounts=Chart_of_Accounts.objects.filter(company=cmp)
 
+        # Fetching last rec_invoice and assigning upcoming ref no as current + 1
+        # Also check for if any bill is deleted and ref no is continuos w r t the deleted rec_invoice
+        latest_challan = Delivery_challan.objects.filter(company = cmp).order_by('-id').first()
 
-def challan_get_customer_data(request, customer_id):
-    try:
-        customer = Customer.objects.get(id=customer_id)
-       
-        data = {
-            'email': customer.customer_email,
-            'billing_address': customer.billing_address,
-            'gsttype':customer.GST_treatement,
-            'gstnumber':customer.GST_number,
-            'place':customer.place_of_supply
-           
+        new_number = int(latest_challan.reference_number) + 1 if latest_challan else 1
+
+        if Delivery_challan_reference.objects.filter(company = cmp).exists():
+            deleted = Delivery_challan_reference.objects.get(company = cmp)
+            
+            if deleted:
+                while int(deleted.reference_number) >= new_number:
+                    new_number+=1
+
+        # Finding next rec_invoice number w r t last rec_invoice number if exists.
+        nxtchallan = ""
+        lastchallan = Delivery_challan.objects.filter(company = cmp).last()
+        if lastchallan:
+            challan_no = str(lastchallan.challan_number)
+            numbers = []
+            stri = []
+            for word in challan_no:
+                if word.isdigit():
+                    numbers.append(word)
+                else:
+                    stri.append(word)
+            
+            num=''
+            for i in numbers:
+                num +=i
+            
+            st = ''
+            for j in stri:
+                st = st+j
+
+            challan_num = int(num)+1
+
+            if num[0] == '0':
+                if challan_num <10:
+                    nxtchallan = st+'0'+ str(challan_num)
+                else:
+                    nxtchallan = st+ str(challan_num)
+            else:
+                nxtchallan = st+ str(challan_num)
+        else:
+            nxtchallan = 'DC01'
+        context = {
+            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'pTerms':trm, 'repeat':repeat, 'banks':bnk, 'priceListItems':priceList, 'items':itms,
+            'invNo':nxtchallan, 'ref_no':new_number,'units': units,'accounts':accounts,
         }
+       
+
+        return render(request,'zohomodules/Delivery-challan/new_challan.html',context) 
+     
+
+       
+     
+
+
+def challan_get_customer_data(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
         
-        return JsonResponse(data)
-    except Customer.DoesNotExist:
-        return JsonResponse({'error': 'Customer not found'}, status=404)
+        custId = request.POST['id']
+        cust = Customer.objects.get(id = custId)
+
+        if cust:
+            context = {
+                'status':True, 'id':cust.id, 'email':cust.customer_email, 'gstType':cust.GST_treatement,'shipState':cust.place_of_supply,'gstin':False if cust.GST_number == "" or cust.GST_number == None else True, 'gstNo':cust.GST_number,
+                'street':cust.billing_address, 'city':cust.billing_city, 'state':cust.billing_state, 'country':cust.billing_country, 'pincode':cust.billing_pincode
+            }
+            return JsonResponse(context)
+        else:
+            return JsonResponse({'status':False, 'message':'Something went wrong..!'})
+    else:
+       return redirect('/')
+
     
 
 
-def challan_get_item_data(request, item_id):
-    try:
-        item = Items.objects.get(id=item_id)
-       
-        data = {
-            'hsn': item.hsn_code,
-            'rate': item.purchase_price,
-            'intratax':item.intrastate_tax,
-            'intertax':item.interstate_tax,
-            'company_state':item.company.state,
-            'stock': item.current_stock ,
-            'track' :item.track_inventory,
-            
-            
-           
-        }
+def challan_get_item_data(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
         
-        return JsonResponse(data)
-    except item.DoesNotExist:
-        return JsonResponse({'error': 'Customer not found'}, status=404)
+        itemName = request.GET['item']
+       
+        item = Items.objects.filter(company = cmp, item_name = itemName).first()
+
+        
+
+               
+        context = {
+            'status':True,
+            'id': item.id,
+            'hsn':item.hsn_code,
+            'sales_rate':item.selling_price,
+            'purchase_rate':item.purchase_price,
+            'avl':item.current_stock,
+            'tax': True if item.tax_reference == 'taxable' else False,
+            'gst':item.intrastate_tax,
+            'igst':item.interstate_tax,
+            
+
+        }
+        return JsonResponse(context)
+    else:
+       return redirect('/')
+
         
 def challannewSalesCustomerAjax(request):
    
@@ -16512,298 +16547,118 @@ def challan_check_customer_phonenumber_exist(request):
 
 
 def add_delivery_challan(request):
-     if request.method == 'POST':
-        if 'login_id' in request.session:
-            if request.session.has_key('login_id'):
-                log_id = request.session['login_id']
+     if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        if request.method == 'POST':
+            challanNum = request.POST['rec_invoice_no']
+
+            PatternStr = []
+            for word in challanNum:
+                if word.isdigit():
+                    pass
+                else:
+                    PatternStr.append(word)
             
-            else:
-                return redirect('/')
-        
-            log_details= LoginDetails.objects.get(id=log_id)
-            if log_details.user_type=='Staff':
-                dash_details = StaffDetails.objects.get(login_details=log_details)
-                comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
+            pattern = ''
+            for j in PatternStr:
+                pattern += j
 
-            else:    
-                dash_details = CompanyDetails.objects.get(login_details=log_details)
-                comp_details=CompanyDetails.objects.get(login_details=log_details)
+            pattern_exists = ChallancheckRecInvNumberPattern(pattern)
 
-            if 'draft' in request.POST:  
-                cname = request.POST['customerName'] 
-                customer = Customer.objects.get(id=cname)
-                place_of_supply = request.POST['placeOfSupply']
-                dc_number = request.POST['deliveryChallan']
-                ref_number = request.POST['referenceNumber']
-                dc_date = request.POST['deliveryChallanDate']
-                dc_type = request.POST['challanType']
-                description = request.POST['note']
-                file = request.FILES.get('file')
-                termcondition = request.POST['termcondition']
-                item_lists = request.POST.getlist('item[]')
+            if Delivery_challan.objects.filter(company = com, challan_number = challanNum).exists():
+                res = f'<script>alert("Rec. Invoice Number `{challanNum}` already exists, try another!");window.history.back();</script>'
+                return HttpResponse(res)
+
+            challan = Delivery_challan(
+                company = com,
+                login_details = com.login_details,
+                customer = Customer.objects.get(id = request.POST['customerId']),
                 
-                hsn_list = request.POST.getlist('hsn[]')
-                quantity_list = request.POST.getlist('quantity[]')
-                rate_list = request.POST.getlist('rate[]')
-                dicount_list = request.POST.getlist('discount[]')
-                tax_list = request.POST.getlist('tax[]')
-                amount_list = request.POST.getlist('amount[]')
-                subtotal = request.POST['subtotal']
-                igst = request.POST['igst']
-                cgst = request.POST['cgst']
-                sgst = request.POST['sgst']
-                taxamount = request.POST['taxAmount']
-                shipping = request.POST['shippingCharge']
-                adjustment = request.POST['adjustment']
-                grand_total = request.POST['total']
-                advance = request.POST['advance']
-                balance = float(request.POST['total']) if request.POST['balance'] == "0.00" else float(request.POST['balance'])
-
                 
-                product = request.POST.getlist("item[]")
-                quantity = [int(qty) for qty in request.POST.getlist("quantity[]")]
-                total_texts = request.POST.getlist("amount[]")
-                total = [float(value) for value in total_texts]
-                discount = [float(disc) for disc in request.POST.getlist("discount[]")]
-                hsn = [int(code) for code in request.POST.getlist("hsn[]")]
-                rate = [float(r) for r in request.POST.getlist("rate[]")]
-                tax = [float(t) for t in request.POST.getlist("tax[]")]
-
-                if '0' in quantity:
-                    messages.info(request, 'Quantity of one item is 0')
-                    return redirect('delivery_challan')
+                place_of_supply = request.POST['place_of_supply'],
                 
-                try:
-    
-                    existing_challan = Delivery_challan.objects.get(challan_number=dc_number)
-                    messages.info(request, 'A delivery challan with this number already exists')
-                    return redirect('delivery_challan')
-                except ObjectDoesNotExist:
-                    pass  
-
-                if all(int(qty) > 0 for qty in quantity):
-                    dc = Delivery_challan(
-                        login_details=log_details,
-                        company=comp_details,
-                        customer=customer,
-                        place_of_supply=place_of_supply,
-                        challan_date=dc_date,
-                        reference_number=ref_number,
-                        challan_number=dc_number,
-                        challan_type=dc_type,
-                        description=description,
-                        document=file,
-                        terms_condition=termcondition,
-                        sub_total=subtotal,
-                        igst=igst,
-                        cgst=cgst,
-                        sgst=sgst,
-                        tax_amount=taxamount,
-                        shipping_charge=shipping,
-                        adjustment=adjustment,
-                        grand_total=grand_total,
-                        advance=advance,
-                        balance=balance,
-                        status='Draft'
-                    )
-                    
-                    dc.save()
-
-                    if len(product) == len(quantity) == len(discount) == len(total) == len(hsn) == len(tax) == len(rate):
-                    
-
-    
-                    
-
-                        group = zip(product, hsn, quantity, rate, tax, discount, total)
-
-                        try:
-                            mapped = list(group)
-                            print(mapped)
-                        except Exception as e:
-                            print("Exception occurred during conversion:", e)
-
-                        print(mapped)
-                        print('HI')
-
-                        for itemsNew in mapped:
-                            item_id = int(itemsNew[0])  
-                            item_instance = Items.objects.get(id=item_id)
-                            itemsTable = Delivery_challan_item(
-                                item=item_instance, 
-                                hsn=itemsNew[1], 
-                                quantity=itemsNew[2], 
-                                price=itemsNew[3], 
-                                tax_rate=itemsNew[4], 
-                                discount=itemsNew[5], 
-                                total=itemsNew[6], 
-                                delivery_challan=dc, 
-                                login_details=log_details, 
-                                company=comp_details
-                            )
-                            itemsTable.save()
-                            item_instance.current_stock -= int(itemsNew[2])
-                            item_instance.save()
-
-                    dc_reference = Delivery_challan_reference(
-                        login_details=log_details,
-                        company=comp_details,
-                        reference_number=ref_number
-                    )
-                    print('afer afer loop')
-                    dc_reference.save()
-                    
-
-                    current_date = date.today()
-                    dc_history = Delivery_challan_history(
-                        login_details=log_details,
-                        company=comp_details,
-                        delivery_challan=dc,
-                        date=current_date,
-                        action='Created'
-                    )
-                    dc_history.save()
-
-                    
-                    return redirect('challan_list')
-
-            if 'save' in request.POST:  
-                cname = request.POST['customerName'] 
-                customer = Customer.objects.get(id=cname)
-                place_of_supply = request.POST['placeOfSupply']
-                dc_number = request.POST['deliveryChallan']
-                ref_number = request.POST['referenceNumber']
-                dc_date = request.POST['deliveryChallanDate']
-                dc_type = request.POST['challanType']
-                description = request.POST['note']
-                file = request.FILES.get('file')
-                termcondition = request.POST['termcondition']
-                item_lists = request.POST.getlist('item[]')
+                reference_number = request.POST['reference_number'],
+                challan_number = challanNum,
                 
-                hsn_list = request.POST.getlist('hsn[]')
-                quantity_list = request.POST.getlist('quantity[]')
-                rate_list = request.POST.getlist('rate[]')
-                dicount_list = request.POST.getlist('discount[]')
-                tax_list = request.POST.getlist('tax[]')
-                amount_list = request.POST.getlist('amount[]')
-                subtotal = request.POST['subtotal']
-                igst = request.POST['igst']
-                cgst = request.POST['cgst']
-                sgst = request.POST['sgst']
-                taxamount = request.POST['taxAmount']
-                shipping = request.POST['shippingCharge']
-                adjustment = request.POST['adjustment']
-                grand_total = request.POST['total']
-                advance = request.POST['advance']
-                balance = float(request.POST['total']) if request.POST['balance'] == "0.00" else float(request.POST['balance'])
-
-
+                challan_date = request.POST['start_date'],
                 
-                product = request.POST.getlist("item[]")
-                quantity = [int(qty) for qty in request.POST.getlist("quantity[]")]
-                total_texts = request.POST.getlist("amount[]")
-                total = [float(value) for value in total_texts]
-                discount = [float(disc) for disc in request.POST.getlist("discount[]")]
-                hsn = [int(code) for code in request.POST.getlist("hsn[]")]
-                rate = [float(r) for r in request.POST.getlist("rate[]")]
-                tax = [float(t) for t in request.POST.getlist("tax[]")]
+                sub_total = 0.0 if request.POST['subtotal'] == "" else float(request.POST['subtotal']),
+                igst = 0.0 if request.POST['igst'] == "" else float(request.POST['igst']),
+                cgst = 0.0 if request.POST['cgst'] == "" else float(request.POST['cgst']),
+                sgst = 0.0 if request.POST['sgst'] == "" else float(request.POST['sgst']),
+                tax_amount = 0.0 if request.POST['taxamount'] == "" else float(request.POST['taxamount']),
+                adjustment = 0.0 if request.POST['adj'] == "" else float(request.POST['adj']),
+                shipping_charge = 0.0 if request.POST['ship'] == "" else float(request.POST['ship']),
+                grand_total = 0.0 if request.POST['grandtotal'] == "" else float(request.POST['grandtotal']),
+                advance = 0.0 if request.POST['advance'] == "" else float(request.POST['advance']),
+                balance = request.POST['grandtotal'] if request.POST['balance'] == "" else float(request.POST['balance']),
+                description = request.POST['note'],
+                terms_condition = request.POST['terms'],
+                challan_type = request.POST['challanType']
+            )
 
-                if '0' in quantity:
-                    messages.info(request, 'Quantity of one item is 0')
-                    return redirect('delivery_challan')
-                try:
-    
-                    existing_challan = Delivery_challan.objects.get(challan_number=dc_number)
-                    messages.info(request, 'A delivery challan with this number already exists')
-                    return redirect('delivery_challan')
-                except ObjectDoesNotExist:
-                    pass  
-                if all(int(qty) > 0 for qty in quantity):
-                    dc = Delivery_challan(
-                        login_details=log_details,
-                        company=comp_details,
-                        customer=customer,
-                        place_of_supply=place_of_supply,
-                        challan_date=dc_date,
-                        reference_number=ref_number,
-                        challan_number=dc_number,
-                        challan_type=dc_type,
-                        description=description,
-                        terms_condition = termcondition,
-                        document=file,
-                        sub_total=subtotal,
-                        igst=igst,
-                        cgst=cgst,
-                        sgst=sgst,
-                        tax_amount=taxamount,
-                        shipping_charge=shipping,
-                        adjustment=adjustment,
-                        grand_total=grand_total,
-                        advance=advance,
-                        balance=balance,
-                        status='Save'
-                    )
+            challan.save()
+
+            if len(request.FILES) != 0:
+                challan.document=request.FILES.get('file')
+            challan.save()
+
+            if 'Draft' in request.POST:
+                challan.status = "Draft"
+            elif "Saved" in request.POST:
+                challan.status = "Saved" 
+            challan.save()
+
+            
+
+            itemId = request.POST.getlist("item_id[]")
+            itemName = request.POST.getlist("item_name[]")
+            hsn  = request.POST.getlist("hsn[]")
+            qty = request.POST.getlist("qty[]")
+            price = request.POST.getlist("priceListPrice[]") if 'priceList' in request.POST else request.POST.getlist("price[]")
+            tax = request.POST.getlist("taxGST[]") if request.POST['place_of_supply'] == com.state else request.POST.getlist("taxIGST[]")
+            discount = request.POST.getlist("discount[]")
+            total = request.POST.getlist("total[]")
+
+            if len(itemId)==len(itemName)==len(hsn)==len(qty)==len(price)==len(tax)==len(discount)==len(total) and itemId and itemName and hsn and qty and price and tax and discount and total:
+                mapped = zip(itemId,itemName,hsn,qty,price,tax,discount,total)
+                mapped = list(mapped)
+                for ele in mapped:
+                    itm = Items.objects.get(id = int(ele[0]))
+                    Delivery_challan_item.objects.create(company = com, login_details = com.login_details, delivery_challan = challan, item = itm, hsn = ele[2], quantity = int(ele[3]), price = float(ele[4]), tax_rate = ele[5], discount = float(ele[6]), total = float(ele[7]))
+                    itm.current_stock -= int(ele[3])
+                    itm.save()
+
+            # Save transaction
                     
-                    dc.save()
+            Delivery_challan_history.objects.create(
+                company = com,
+                login_details = com.login_details,
+                delivery_challan = challan,
+                action = 'Created'
+            )
 
-                    if len(product) == len(quantity) == len(discount) == len(total) == len(hsn) == len(tax) == len(rate):
-                    
+            return redirect(challan_list)
+        else:
+            return redirect(delivery_challan)
+     else:
+       return redirect('/')
+def ChallancheckRecInvNumberPattern(pattern):
+    models = [invoice,Delivery_challan]
 
-    
-                    
+    for model in models:
+        field_name = model.getNumFieldName(model)
+        if model.objects.filter(**{f"{field_name}__icontains": pattern}).exists():
+            return True
+    return False
 
-                        group = zip(product, hsn, quantity, rate, tax, discount, total)
 
-                        try:
-                            mapped = list(group)
-                            print(mapped)
-                        except Exception as e:
-                            print("Exception occurred during conversion:", e)
-
-                        print(mapped)
-                        print('HI')
-
-                        for itemsNew in mapped:
-                            item_id = int(itemsNew[0])  
-                            item_instance = Items.objects.get(id=item_id)
-                            itemsTable = Delivery_challan_item(
-                                item=item_instance, 
-                                hsn=itemsNew[1], 
-                                quantity=itemsNew[2], 
-                                price=itemsNew[3], 
-                                tax_rate=itemsNew[4], 
-                                discount=itemsNew[5], 
-                                total=itemsNew[6], 
-                                delivery_challan=dc, 
-                                login_details=log_details, 
-                                company=comp_details
-                            )
-                            itemsTable.save()
-                            item_instance.current_stock -= int(itemsNew[2])
-                            item_instance.save()
-                    
-                    dc_reference = Delivery_challan_reference(
-                        login_details=log_details,
-                        company=comp_details,
-                        reference_number=ref_number
-                    )
-                    print('afer afer loop')
-                    dc_reference.save()
-
-                    current_date = date.today()
-                    dc_history = Delivery_challan_history(
-                        login_details=log_details,
-                        company=comp_details,
-                        delivery_challan=dc,
-                        date=current_date,
-                        action='Created'
-                    )
-                    dc_history.save()
-
-                    
-                    return redirect('challan_list')
-                
-        return redirect('/')
 
 def challan_overview(request,id):
     if 'login_id' in request.session:
@@ -16828,9 +16683,9 @@ def challan_overview(request,id):
             comments = Delivery_challan_comment.objects.filter(company=comp_details,delivery_challan=challan)
             history = Delivery_challan_history.objects.filter(company=comp_details,delivery_challan=challan)
             last_history = Delivery_challan_history.objects.filter(delivery_challan = challan).last()
-            created = Delivery_challan_history.objects.get(delivery_challan = challan, action = 'Created')
+            
         
-            return render(request,'zohomodules/Delivery-challan/challan_overview.html',{'challan':challan,'d_challan':all_challan,'items':items,'comments':comments,'history':history,'details':dash_details,'allmodules':allmodules,'last_history':last_history, 'created':created}) 
+            return render(request,'zohomodules/Delivery-challan/challan_overview.html',{'challan':challan,'d_challan':all_challan,'items':items,'comments':comments,'history':history,'details':dash_details,'allmodules':allmodules,'last_history':last_history}) 
                 
 def convert_save(request,id):
     dc = Delivery_challan.objects.get(id=id)
@@ -16842,206 +16697,172 @@ def convert_save(request,id):
 def challan_edit(request,id):
     
    if 'login_id' in request.session:
-        if request.session.has_key('login_id'):
-            log_id = request.session['login_id']
-           
-        else:
-            return redirect('/')
-    
+        log_id = request.session['login_id']
         log_details= LoginDetails.objects.get(id=log_id)
-        if log_details.user_type=='Staff':
-            dash_details = StaffDetails.objects.get(login_details=log_details)
-            comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
-
-        else:    
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
             dash_details = CompanyDetails.objects.get(login_details=log_details)
-            comp_details=CompanyDetails.objects.get(login_details=log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+            dash_details = StaffDetails.objects.get(login_details=log_details)
 
-            
-        allmodules= ZohoModules.objects.get(company=comp_details,status='New')
-        
-        customer=Customer.objects.filter(company=comp_details,customer_status='Active')
-        item=Items.objects.filter(company=comp_details,activation_tag='Active')
-        
-        
-        comp_payment_terms=Company_Payment_Term.objects.filter(company=comp_details)
-        price_lists=PriceList.objects.filter(company=comp_details,type='Sales',status='Active')
-        units = Unit.objects.filter(company=comp_details)
-        accounts=Chart_of_Accounts.objects.filter(company=comp_details)
-        
+        allmodules= ZohoModules.objects.get(company = cmp)
+        cust = Customer.objects.filter(company = cmp, customer_status = 'Active')
+        trm = Company_Payment_Term.objects.filter(company = cmp)
+       
+        itms = Items.objects.filter(company = cmp, activation_tag = 'active')
+        units = Unit.objects.filter(company=cmp)
+        accounts=Chart_of_Accounts.objects.filter(company=cmp)
+
+        challan = Delivery_challan.objects.get(id = id)
+        challanItems = Delivery_challan_item.objects.filter(delivery_challan = challan)
+
+        context = {
+            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'pTerms':trm,  'items':itms,
+            'units': units,'accounts':accounts, 'challan':challan, 'challanItems': challanItems,
+        }
         
 
+
         
-        dc = Delivery_challan.objects.get(id=id)
-        dct = Delivery_challan_item.objects.filter(delivery_challan=dc,company=comp_details)
-        for item1 in dct:
-            item1.available_stock = item1.item.current_stock - item1.quantity
-        
-        return render(request,'zohomodules/Delivery-challan/challan_edit.html',{'details':dash_details,'allmodules': allmodules,'comp_payment_terms':comp_payment_terms,'log_details':log_details,'price_lists':price_lists,'customer':customer,'item':item,'challan':dc,'citem':dct,'units':units,'accounts':accounts}) 
+        return render(request,'zohomodules/Delivery-challan/challan_edit.html',context) 
      
 def edit_challan(request,id):
-    if request.method == 'POST':
-            if 'login_id' in request.session:
-                if request.session.has_key('login_id'):
-                    log_id = request.session['login_id']
-                
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        rec_inv = Delivery_challan.objects.get(id = id)
+        if request.method == 'POST':
+            challanNum = request.POST['rec_invoice_no']
+
+            PatternStr = []
+            for word in challanNum:
+                if word.isdigit():
+                    pass
                 else:
-                    return redirect('/')
+                    PatternStr.append(word)
             
-                log_details= LoginDetails.objects.get(id=log_id)
-                if log_details.user_type=='Staff':
-                    dash_details = StaffDetails.objects.get(login_details=log_details)
-                    comp_details=CompanyDetails.objects.get(id=dash_details.company.id)
+            pattern = ''
+            for j in PatternStr:
+                pattern += j
 
-                else:    
-                    dash_details = CompanyDetails.objects.get(login_details=log_details)
-                    comp_details=CompanyDetails.objects.get(login_details=log_details)
+            pattern_exists = ChallancheckRecInvNumberPattern(pattern)
 
-                dc = Delivery_challan.objects.get(id=id)
-                cname = request.POST['customerName'] 
-                customer = Customer.objects.get(id=cname)
-                place_of_supply = request.POST['placeOfSupply']
-                dc_number = request.POST['deliveryChallan']
-                ref_number = request.POST['referenceNumber']
-                dc_date = request.POST['deliveryChallanDate']
-                dc_type = request.POST['challanType']
-                description = request.POST['note']
-                file = request.FILES.get('file')
-                termconditions=request.POST['termcondition']
-                item_lists = request.POST.getlist('item[]')
-                    
-                    
-                    
-                subtotal = request.POST['subtotal']
-                igst = request.POST['igst']
-                cgst = request.POST['cgst']
-                sgst = request.POST['sgst']
-                taxamount = request.POST['taxAmount']
-                shipping = request.POST['shippingCharge']
-                adjustment = request.POST['adjustment']
-                grand_total = request.POST['total']
-                advance = request.POST['advance']
-                balance = float(request.POST['total']) if request.POST['balance'] == "0.00" else float(request.POST['balance'])
-
-                    
-                product = request.POST.getlist("item[]")
-                quantity = [int(qty) for qty in request.POST.getlist("quantity[]")]
-                total_texts = request.POST.getlist("amount[]")
-                total = [float(value) for value in total_texts]
-                discount = [float(disc) for disc in request.POST.getlist("discount[]")]
-                hsn = [int(code) for code in request.POST.getlist("hsn[]")]
-                rate = [float(r) for r in request.POST.getlist("rate[]")]
-                tax = [float(t) for t in request.POST.getlist("tax[]")]
-                c_item_ids = request.POST.getlist("id[]")
-                cItem_ids = [int(id) for id in c_item_ids if id.strip()]
-
-                inv_items = Delivery_challan_item.objects.filter(delivery_challan = dc)
-                object_ids = [obj.id for obj in inv_items]
-
-                ids_to_delete = [obj_id for obj_id in object_ids if obj_id not in cItem_ids]
-                for itmId in ids_to_delete:
-                        invItem = Delivery_challan_item.objects.get(id = itmId)
-                        item = Items.objects.get(id = invItem.item.id)
-                        item.current_stock += invItem.quantity
-                        item.save()
-
-                Delivery_challan_item.objects.filter(id__in=ids_to_delete).delete()
             
-                count = Delivery_challan_item.objects.filter(delivery_challan = dc).count()
+
+            if rec_inv.challan_number != challanNum and Delivery_challan.objects.filter(company = com, challan_number = challanNum).exists():
+                res = f'<script>alert("Challan Number `{challanNum}` already exists, try another!");window.history.back();</script>'
+                return HttpResponse(res)
+
+            rec_inv.customer = Customer.objects.get(id = request.POST['customerId'])
+            
+            rec_inv.place_of_supply = request.POST['place_of_supply']
+           
+            rec_inv.reference_number = request.POST['reference_number']
+            rec_inv.challan_number = challanNum
+            
+            rec_inv.challan_date = request.POST['start_date']
+            
+            rec_inv.sub_total = 0.0 if request.POST['subtotal'] == "" else float(request.POST['subtotal'])
+            rec_inv.igst = 0.0 if request.POST['igst'] == "" else float(request.POST['igst'])
+            rec_inv.cgst = 0.0 if request.POST['cgst'] == "" else float(request.POST['cgst'])
+            rec_inv.sgst = 0.0 if request.POST['sgst'] == "" else float(request.POST['sgst'])
+            rec_inv.tax_amount = 0.0 if request.POST['taxamount'] == "" else float(request.POST['taxamount'])
+            rec_inv.adjustment = 0.0 if request.POST['adj'] == "" else float(request.POST['adj'])
+            rec_inv.shipping_charge = 0.0 if request.POST['ship'] == "" else float(request.POST['ship'])
+            rec_inv.grand_total = 0.0 if request.POST['grandtotal'] == "" else float(request.POST['grandtotal'])
+            rec_inv.advance = 0.0 if request.POST['advance'] == "" else float(request.POST['advance'])
+            rec_inv.balance = request.POST['grandtotal'] if request.POST['balance'] == "" else float(request.POST['balance'])
+            rec_inv.description = request.POST['note']
+            rec_inv.terms_condition = request.POST['terms'],
+            rec_inv.challan_type = request.POST['challanType']
+            
+            if len(request.FILES) != 0:
+                rec_inv.document=request.FILES.get('file')
+            rec_inv.save()
 
 
-                if all(qty <= 0 for qty in quantity):
-                        messages.info(request, 'Quantity of one item is 0')
-                        return redirect('challan_edit',id=id)
-                
+            # Save rec_invoice items.
 
-                if all(int(qty) > 0 for qty in quantity):
-                        
-                        
-                       
-                        dc.customer=customer
-                        dc.place_of_supply=place_of_supply
-                        dc.challan_date=dc_date
-                        dc.reference_number=ref_number
-                        dc.challan_number=dc_number
-                        dc.challan_type=dc_type
-                        dc.description=description
-                        dc.document=file
-                        dc.terms_condition=termconditions
-                        dc.sub_total=subtotal
-                        dc.igst=igst
-                        dc.cgst=cgst
-                        dc.sgst=sgst
-                        dc.tax_amount=taxamount
-                        dc.shipping_charge=shipping
-                        dc.adjustment=adjustment
-                        dc.grand_total=grand_total
-                        dc.advance=advance
-                        dc.balance=balance
-                        dc.status=dc.status
-                        
-                        
-                        dc.save()
+            itemId = request.POST.getlist("item_id[]")
+            itemName = request.POST.getlist("item_name[]")
+            hsn  = request.POST.getlist("hsn[]")
+            qty = request.POST.getlist("qty[]")
+            price = request.POST.getlist("priceListPrice[]") if 'priceList' in request.POST else request.POST.getlist("price[]")
+            tax = request.POST.getlist("taxGST[]") if request.POST['place_of_supply'] == com.state else request.POST.getlist("taxIGST[]")
+            discount = request.POST.getlist("discount[]")
+            total = request.POST.getlist("total[]")
+            inv_item_ids = request.POST.getlist("id[]")
+            invItem_ids = [int(id) for id in inv_item_ids]
 
-                        if len(product) == len(quantity) == len(discount) == len(total) == len(hsn) == len(tax) == len(rate):
-                            group = zip(product, hsn, quantity, rate, tax, discount, total)
+            inv_items = Delivery_challan_item.objects.filter(delivery_challan = rec_inv)
+            object_ids = [obj.id for obj in inv_items]
 
-                            try:
-                                    mapped = list(group)
-                                    print(mapped)
-                            except Exception as e:
-                                    print("Exception occurred during conversion:", e)
+            ids_to_delete = [obj_id for obj_id in object_ids if obj_id not in invItem_ids]
+            for itmId in ids_to_delete:
+                invItem = Delivery_challan_item.objects.get(id = itmId)
+                item = Items.objects.get(id = invItem.item.id)
+                item.current_stock += invItem.quantity
+                item.save()
 
-                            for itemsNew in mapped:
-                                    item_id = int(itemsNew[0])
-                                    item_instance = Items.objects.get(id=item_id)
+            Delivery_challan_item.objects.filter(id__in=ids_to_delete).delete()
+            
+            count = Delivery_challan_item.objects.filter(delivery_challan = rec_inv).count()
 
-                                    
-                                    try:
-                                        existing_item = Delivery_challan_item.objects.get(item=item_instance, delivery_challan=dc,company=comp_details)
-                                    except Delivery_challan_item.DoesNotExist:
-                                        existing_item = None
+            if len(itemId)==len(itemName)==len(hsn)==len(qty)==len(price)==len(tax)==len(discount)==len(total)==len(invItem_ids) and invItem_ids and itemId and itemName and hsn and qty and price and tax and discount and total:
+                mapped = zip(itemId,itemName,hsn,qty,price,tax,discount,total,invItem_ids)
+                mapped = list(mapped)
+                for ele in mapped:
+                    if int(len(itemId))>int(count):
+                        if ele[8] == 0:
+                            itm = Items.objects.get(id = int(ele[0]))
+                            Delivery_challan_item.objects.create(company = com, login_details = com.login_details, delivery_challan = rec_inv, item = itm, hsn = ele[2], quantity = int(ele[3]), price = float(ele[4]), tax_rate = ele[5], discount = float(ele[6]), total = float(ele[7]))
+                            itm.current_stock -= int(ele[3])
+                            itm.save()
+                        else:
+                            itm = Items.objects.get(id = int(ele[0]))
+                            inItm = Delivery_challan_item.objects.get(id = int(ele[8]))
+                            crQty = int(inItm.quantity)
+                            
+                            Delivery_challan_item.objects.filter( id = int(ele[8])).update(delivery_challan = rec_inv, item = itm, hsn = ele[2], quantity = int(ele[3]), price = float(ele[4]), tax_rate = ele[5], discount = float(ele[6]), total = float(ele[7]))
 
-                                    
-                                    if existing_item:
-                                        existing_item.hsn = itemsNew[1]
-                                        existing_item.quantity = itemsNew[2]
-                                        existing_item.price = itemsNew[3]
-                                        existing_item.tax_rate = itemsNew[4]
-                                        existing_item.discount = itemsNew[5]
-                                        existing_item.total = itemsNew[6]
-                                        existing_item.save()
-                                    else:
-                                        # If the item does not exist, create a new Delivery_challan_item object
-                                        itemsTable = Delivery_challan_item(
-                                            item=item_instance, 
-                                            hsn=itemsNew[1], 
-                                            quantity=itemsNew[2], 
-                                            price=itemsNew[3], 
-                                            tax_rate=itemsNew[4], 
-                                            discount=itemsNew[5], 
-                                            total=itemsNew[6], 
-                                            delivery_challan=dc, 
-                                            login_details=log_details, 
-                                            company=comp_details
-                                        )
-                                        itemsTable.save()
-                                        item_instance.current_stock -= int(itemsNew[2])
-                                        item_instance.save()
-                        
+                            if crQty < int(ele[3]):
+                                itm.current_stock -=  abs(crQty - int(ele[3]))
+                            elif crQty > int(ele[3]):
+                                itm.current_stock += abs(crQty - int(ele[3]))
+                            itm.save()
+                    else:
+                        itm = Items.objects.get(id = int(ele[0]))
+                        inItm = Delivery_challan_item.objects.get(id = int(ele[8]))
+                        crQty = int(inItm.quantity)
 
-                        current_date = date.today()
-                        dc_history = Delivery_challan_history(
-                            login_details=log_details,
-                            company=comp_details,
-                            delivery_challan=dc,
-                            date=current_date,
-                            action='Edited'
-                        )
-                        dc_history.save()
+                        Delivery_challan_item.objects.filter( id = int(ele[8])).update(delivery_challan = rec_inv, item = itm, hsn = ele[2], quantity = int(ele[3]), price = float(ele[4]), tax_rate = ele[5], discount = float(ele[6]), total = float(ele[7]))
 
-                        
-                        return redirect('challan_list')
+                        if crQty < int(ele[3]):
+                            itm.current_stock -=  abs(crQty - int(ele[3]))
+                        elif crQty > int(ele[3]):
+                            itm.current_stock += abs(crQty - int(ele[3]))
+                        itm.save()
+            
+            # Save transaction
+                    
+            Delivery_challan_history.objects.create(
+                company = com,
+                login_details = com.login_details,
+                delivery_challan = rec_inv,
+                action = 'Edited'
+            )
+
+            return redirect(challan_overview, id)
+        else:
+            return redirect(challan_edit, id)
+    else:
+       return redirect('/')
 
 
 def challan_add_comment(request,id):
@@ -17418,16 +17239,16 @@ def ChallancheckRecurringInvoiceNumber(request):
         else:
             com = StaffDetails.objects.get(login_details = log_details).company
         
-        RecInvNo = request.GET['RecInvNum']
+        challanNo = request.GET['RecInvNum']
 
         # Finding next rec_invoice number w r t last rec_invoice number if exists.
-        nxtInv = ""
-        lastInv = RecurringInvoice.objects.filter(company = com).last()
-        if lastInv:
-            inv_no = str(lastInv.rec_invoice_no)
+        nxtchallan = ""
+        lastchallan = Delivery_challan.objects.filter(company = com).last()
+        if lastchallan:
+            challan_no = str(lastchallan.challan_number)
             numbers = []
             stri = []
-            for word in inv_no:
+            for word in challan_no:
                 if word.isdigit():
                     numbers.append(word)
                 else:
@@ -17441,20 +17262,20 @@ def ChallancheckRecurringInvoiceNumber(request):
             for j in stri:
                 st = st+j
 
-            inv_num = int(num)+1
+            challan_num = int(num)+1
 
             if num[0] == '0':
-                if inv_num <10:
-                    nxtInv = st+'0'+ str(inv_num)
+                if challan_num <10:
+                    nxtchallan = st+'0'+ str(challan_num)
                 else:
-                    nxtInv = st+ str(inv_num)
+                    nxtchallan = st+ str(challan_num)
             else:
-                nxtInv = st+ str(inv_num)
+                nxtchallan = st+ str(challan_num)
         # else:
         #     nxtInv = 'RI01'
 
         PatternStr = []
-        for word in RecInvNo:
+        for word in challanNo:
             if word.isdigit():
                 pass
             else:
@@ -17466,12 +17287,11 @@ def ChallancheckRecurringInvoiceNumber(request):
 
         pattern_exists = checkChallanPattern(pattern)
 
-        if pattern !="" and pattern_exists:
-            return JsonResponse({'status':False, 'message':'Rec. Invoice No. Pattern already Exists.!'})
-        elif RecurringInvoice.objects.filter(company = com, rec_invoice_no__iexact = RecInvNo).exists():
-            return JsonResponse({'status':False, 'message':'Rec. Invoice No. already Exists.!'})
-        elif nxtInv != "" and RecInvNo != nxtInv:
-            return JsonResponse({'status':False, 'message':'Rec. Invoice No. is not continuous.!'})
+        
+        if Delivery_challan.objects.filter(company = com, challan_number = challanNo).exists():
+            return JsonResponse({'status':False, 'message':'challan No. already Exists.!'})
+        elif nxtchallan != "" and challanNo != nxtchallan:
+            return JsonResponse({'status':False, 'message':'Challan  No. is not continuous.!'})
         else:
             return JsonResponse({'status':True, 'message':'Number is okay.!'})
     else:
@@ -17967,36 +17787,24 @@ def challancreateNewItemAjax(request):
        return redirect('/')
 
 def challangetAllItemsAjax(request):
-    if 'login_id' in request.session:
+     if 'login_id' in request.session:
         log_id = request.session['login_id']
-        if 'login_id' not in request.session:
-            return redirect('/')
-        log_details = LoginDetails.objects.get(id=log_id)
+        log_details= LoginDetails.objects.get(id=log_id)
         if log_details.user_type == 'Company':
-            company=CompanyDetails.objects.get(login_details=log_details)
-            options = []
-            option_objects = Items.objects.filter(company=company, activation_tag='Active')
-            for option in option_objects:
-                # Append a dictionary for each item to the options list
-                options.append({
-                    'id': option.id,
-                    'name': option.item_name,
-                })
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
 
-            return JsonResponse(options,safe=False)
-            
-        if log_details.user_type=='Staff':
-            staff = StaffDetails.objects.get(login_details=log_details)
-            company = staff.company
-            options = []
-            option_objects = Items.objects.filter(company=company, activation_tag='Active')
-            for option in option_objects:
-                # Append a dictionary for each item to the options list
-                options.append({
-                    'id': option.id,
-                    'name': option.item_name,
-                })
-            return JsonResponse(options,safe=False)
+        items = {}
+        option_objects = Items.objects.filter(company = com, activation_tag='active')
+        for option in option_objects:
+            items[option.id] = [option.id,option.item_name]
+
+        return JsonResponse(items)
+     else:
+        return redirect('/')
+
+
            
 
 
@@ -18097,6 +17905,7 @@ def challangetAllAccountsAjax(request):
         return JsonResponse(acc)
     else:
         return redirect('/')
+
     
 def challan_customer_check_pan(request):
     if request.method == 'POST':

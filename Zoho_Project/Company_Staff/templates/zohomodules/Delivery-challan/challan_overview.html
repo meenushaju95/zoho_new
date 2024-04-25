@@ -557,6 +557,10 @@
                         <h6 class="mb-0"> Date</h6>
                         <p class="mb-0 text-right">{{challan.challan_date}}</p>
                       </div>
+                      <div class="d-flex px-3 justify-content-between text-black mb-2">
+                        <h6 class="mb-0"> Challan Type</h6>
+                        <p class="mb-0 text-right">{{challan.challan_type}}</p>
+                      </div>
 
                       <div class="d-flex px-3 justify-content-between text-black mb-2">
                         <h6 class="mb-0">Customer</h6>
@@ -699,6 +703,10 @@
                                 <div class="col-md-6 text-left">Challan Date :</div>
                                 <div class="col-md-5 text-right">{{challan.challan_date | date:'d-m-Y'}}</div>
                             </div>
+                            <div class="row">
+                              <div class="col-md-6 text-left">Challan_type :</div>
+                              <div class="col-md-5 text-right">{{challan.challan_type }}</div>
+                          </div>
                            
                         </div>
 
@@ -835,6 +843,7 @@
                                 <div class="col-3">
                                   <span class="fw-bold me-2 h5 text-white float-end">#{{challan.challan_number}}</span>
                                 </div>
+                                
                               </div>
                             </section>
                             <br>
@@ -870,6 +879,9 @@
                                   <div class="col-6">
                                       <p>Challan  Date: <span>{{challan.challan_date | date:'d-m-Y'}}</span></p>
                                   </div>
+                                  <div class="col-6">
+                                    <p>Challan  type: <span>{{challan.challan_type }}</span></p>
+                                </div>
                                  
                                 </div>
                                 <hr class="mx-3">
@@ -1032,6 +1044,11 @@
                                       <p>Challan Date: <span>{{challan.challan_date | date:'d-m-Y'}}</span></p>
                                      
                                   </div>
+
+                                  <div class="col-6">
+                                    <p>Challan Type: <span>{{challan.challan_type }}</span></p>
+                                   
+                                </div>
                                   
                                 </div>
                                 <hr class="mx-3">
@@ -1182,6 +1199,12 @@
                                                       <td style="color: #000;">:</td>
                                                       <td class="text-right" style="color: #000;">{{challan.challan_date | date:'d-m-Y'}}<td>
                                                   </tr>
+
+                                                  <tr >
+                                                    <td style="color: #000; font-weight: bold;">Challan Type</td>
+                                                    <td style="color: #000;">:</td>
+                                                    <td class="text-right" style="color: #000;">{{challan.challan_type }}<td>
+                                                </tr>
    
                                                  
                                                   

@@ -384,8 +384,8 @@ urlpatterns = [
     #------------meenu shaju-delivery challan-------
     path('challan_list/',views.challan_list,name='challan_list'),
     path('delivery_challan',views.delivery_challan,name='delivery_challan'),
-    path('challan_get_customer_data/<int:customer_id>/',views.challan_get_customer_data, name='challan_get_customer_data'),
-    path('challan_get_item_data/<int:item_id>/',views.challan_get_item_data, name='challan_get_item_data'),
+    path('challan_get_customer_data/',views.challan_get_customer_data, name='challan_get_customer_data'),
+    path('challan_get_item_data/',views.challan_get_item_data, name='challan_get_item_data'),
     path('challannewSalesCustomerAjax/',views.challannewSalesCustomerAjax, name='challannewSalesCustomerAjax'),
     path('challan_customer_payment_terms_add/',views.challan_customer_payment_terms_add, name='challan_customer_payment_terms_add'),
     path('challangetCustomersAjax/',views.challangetCustomersAjax, name='challangetCustomersAjax'),
