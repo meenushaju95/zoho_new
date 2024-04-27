@@ -16104,12 +16104,7 @@ def delivery_challan(request):
 
         new_number = int(latest_challan.reference_number) + 1 if latest_challan else 1
 
-        if Delivery_challan_reference.objects.filter(company = cmp).exists():
-            deleted = Delivery_challan_reference.objects.get(company = cmp)
-            
-            if deleted:
-                while int(deleted.reference_number) >= new_number:
-                    new_number+=1
+        
 
         # Finding next rec_invoice number w r t last rec_invoice number if exists.
         nxtchallan = ""
@@ -16612,7 +16607,7 @@ def add_delivery_challan(request):
             if 'Draft' in request.POST:
                 challan.status = "Draft"
             elif "Saved" in request.POST:
-                challan.status = "Saved" 
+                challan.status = "Save" 
             challan.save()
 
             
@@ -16636,6 +16631,7 @@ def add_delivery_challan(request):
                     itm.save()
 
             # Save transaction
+           
                     
             Delivery_challan_history.objects.create(
                 company = com,
@@ -17918,7 +17914,106 @@ def challan_customer_check_pan(request):
             return JsonResponse({'status': 'not_exists'})
     else:
         return JsonResponse({'error': 'Invalid request'})  
+    
 
+def update_available_quantity(request):
+    
+    if request.method == 'POST' :
+        item_id = request.POST.get('itemid')
+        
+        qty = request.POST.get('qty')
+        print(qty)
+
+        try:
+            item = Items.objects.get(id=item_id)
+            name = item.item_name
+            print(name)
+            available_quantity = item.current_stock - int(qty)
+            print(available_quantity)
+            
+            return JsonResponse({'available_quantity': available_quantity})
+        except Items.DoesNotExist:
+            return JsonResponse({'error': 'Item does not exist'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400, safe=False)
 
 
 # ------------------Delivery challan end----------------------------------
+
+
+def checkRecurringInvoiceNumber(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        
+        RecInvNo = request.GET['RecInvNum']
+
+        # Finding next rec_invoice number w r t last rec_invoice number if exists.
+        nxtInv = ""
+        lastInv = RecurringInvoice.objects.filter(company = com).last()
+        if lastInv:
+            inv_no = str(lastInv.rec_invoice_no)
+            numbers = []
+            stri = []
+            for word in inv_no:
+                if word.isdigit():
+                    numbers.append(word)
+                else:
+                    stri.append(word)
+            
+            num=''
+            for i in numbers:
+                num +=i
+            
+            st = ''
+            for j in stri:
+                st = st+j
+
+            inv_num = int(num)+1
+
+            if num[0] == '0':
+                if inv_num <10:
+                    nxtInv = st+'0'+ str(inv_num)
+                else:
+                    nxtInv = st+ str(inv_num)
+            else:
+                nxtInv = st+ str(inv_num)
+        # else:
+        #     nxtInv = 'RI01'
+
+        PatternStr = []
+        for word in RecInvNo:
+            if word.isdigit():
+                pass
+            else:
+                PatternStr.append(word)
+        
+        pattern = ''
+        for j in PatternStr:
+            pattern += j
+
+        pattern_exists = checkRecInvNumberPattern(pattern)
+
+        if pattern !="" and pattern_exists:
+            return JsonResponse({'status':False, 'message':'Rec. Invoice No. Pattern already Exists.!'})
+        elif RecurringInvoice.objects.filter(company = com, rec_invoice_no__iexact = RecInvNo).exists():
+            return JsonResponse({'status':False, 'message':'Rec. Invoice No. already Exists.!'})
+        elif nxtInv != "" and RecInvNo != nxtInv:
+            return JsonResponse({'status':False, 'message':'Rec. Invoice No. is not continuous.!'})
+        else:
+            return JsonResponse({'status':True, 'message':'Number is okay.!'})
+    else:
+       return redirect('/')
+
+def checkRecInvNumberPattern(pattern):
+    models = [invoice, Delivery_challan, RetainerInvoice]
+
+    for model in models:
+        field_name = model.getNumFieldName(model)
+        if model.objects.filter(**{f"{field_name}__icontains": pattern}).exists():
+            return True
+    return False

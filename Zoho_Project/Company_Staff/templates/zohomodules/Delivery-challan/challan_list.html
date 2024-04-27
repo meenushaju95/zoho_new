@@ -100,10 +100,10 @@
                             <button type="button" class="btn orange-link mt-5 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fa fa-sort" aria-hidden="true"></i>
                             </button>
-                            <div class="dropdown-menu dropdown-menu-right" style="background-color: black;color: white;">
-                              <button class="dropdown-item" type="button" id="sortAll" >All</button>
-                              <button class="dropdown-item" type="button" id="sortName" >Customer Name</button>
-                              <button class="dropdown-item" type="button" id="sortNo" >DC NO</button>
+                            <div class="dropdown-menu dropdown-menu-right" style="background-color: white;color: white;">
+                              <button class="dropdown-item" type="button" id="sortAll" style="color: black;">All</button>
+                              <button class="dropdown-item" type="button" id="sortName" style="color: black;" >Customer Name</button>
+                              <button class="dropdown-item" type="button" id="sortNo" style="color: black;" >DC NO</button>
                             </div>
                           </div>
                     </div>
@@ -119,10 +119,10 @@
                                 <button type="button" class="btn orange-link mt-5 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <i class="fa fa-filter" aria-hidden="true"></i>
                                 </button>
-                                <div class="dropdown-menu dropdown-menu-right" style="background-color: black;color: white;">
-                                  <button class="dropdown-item" type="button" id="filterAll" >All</button>
-                                  <button class="dropdown-item" type="button" id="filterDraft" >Draft</button>
-                                  <button class="dropdown-item" type="button" id="filterSave" >Save</button>
+                                <div class="dropdown-menu dropdown-menu-right" style="background-color: white;color: white;">
+                                  <button class="dropdown-item" type="button" id="filterAll" style="color: black;" >All</button>
+                                  <button class="dropdown-item" type="button" id="filterDraft" style="color: black;" >Draft</button>
+                                  <button class="dropdown-item" type="button" id="filterSave" style="color: black;" >Save</button>
                                 </div>
                               </div>
                         <a href="#" class="orange-link mt-5 "  id="importExcel" data-toggle="modal" data-target="#importModal" onclick="excelmodel()"><i class="fa fa-share-square-o" aria-hidden="true"></i> Import</a>
@@ -331,6 +331,7 @@
             tbody.appendChild(row);
         });
     }
+    
 
    
     document.getElementById('sortName').addEventListener('click', function () {
@@ -347,6 +348,26 @@
         
         location.reload();
     });
+});
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    // Get all dropdown options
+    const dropdownOptions = document.querySelectorAll('.dropdown-menu .dropdown-item');
+
+    
+    dropdownOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            
+            const dropdownMenu = option.closest('.dropdown-menu');
+            
+           
+            dropdownMenu.classList.remove('show');
+        });
+    });
+    
+    
 });
 </script>
 

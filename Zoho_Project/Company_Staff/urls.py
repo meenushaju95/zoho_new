@@ -378,7 +378,7 @@ urlpatterns = [
     path('Staff/invoice/getAllAccounts',views.getAllAccounts, name='getAllAccounts'),
 
 
-
+    path('checkRecurringInvoiceNumber',views.checkRecurringInvoiceNumber,name='checkRecurringInvoiceNumber'),
 
 
     #------------meenu shaju-delivery challan-------
@@ -420,6 +420,7 @@ urlpatterns = [
     path('challancreateNewAccountAjax',views.challancreateNewAccountAjax,name='challancreateNewAccountAjax'),
     path('challangetAllAccountsAjax',views.challangetAllAccountsAjax,name='challangetAllAccountsAjax'),
     path('challan_customer_check_pan',views.challan_customer_check_pan,name='challan_customer_check_pan'),
+    path('update_available_quantity',views.update_available_quantity,name='update_available_quantity'),
     
     #End
     

@@ -2894,7 +2894,7 @@
             console.log(inv_num);
             $.ajax({
                 type: "GET",
-                url: "{% url 'ChallancheckRecurringInvoiceNumber' %}",
+                url: "{% url 'checkRecurringInvoiceNumber' %}",
                 data: {
                     RecInvNum : inv_num,
                 },
