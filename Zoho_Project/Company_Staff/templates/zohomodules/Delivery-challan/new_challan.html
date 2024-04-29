@@ -7,6 +7,11 @@
 <!-- <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> -->
 
 <style>
+        
+input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1); 
+    }
+
   .modal{
     z-index: 9999;
     overflow: scroll;
@@ -294,7 +299,7 @@
                     <input type="text" class="form-control text-white bg-black" id="customerGstType" name="customer_gst_type" readonly>
                   </div>
                 </div>
-
+                      
                 <div class="row mt-2" id="customerGstInDisplay" style="display: flex;">
                   <label for="" class="col-md-3 labels">GSTIN</label>
                   <div class="col-md-6">
@@ -365,6 +370,7 @@
                     <div class="col-md-6">
                       <input hidden value="{{cmp.state}}" id="cmpstate">
                       <select id="challanType" class="form-control bg-black text-white" name="challanType"  required>
+                        <option value="" selected>Select Challan Type</option>
                         <option value="Supply Of Liquid Gas">Supply Of Liquid Gas</option>
                         <option value="Job Work">Job Work</option>
                         <option value="Supply Of Approval">Supply Of Approval</option>
@@ -2429,7 +2435,7 @@
                     $('#billAddressSection').show();
                     document.getElementById('billAddress').value = data.street + ',' + data.city + '\n' + data.state + '\n' + data.country  + '\n' + data.pincode ;
                   }
-                  if(data.gstin){
+                  if(data.gstin && data.gstType !== "Unregistered Business-not Registered under GST"){
                       document.getElementById('customerGstInDisplay').style.display = 'flex';
                       document.getElementById('customerGSTIN').value = data.gstNo;
                   }else{
@@ -2810,7 +2816,7 @@
             alert('Select Place of Supply.!')
         }
     } else {
-        alert('')
+        alert('item already exist!')
     }
 }
     function changeItemQty(id){

@@ -305,6 +305,7 @@
                   </div>
                 </div>
                 {% endif %}
+                {% if challan.customer.billing_address != "" %}
 
                 <div class="row mt-2">
                   <label for="" class="col-md-3 labels">Billing Address</label>
@@ -312,6 +313,7 @@
                     <textarea class="form-control text-white bg-black" name="bill_address" id="billAddress" rows="4" readonly>{{challan.customer.billing_address}}</textarea>
                   </div>
                 </div>
+                {%endif%}
 
                 <div class="row mt-2">
                   <label for="" class="col-md-3 labels">Place of Supply</label>

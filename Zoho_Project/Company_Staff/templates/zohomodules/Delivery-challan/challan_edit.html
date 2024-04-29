@@ -285,30 +285,31 @@
                 <div class="row mt-2">
                   <label for="" class="col-md-3 labels">Email</label>
                   <div class="col-md-6">
-                    <input type="text" class="form-control text-white bg-black" value="{{invoice.customer_email}}" id="customerEmail" name="customer_email" readonly>
+                    <input type="text" class="form-control text-white bg-black" value="{{challan.customer.customer_email}}" id="customerEmail" name="customer_email" readonly>
                   </div>
                 </div>
 
                 <div class="row mt-2">
                   <label for="" class="col-md-3 labels">GST Type</label>
                   <div class="col-md-6">
-                    <input type="text" class="form-control text-white bg-black" value="{{invoice.gst_type}}" id="customerGstType" name="customer_gst_type" readonly>
+                    <input type="text" class="form-control text-white bg-black" value="{{challan.GST_treatement}}" id="customerGstType" name="customer_gst_type" readonly>
                   </div>
                 </div>
 
                 <div class="row mt-2" id="customerGstInDisplay" style="display: flex;">
                   <label for="" class="col-md-3 labels">GSTIN</label>
                   <div class="col-md-6">
-                    <input type="text" class="form-control text-white bg-black" value="{{invoice.gstin}}" id="customerGSTIN" name="customer_gstin" readonly>
+                    <input type="text" class="form-control text-white bg-black" value="{{challan.GST_number}}" id="customerGSTIN" name="customer_gstin" readonly>
                   </div>
                 </div>
-
+                {% if challan.customer.billing_address != "" %}
                 <div class="row mt-2">
                   <label for="" class="col-md-3 labels">Billing Address</label>
                   <div class="col-md-6">
-                    <textarea class="form-control text-white bg-black" name="bill_address" id="billAddress" rows="4" readonly>{{invoice.billing_address}}</textarea>
+                    <textarea class="form-control text-white bg-black" name="bill_address" id="billAddress" rows="4" readonly>{{challan.customer.billing_address}}</textarea>
                   </div>
                 </div>
+                {%endif%}
 
                 <div class="row mt-2">
                   <label for="" class="col-md-3 labels">Place of Supply</label>
@@ -2492,7 +2493,7 @@
                     $('#billAddressSection').show();
                     document.getElementById('billAddress').value = data.street + ',' + data.city + '\n' + data.state + '\n' + data.country  + '\n' + data.pincode ;
                   }
-                  if(data.gstin){
+                  if(data.gstin && data.gstType !== "Unregistered Business-not Registered under GST"){
                       document.getElementById('customerGstInDisplay').style.display = 'flex';
                       document.getElementById('customerGSTIN').value = data.gstNo;
                   }else{

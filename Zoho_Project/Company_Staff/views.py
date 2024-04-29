@@ -16104,7 +16104,13 @@ def delivery_challan(request):
 
         new_number = int(latest_challan.reference_number) + 1 if latest_challan else 1
 
-        
+        if Delivery_challan_reference.objects.filter(company = cmp).exists():
+            deleted = Delivery_challan_reference.objects.get(company = cmp)
+            
+            if deleted:
+                while int(deleted.reference_number) >= new_number:
+                    new_number+=1
+
 
         # Finding next rec_invoice number w r t last rec_invoice number if exists.
         nxtchallan = ""
@@ -16911,6 +16917,16 @@ def challan_delete(request,id):
                 item = Items.objects.get(id = i.item.id)
                 item.current_stock += i.quantity
                 item.save()
+         # Storing ref number to deleted table
+        # if entry exists and lesser than the current, update and save => Only one entry per company
+        if Delivery_challan_reference.objects.filter(company = com).exists():
+            deleted = Delivery_challan_reference.objects.get(company = com)
+            if int(challan.reference_number) > int(deleted.reference_number):
+                deleted.reference_number = challan.reference_number
+                deleted.save()
+        else:
+            Delivery_challan_reference.objects.create(company = com, login_details = com.login_details, reference_number = challan.reference_number)
+
             
       
         challan.delete()   
@@ -17082,6 +17098,17 @@ def importDeliveryChallanFromExcel(request):
     else:
         latestNum = int(ref_num.reference_number) + 1
 
+    latest_challan = Delivery_challan.objects.filter(company = com).order_by('-id').first()
+                
+    new_number = int(latest_challan.reference_number) + 1 if latest_challan else 1
+
+    if Delivery_challan_reference.objects.filter(company = com).exists():
+                    deleted = Delivery_challan_reference.objects.get(company = com)
+                    
+                    if deleted:
+                        while int(deleted.reference_number) >= new_number:
+                            new_number+=1
+
     if request.method == 'POST' and request.FILES['excel_file']:
         excel_file = request.FILES['excel_file']
 
@@ -17127,6 +17154,9 @@ def importDeliveryChallanFromExcel(request):
 
             print("CnNum:", CnNum)
             print("Prefix:", prefix)
+            
+                
+
 
             
 
@@ -17145,7 +17175,7 @@ def importDeliveryChallanFromExcel(request):
                     
                    
                     
-                    reference_number = latestNum ,
+                    reference_number = new_number ,
                     challan_date = row[5] ,
                     challan_number = row[4] ,
                     description = row[7],
@@ -17183,11 +17213,7 @@ def importDeliveryChallanFromExcel(request):
             )
 
             # reference numebr
-            Delivery_challan_reference.objects.create(
-                company = com,
-                login_details = log_details,
-                reference_number = latestNum
-            )
+           
 
 # -------------------second sheet--------------------------------------
             
@@ -17602,7 +17628,7 @@ def save_challanInvoice(request):
                 login_details = com.login_details,
                 customer = Customer.objects.get(id = request.POST['customerId']),
                 customer_email = request.POST['customer_email'],
-                customer_billingaddress = request.POST['bill_address'],
+                customer_billingaddress = request.POST.get('bill_address'),
                 customer_GSTtype = request.POST['customer_gst_type'],
                 customer_GSTnumber = request.POST.get('customer_gstin'),
                 customer_place_of_supply = request.POST['place_of_supply'],
