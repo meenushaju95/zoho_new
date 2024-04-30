@@ -16641,7 +16641,7 @@ def add_delivery_challan(request):
                     
             Delivery_challan_history.objects.create(
                 company = com,
-                login_details = com.login_details,
+                login_details =log_details,
                 delivery_challan = challan,
                 action = 'Created'
             )
@@ -16855,7 +16855,7 @@ def edit_challan(request,id):
                     
             Delivery_challan_history.objects.create(
                 company = com,
-                login_details = com.login_details,
+                login_details = log_details,
                 delivery_challan = rec_inv,
                 action = 'Edited'
             )
@@ -17442,7 +17442,7 @@ def save_challanRecurringInvoice(request):
                 login_details = com.login_details,
                 customer = Customer.objects.get(id = request.POST['customerId']),
                 customer_email = request.POST['customer_email'],
-                billing_address = request.POST['bill_address'],
+                billing_address = request.POST.get('bill_address'),
                 gst_type = request.POST['customer_gst_type'],
                 gstin = request.POST.get('customer_gstin'),
                 place_of_supply = request.POST['place_of_supply'],
